@@ -4,6 +4,7 @@ foreach( system_test_category
         Instrumentation
         Navaids
         Main
+        subsystems
     )
 
     add_subdirectory(${system_test_category})
