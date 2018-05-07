@@ -602,15 +602,6 @@ FGGlobals::get_subsystem (const char * name) const
     return subsystem_mgr->get_subsystem(name);
 }
 
-void
-FGGlobals::add_subsystem (const char * name,
-                          SGSubsystem * subsystem,
-                          SGSubsystemMgr::GroupType type,
-                          double min_time_sec)
-{
-    subsystem_mgr->add(name, subsystem, type, min_time_sec);
-}
-
 SGEventMgr *
 FGGlobals::get_event_mgr () const
 {

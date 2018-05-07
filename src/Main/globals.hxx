@@ -180,19 +180,6 @@ public:
     }
 
 
-    void add_subsystem (const char * name,
-                                SGSubsystem * subsystem,
-                                SGSubsystemMgr::GroupType type,
-                                double min_time_sec = 0);
-
-    template<class T>
-    T* add_new_subsystem (SGSubsystemMgr::GroupType type, double min_time_sec = 0)
-    {
-        T* sub = new T;
-        add_subsystem(T::staticSubsystemClassId(), sub, type, min_time_sec);
-        return sub;
-    }
-
     SGEventMgr *get_event_mgr () const;
 
     inline double get_sim_time_sec () const { return sim_time_sec; }

@@ -55,7 +55,7 @@ void TrafficMgrTests::tearDown()
 }
 
 void TrafficMgrTests::testParse() {
-    globals->add_new_subsystem<FGTrafficManager>(SGSubsystemMgr::GENERAL);
+    globals->get_subsystem_mgr()->add<FGTrafficManager>();
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
@@ -107,7 +107,7 @@ void TrafficMgrTests::testTrafficManager()
 
     FGTestApi::setPositionAndStabilise(egeo->geod());
 
-    auto tmgr = globals->add_new_subsystem<FGTrafficManager>(SGSubsystemMgr::GENERAL);
+    auto tmgr = globals->get_subsystem_mgr()->add<FGTrafficManager>();
 
     tmgr->bind();
     tmgr->init();

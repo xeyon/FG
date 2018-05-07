@@ -29,7 +29,7 @@ std::vector<SGSharedPtr<FGAIBase>> SwiftAircraftManagerTest::getAIList()
 
 void SwiftAircraftManagerTest::testAircraftManager()
 {
-    globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::POST_FDM);
+    globals->get_subsystem_mgr()->add<FGAIManager>();
     globals->get_subsystem<FGAIManager>()->bind();
     globals->get_subsystem<FGAIManager>()->init();
 

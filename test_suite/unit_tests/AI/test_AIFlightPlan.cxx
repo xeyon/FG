@@ -49,7 +49,7 @@ void AIFlightPlanTests::setUp()
     FGTestApi::setUp::initTestGlobals("AI");
     FGTestApi::setUp::initNavDataCache();
 
-    globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
+    globals->get_subsystem_mgr()->add<FGAIManager>();
 
     auto props = globals->get_props();
     props->setBoolValue("sim/ai/enabled", true);

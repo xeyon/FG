@@ -93,7 +93,7 @@ FGHTTPClient* FGHTTPClient::getOrCreate()
         return ext;
     }
 
-    ext = globals->add_new_subsystem<FGHTTPClient>(SGSubsystemMgr::GENERAL);
+    ext = globals->get_subsystem_mgr()->add<FGHTTPClient>();
     ext->init();
     return ext;
 }

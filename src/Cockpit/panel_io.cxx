@@ -782,7 +782,7 @@ readPanel (const SGPropertyNode * root, const SGPath& path)
           KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
 		  if (gps == NULL) {
 			  gps = new KLN89(instrument);
-			  globals->add_subsystem("kln89", gps, SGSubsystemMgr::GENERAL);
+			  globals->get_subsystem_mgr()->add("kln89", gps);
 		  }
 		  //gps->init();  // init seems to get called automagically.
 		  FGSpecialInstrument* gpsinst = new FGSpecialInstrument(gps);

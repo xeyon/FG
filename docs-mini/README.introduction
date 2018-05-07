@@ -91,7 +91,11 @@ The bind() and unbind() functions can be used to tie and untie properties.
 
 Finally to create and have the subsystem managed:
 
-    globals->add_subsystem("example", new FGSubsystemExample);
+    globals->get_subsystem_mgr()->add<FGSubsystemExample>();
+
+or:
+
+    globals->get_subsystem_mgr()->add("example");
 
 Now the subsystem manager calls the update() function of this class every
 frame. dt is the time (in seconds) elapsed since the last call.

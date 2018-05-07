@@ -68,10 +68,10 @@ void GroundnetTests::setUp()
     ybbn->testSuiteInjectGroundnetXML(SGPath::fromUtf8(FG_TEST_SUITE_DATA) / "YBBN.groundnet.xml");
 
 
-    globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::GENERAL);
-    globals->add_new_subsystem<FGATCManager>(SGSubsystemMgr::GENERAL);
-    globals->add_new_subsystem<FGAIManager>(SGSubsystemMgr::GENERAL);
-    globals->add_new_subsystem<flightgear::AirportDynamicsManager>(SGSubsystemMgr::GENERAL);
+    globals->get_subsystem_mgr()->add<PerformanceDB>();
+    globals->get_subsystem_mgr()->add<FGATCManager>();
+    globals->get_subsystem_mgr()->add<FGAIManager>();
+    globals->get_subsystem_mgr()->add<flightgear::AirportDynamicsManager>();
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();

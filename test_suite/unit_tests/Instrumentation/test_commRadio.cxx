@@ -51,7 +51,7 @@ SGSubsystemRef CommRadioTests::setupStandardRadio(const std::string& name, int i
     r->bind();
     r->init();
 
-    globals->add_subsystem("comm-radio", r, SGSubsystemMgr::GENERAL);
+    globals->get_subsystem_mgr()->add("comm-radio", r);
 
     return r;
 }
