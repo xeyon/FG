@@ -94,7 +94,7 @@
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-
+ 
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
 #include <Canvas/FGCanvasSystemAdapter.hxx>
@@ -1014,7 +1014,7 @@ void fgCreateSubsystems(bool duringReset) {
         }
 
         // may exist already due to GUI startup or --load-tape=http...
-        if (!globals->get_subsystem<FGHTTPClient>()) {
+        if (!mgr->get_subsystem<FGHTTPClient>()) {
             mgr->add<FGHTTPClient>();
         }
         mgr->add<FGDNSClient>();
@@ -1079,7 +1079,7 @@ void fgCreateSubsystems(bool duringReset) {
         // properties before it is initialised. This caused problems when
         // FGReplay was changed to be POST_FDM.
         mgr->add<FGReplay>();
-        mgr->get_subsystem("replay")->init(); // Special case.
+        mgr->get_subsystem<FGReplay>()->init(); // Special case.
 
         //mgr->add<FGAIManager>();
         mgr->add<FGSubmodelMgr>();
@@ -1194,52 +1194,55 @@ void fgStartReposition()
   fgSetBool("/sim/signals/reinit", true);
   fgSetBool("/sim/crashed", false);
 
-  globals->get_subsystem("flight")->unbind();
+  // Fetch the subsystem manager.
+  auto mgr = globals->get_subsystem_mgr();
+
+  mgr->get_subsystem<FDMShell>()->unbind();
 
   // update our position based on current presets
   // this will mark position as needed finalized which we'll do in the
   // main-loop
   flightgear::initPosition();
   
-  auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
+  auto terraSync = mgr->get_subsystem<simgear::SGTerraSync>();
   if (terraSync) {
     terraSync->reposition();
   }
   
   // Initialize the FDM
-  globals->get_subsystem<FDMShell>()->reinit();
+  mgr->get_subsystem<FDMShell>()->reinit();
   
   // reset replay buffers
-  globals->get_subsystem<FGReplay>()->reinit();
-  
+  mgr->get_subsystem<FGReplay>()->reinit();
+
   // ugly: finalizePosition waits for METAR to arrive for the new airport.
   // we don't re-init the environment manager here, since historically we did
   // not, and doing so seems to have other issues. All that's needed is to
   // schedule METAR fetch immediately, so it's available for finalizePosition.
   // So we manually extract the METAR-fetching component inside the environment
   // manager, and re-init that.
-  SGSubsystemGroup* envMgr = static_cast<SGSubsystemGroup*>(globals->get_subsystem("environment"));
+  auto envMgr = static_cast<SGSubsystemGroup*>(mgr->get_subsystem<FGEnvironmentMgr>());
   if (envMgr) {
     envMgr->get_subsystem("realwx")->reinit();
   }
   
     // needed for parking assignment to work after reposition
-    auto atcManager = globals->get_subsystem<FGATCManager>();
+    auto atcManager = mgr->get_subsystem<FGATCManager>();
     if (atcManager) {
         atcManager->reposition();
     }
 
   // need to bind FDMshell again
-  globals->get_subsystem("flight")->bind();
+  mgr->get_subsystem<FDMShell>()->bind();
 
   // need to reset aircraft (systems/instruments/autopilot)
   // so they can adapt to current environment
-  globals->get_subsystem("systems")->reinit();
-  globals->get_subsystem("instrumentation")->reinit();
-  globals->get_subsystem("xml-autopilot")->reinit();
+  mgr->get_subsystem<FGSystemMgr>()->reinit();
+  mgr->get_subsystem<FGInstrumentMgr>()->reinit();
+  mgr->get_subsystem("xml-autopilot")->reinit();
 
   // need to update the timezone
-  auto timeManager = globals->get_subsystem<TimeManager>();
+  auto timeManager = mgr->get_subsystem<TimeManager>();
   if (timeManager) {
       timeManager->reposition();
   }

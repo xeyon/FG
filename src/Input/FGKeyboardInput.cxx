@@ -107,7 +107,7 @@ void FGKeyboardInput::postinit()
     key_nodes = fgGetNode("/input/keyboard", true);
   }
 
-  FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
+  auto nasalsys = globals->get_subsystem<FGNasalSys>();
   PropertyList nasal = key_nodes->getChildren("nasal");
   for (unsigned int j = 0; j < nasal.size(); j++) {
     nasal[j]->setStringValue("module", module.c_str());

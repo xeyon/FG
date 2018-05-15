@@ -219,7 +219,7 @@ bool FGATCMain::process() {
     // functionality from the interface than the ATC hardware can
     // directly provide.
 
-    FGNasalSys *n = (FGNasalSys*)globals->get_subsystem("nasal");
+    auto n = globals->get_subsystem<FGNasalSys>();
     bool result = n->parseAndRun( "atcsim.update()" );
     if ( !result ) {
         SG_LOG( SG_NETWORK, SG_ALERT, "Nasal: atcsim.update() failed!" );

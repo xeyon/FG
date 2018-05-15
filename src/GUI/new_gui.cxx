@@ -95,7 +95,7 @@ static void scanMenus()
     sim/menubar/default/menu[]/item[]. */
     SGPropertyNode* menubar = globals->get_props()->getNode("sim/menubar/default");
     assert(menubar);
-    Highlight* highlight = globals->get_subsystem<Highlight>();
+    auto highlight = globals->get_subsystem<Highlight>();
     if (!highlight) {
         return;
     }
@@ -469,7 +469,7 @@ NewGUI::readDir (const SGPath& path)
 
     flightgear::NavDataCache* cache = flightgear::NavDataCache::instance();
     flightgear::NavDataCache::Transaction txn(cache);
-    Highlight* highlight = globals->get_subsystem<Highlight>();
+    auto highlight = globals->get_subsystem<Highlight>();
     for (SGPath xmlPath : dir.children(simgear::Dir::TYPE_FILE, ".xml")) {
 
       SGPropertyNode_ptr props = new SGPropertyNode;

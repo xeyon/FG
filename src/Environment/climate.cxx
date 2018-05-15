@@ -145,7 +145,7 @@ void FGClimate::reinit()
 // http://vectormap.si.edu/Climate.htm
 void FGClimate::update(double dt)
 {
-    FGLight *l = globals->get_subsystem<FGLight>();
+    auto l = globals->get_subsystem<FGLight>();
     if (l)
     {
         _sun_longitude_deg = l->get_sun_lon()*SGD_RADIANS_TO_DEGREES;

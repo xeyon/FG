@@ -289,7 +289,7 @@ FGPanel::draw(osg::State& state)
   state.setActiveTextureUnit(0);
   state.setClientActiveTextureUnit(0);
 
-  FGLight *l = (FGLight *)(globals->get_subsystem("lighting"));
+  auto l = globals->get_subsystem<FGLight>();
   sgCopyVec4( panel_color, l->scene_diffuse().data());
   if ( fgGetDouble("/systems/electrical/outputs/instrument-lights") > 1.0 ) {
       if ( panel_color[0] < 0.7 ) panel_color[0] = 0.7;

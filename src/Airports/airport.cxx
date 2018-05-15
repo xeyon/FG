@@ -407,7 +407,7 @@ void FGAirport::addLineFeature(FGPavementRef linefeature)
 FGRunwayRef FGAirport::getActiveRunwayForUsage() const
 {
   auto envMgr = globals->get_subsystem<FGEnvironmentMgr>();
-
+  
   // This forces West-facing rwys to be used in no-wind situations
   // which is consistent with Flightgear's initial setup.
   double hdg = 270;

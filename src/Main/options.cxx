@@ -1628,7 +1628,7 @@ fgOptLoadTape(const char* arg)
             fgGetNode("/sim/signals/fdm-initialized", true)->removeChangeListener( this );
 
             // tell the replay subsystem to load the tape
-            FGReplay* replay = globals->get_subsystem<FGReplay>();
+            auto replay = globals->get_subsystem<FGReplay>();
             assert(replay);
             SGPropertyNode_ptr arg = new SGPropertyNode();
             arg->setStringValue("tape", _tape.utf8Str() );

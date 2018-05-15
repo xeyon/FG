@@ -306,7 +306,7 @@ void FGHTTPClient::postinit()
   
   pkg::Root* packageRoot = globals->packageRoot();
   if (packageRoot) {
-    FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
     nasal::Hash nasalGlobals = nasalSys->getGlobals();
     nasal::Hash nasalPkg = nasalGlobals.createHash("pkg"); // module
     nasalPkg.set("root", packageRoot);

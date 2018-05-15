@@ -161,6 +161,8 @@ private:
 
     SGSharedPtr<simgear::pkg::Root> _packageRoot;
 
+    SGSubsystem *get_subsystem (const char * name) const;
+
 public:
 
     FGGlobals();
@@ -170,8 +172,6 @@ public:
     void set_renderer(FGRenderer* render);
 
     SGSubsystemMgr *get_subsystem_mgr () const;
-
-    SGSubsystem *get_subsystem (const char * name) const;
 
     template<class T>
     T* get_subsystem() const

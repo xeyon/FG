@@ -358,7 +358,7 @@ GPS::update (double delta_time_sec)
   if (_dataValid && (_mode == "init")) {
     // will select LEG mode if the route is active
     routeManagerFlightPlanChanged(nullptr);
-    FGRouteMgr* routeMgr = globals->get_subsystem<FGRouteMgr>();
+    auto routeMgr = globals->get_subsystem<FGRouteMgr>();
       
     if (!routeMgr || !routeMgr->isRouteActive()) {
       // initialise in OBS mode, with waypt set to the nearest airport.
@@ -397,7 +397,7 @@ void GPS::routeManagerFlightPlanChanged(SGPropertyNode*)
   }
   
   SG_LOG(SG_INSTR, SG_DEBUG, "GPS saw route-manager flight-plan replaced.");
-  FGRouteMgr* routeMgr = globals->get_subsystem<FGRouteMgr>();
+  auto routeMgr = globals->get_subsystem<FGRouteMgr>();
   if (!routeMgr) {
     return;
   }

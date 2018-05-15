@@ -52,6 +52,7 @@
 #include "multiplaymgr.hxx"
 #include "mpmessages.hxx"
 #include "MPServerResolver.hxx"
+#include <FDM/fdm_shell.hxx>
 #include <FDM/flightProperties.hxx>
 #include <Time/TimeManager.hxx>
 #include <Main/sentryIntegration.hxx>
@@ -2142,7 +2143,7 @@ void FGMultiplayMgr::Send(double mpTime)
     // The orientation of the vehicle wrt the earth centered frame
     motionInfo.orientation = qEc2Hl*hlOr;
 
-    if (!globals->get_subsystem("flight")->is_suspended()) {
+    if (!globals->get_subsystem<FDMShell>()->is_suspended()) {
         // velocities
         motionInfo.linearVel = SG_FEET_TO_METER*SGVec3f(ifce.get_uBody(),
             ifce.get_vBody(),
@@ -2661,7 +2662,7 @@ FGMultiplayMgr::addMultiplayer(const std::string& callsign,
   mp->setCallSign(callsign);
   mMultiPlayerMap[callsign] = mp;
 
-  FGAIManager *aiMgr = (FGAIManager*)globals->get_subsystem("ai-model");
+  auto aiMgr = globals->get_subsystem<FGAIManager>();
   if (aiMgr) {
     aiMgr->attach(mp);
 

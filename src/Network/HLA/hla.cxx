@@ -510,8 +510,7 @@ public:
             std::string modelPath = objectInstance._model->getModelPath();
             if (modelPath.empty())
                 return;
-            FGAIManager *aiMgr;
-            aiMgr = static_cast<FGAIManager*>(globals->get_subsystem("ai-model"));
+            auto aiMgr = globals->get_subsystem<FGAIManager>();
             if (!aiMgr)
                 return;
 

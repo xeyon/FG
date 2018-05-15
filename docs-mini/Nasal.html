@@ -394,7 +394,7 @@ which you can pass arbitrary Nasal source code for immediate
 execution:
 
 <pre>
-FGNasalSys n = (FGNasalSys*)globals->get_subsystem("nasal");
+auto n = globals->get_subsystem<FGNasalSys>();
 if(! n->parseAndRun("print('This script was called from C++!')")) 
   SG_LOG(SG_GENERAL, SG_ALERT, "My Nasal code failed :(");
 </pre>
@@ -408,7 +408,7 @@ avoids the parsing and code generation overhead for the successive
 calls.
 
 <pre>
-FGNasalSys n = (FGNasalSys*)globals->get_subsystem("nasal");
+auto n = globals->get_subsystem<FGNasalSys>();
 FGNasalScript* script = n->parseScript("print('Spam!')")) 
 if(!script) SG_LOG(SG_GENERAL, SG_ALERT, "My Nasal code failed :(");
 

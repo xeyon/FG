@@ -73,7 +73,7 @@ add_deprecated_dialogs ()
 static void
 menu_callback (puObject * object)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     FGPUIMenuBar* mb = static_cast<FGPUIMenuBar*>(gui->getMenuBar());
     mb->fireItem(object);
 }
@@ -381,7 +381,7 @@ namespace {
   
   struct EnabledListener : SGPropertyChangeListener {
     void valueChanged(SGPropertyNode *node) {
-        NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+        auto gui = globals->get_subsystem<NewGUI>();
         if (!gui)
             return;
         FGPUIMenuBar* menubar = static_cast<FGPUIMenuBar*>(gui->getMenuBar());

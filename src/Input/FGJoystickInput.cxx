@@ -195,7 +195,7 @@ void FGJoystickInput::reinit()
 
 void FGJoystickInput::postinit()
 {
-  FGNasalSys *nasalsys = (FGNasalSys *)globals->get_subsystem("nasal");
+  auto nasalsys = globals->get_subsystem<FGNasalSys>();
   SGPropertyNode_ptr js_nodes = fgGetNode("/input/joysticks");
 
   for (int i = 0; i < MAX_JOYSTICKS; i++) {

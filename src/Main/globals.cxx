@@ -947,12 +947,12 @@ void FGGlobals::set_warp_delta( long int d )
 
 FGScenery* FGGlobals::get_scenery () const
 {
-    return get_subsystem<FGScenery>();
+    return subsystem_mgr->get_subsystem<FGScenery>();
 }
 
 FGViewMgr *FGGlobals::get_viewmgr() const
 {
-    return get_subsystem<FGViewMgr>();
+    return subsystem_mgr->get_subsystem<FGViewMgr>();
 }
 
 flightgear::View* FGGlobals::get_current_view () const
@@ -968,7 +968,7 @@ void FGGlobals::set_matlib( SGMaterialLib *m )
 
 FGControls *FGGlobals::get_controls() const
 {
-    return get_subsystem<FGControls>();
+    return subsystem_mgr->get_subsystem<FGControls>();
 }
 
 void FGGlobals::addListenerToCleanup(SGPropertyChangeListener* l)

@@ -253,7 +253,7 @@ void FGButtonEvent::update( double dt )
 
 FGInputDevice::~FGInputDevice()
 {
-  FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+  auto nas = globals->get_subsystem<FGNasalSys>();
   if (nas && deviceNode ) {
     SGPropertyNode_ptr nasal = deviceNode->getNode("nasal");
     if( nasal ) {
@@ -297,7 +297,7 @@ void FGInputDevice::Configure( SGPropertyNode_ptr aDeviceNode )
     SGPropertyNode_ptr open = nasal->getNode("open");
     if (open) {
       const string s = open->getStringValue();
-      FGNasalSys *nas = (FGNasalSys *)globals->get_subsystem("nasal");
+      auto nas = globals->get_subsystem<FGNasalSys>();
       if (nas)
         nas->createModule(nasalModule.c_str(), nasalModule.c_str(), s.c_str(), s.length(), deviceNode );
     }
@@ -535,7 +535,7 @@ bool FGReportSetting::Test()
 
 std::string FGReportSetting::reportBytes(const std::string& moduleName) const
 {
-    FGNasalSys *nas = globals->get_subsystem<FGNasalSys>();
+    auto nas = globals->get_subsystem<FGNasalSys>();
     if (!nas) {
         return {};
     }

@@ -43,7 +43,7 @@ static bool do_timeofday (const SGPropertyNode * arg, SGPropertyNode * root)
 {
     const std::string &offset_type = arg->getStringValue("timeofday", "noon");
     int offset = arg->getIntValue("offset", 0);
-    TimeManager* self = (TimeManager*) globals->get_subsystem("time");
+    auto self = globals->get_subsystem<TimeManager>();
     if (offset_type == "real") {
     // without this, setting 'real' time is a no-op, since the current
     // wrap value (orig_warp) is retained in setTimeOffset. Ick.

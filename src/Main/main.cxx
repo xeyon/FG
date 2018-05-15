@@ -152,14 +152,16 @@ static void fgMainLoop( void )
 
     frame_signal->fireValueChanged();
 
-    auto timeManager = globals->get_subsystem<TimeManager>();
+    // Fetch the subsystem manager.
+    auto mgr = globals->get_subsystem_mgr();
+
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     double sim_dt, real_dt;
-    timeManager->computeTimeDeltas(sim_dt, real_dt);
+    mgr->get_subsystem<TimeManager>()->computeTimeDeltas(sim_dt, real_dt);
 
     // update all subsystems
-    globals->get_subsystem_mgr()->update(sim_dt);
+    mgr->update(sim_dt);
 
     // flush commands waiting in the queue
     SGCommandMgr::instance()->executedQueuedCommands();
@@ -312,6 +314,9 @@ static void fgIdleFunction ( void ) {
     // our initializations out of the idle callback so that we can get a
     // splash screen up and running right away.
 
+    // Fetch the subsystem manager.
+    auto mgr = globals->get_subsystem_mgr();
+
     if ( idle_state == 0 ) {
         auto camera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
         if (guiInit(camera->getGraphicsContext())) {
@@ -337,7 +342,7 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 4 ) {
         idle_state++;
 
-        globals->get_subsystem_mgr()->add<TimeManager>();
+        mgr->add<TimeManager>();
 
         // Do some quick general initializations
         if( !fgInitGeneral()) {
@@ -367,14 +372,14 @@ static void fgIdleFunction ( void ) {
 
         simgear::SGModelLib::init(globals->get_fg_root().utf8Str(), globals->get_props());
 
-        auto timeManager = globals->get_subsystem<TimeManager>();
+        auto timeManager = mgr->get_subsystem<TimeManager>();
         timeManager->init();
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
 
-        auto scenery = globals->get_subsystem_mgr()->add<FGScenery>();
+        auto scenery = mgr->add<FGScenery>();
         scenery->init();
         scenery->bind();
 
@@ -401,12 +406,12 @@ static void fgIdleFunction ( void ) {
         idle_state++;
         SGTimeStamp st;
         st.stamp();
-        globals->get_subsystem_mgr()->bind();
+        mgr->bind();
         SG_LOG(SG_GENERAL, SG_INFO, "Binding subsystems took:" << st.elapsedMSec());
 
         fgSplashProgress("init-subsystems");
     } else if ( idle_state == 9 ) {
-        SGSubsystem::InitStatus status = globals->get_subsystem_mgr()->incrementalInit();
+        SGSubsystem::InitStatus status = mgr->incrementalInit();
         if ( status == SGSubsystem::INIT_DONE) {
           ++idle_state;
           fgSplashProgress("finishing-subsystems");

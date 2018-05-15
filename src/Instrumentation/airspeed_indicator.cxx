@@ -81,7 +81,7 @@ AirspeedIndicator::init ()
         _pressure_alt = fgGetNode(_pressure_alt_source.c_str(), true);
     }
     
-    _environmentManager = (FGEnvironmentMgr*) globals->get_subsystem("environment");
+    _environmentManager = globals->get_subsystem<FGEnvironmentMgr>();
 }
 
 void

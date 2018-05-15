@@ -476,7 +476,7 @@ FGPUIDialog::makeObject(SGPropertyNode* props, int parentWidth, int parentHeight
                 obj->setBuffer(tsync->log());
             }
         } else {
-            FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
+            auto nasal = globals->get_subsystem<FGNasalSys>();
             obj->setBuffer(nasal->log());
         }
 

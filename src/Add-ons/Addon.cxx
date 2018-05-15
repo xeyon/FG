@@ -290,7 +290,7 @@ void Addon::setAddonNode(SGPropertyNode* addonNode)
 
 naRef Addon::getAddonPropsNode() const
 {
-  FGNasalSys* nas = globals->get_subsystem<FGNasalSys>();
+  auto nas = globals->get_subsystem<FGNasalSys>();
   return nas->wrappedPropsNode(_addonNode.get());
 }
 

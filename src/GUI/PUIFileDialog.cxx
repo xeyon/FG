@@ -43,7 +43,7 @@ PUIFileDialog::~PUIFileDialog()
 
 void PUIFileDialog::exec()
 {
-    NewGUI* gui = static_cast<NewGUI*>(globals->get_subsystem("gui"));
+    auto gui = globals->get_subsystem<NewGUI>();
     std::string name("native-file-0");
     _dialogRoot = fgGetNode("/sim/gui/dialogs/" + name, true);
 
@@ -80,7 +80,7 @@ void PUIFileDialog::exec()
 
 void PUIFileDialog::close()
 {
-    NewGUI* gui = static_cast<NewGUI*>(globals->get_subsystem("gui"));
+    auto gui = globals->get_subsystem<NewGUI>();
     std::string name("native-file-0");
     gui->closeDialog(name);
 }

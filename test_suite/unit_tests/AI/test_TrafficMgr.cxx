@@ -61,7 +61,7 @@ void TrafficMgrTests::testParse() {
     globals->get_subsystem_mgr()->init();
     globals->get_subsystem_mgr()->postinit();
 
-    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("traffic-manager");
+    auto tmgr = globals->get_subsystem<FGTrafficManager>();
     FGScheduledFlightVecIterator fltBegin, fltEnd;
 
     for (size_t i = 0; i < 1000000; i++)

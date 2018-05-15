@@ -203,7 +203,7 @@ protected:
 
 static bool commandRequestMetar(const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGSubsystemGroup* envMgr = (SGSubsystemGroup*) globals->get_subsystem("environment");
+  auto envMgr = (SGSubsystemGroup*) globals->get_subsystem_mgr()->get_subsystem("environment");
   if (!envMgr) {
     return false;
   }
@@ -223,7 +223,7 @@ static bool commandRequestMetar(const SGPropertyNode * arg, SGPropertyNode * roo
   
 static bool commandClearMetar(const SGPropertyNode * arg, SGPropertyNode * root)
 {
-  SGSubsystemGroup* envMgr = (SGSubsystemGroup*) globals->get_subsystem("environment");
+  auto envMgr = (SGSubsystemGroup*) globals->get_subsystem_mgr()->get_subsystem("environment");
   if (!envMgr) {
     return false;
   }
@@ -500,7 +500,7 @@ void NoaaMetarRealWxController::requestMetar
     "NoaaMetarRealWxController::update(): "
     "spawning load request for station-id '" << upperId << "'"
   );
-  FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
+  auto http = globals->get_subsystem<FGHTTPClient>();
   if (http) {
       http->makeRequest(new NoaaMetarGetRequest(metarDataHandler, upperId, noaa_base_url));
   }

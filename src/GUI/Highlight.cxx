@@ -328,10 +328,10 @@ struct FdmInitialisedListener : SGPropertyChangeListener
         if (m_fdm_initialised->getBoolValue())
         {
             SG_LOG(SG_GENERAL, SG_DEBUG, "Getting property associations from FDM");
-            Highlight* highlight = globals->get_subsystem<Highlight>();
+            auto highlight = globals->get_subsystem<Highlight>();
             if (highlight)
             {
-                FDMShell* fdmshell = (FDMShell*) globals->get_subsystem("flight");
+                auto fdmshell = globals->get_subsystem<FDMShell>();
                 FGInterface* fginterface = fdmshell->getInterface();
                 assert(fginterface);
                 fginterface->property_associations(

@@ -104,8 +104,7 @@ SGPropertyNode* from_nasal_helper(naContext c, naRef ref, SGPropertyNode**)
 
 CanvasMgr& requireCanvasMgr(const nasal::ContextWrapper& ctx)
 {
-  CanvasMgr* canvas_mgr =
-    static_cast<CanvasMgr*>(globals->get_subsystem("Canvas"));
+  auto canvas_mgr = globals->get_subsystem<CanvasMgr>();
   if( !canvas_mgr )
     ctx.runtimeError("Failed to get Canvas subsystem");
 
@@ -114,8 +113,7 @@ CanvasMgr& requireCanvasMgr(const nasal::ContextWrapper& ctx)
 
 GUIMgr& requireGUIMgr(const nasal::ContextWrapper& ctx)
 {
-  GUIMgr* mgr =
-    static_cast<GUIMgr*>(globals->get_subsystem("CanvasGUI"));
+  auto mgr = globals->get_subsystem<GUIMgr>();
   if( !mgr )
     ctx.runtimeError("Failed to get CanvasGUI subsystem");
 

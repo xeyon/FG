@@ -82,7 +82,7 @@ void FGATCManager::postinit()
     _routeManagerDestinationAirportNode = globals->get_props()->getNode("/autopilot/route-manager/destination/airport", true);
     destination = _routeManagerDestinationAirportNode->getStringValue();
 
-    FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    auto aiManager = globals->get_subsystem<FGAIManager>();
     auto userAircraft = aiManager->getUserAircraft();
     string callsign = userAircraft->getCallSign();
 
@@ -257,7 +257,7 @@ void FGATCManager::reposition()
 
 // remove any parking assignment form the user flight-plan, so it's
 // available again. postinit() will recompute a new value if required
-    FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    auto aiManager = globals->get_subsystem<FGAIManager>();
     auto userAircraft = aiManager->getUserAircraft();
     if (userAircraft) {
         if (userAircraft->GetFlightPlan()) {
@@ -303,7 +303,7 @@ void FGATCManager::update ( double time ) {
     // SG_LOG(SG_ATC, SG_BULK, "ATC update code is running at time: " << time);
 
     // Test code: let my virtual co-pilot handle ATC
-    FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    auto aiManager = globals->get_subsystem<FGAIManager>();
     FGAIAircraft* user_ai_ac = aiManager->getUserAircraft();
     FGAIFlightPlan *fp = user_ai_ac->GetFlightPlan();
 
