@@ -68,6 +68,27 @@ if (APPLE)
         CocoaHelpers.mm)
 endif()
 
+if (ENABLE_PUICOMPAT)
+list(APPEND HEADERS 
+    FGPUICompatDialog.hxx
+    PUICompatObject.hxx
+  )
+
+  list(APPEND SOURCES
+    FGPUICompatDialog.cxx
+    PUICompatObject.cxx
+  )
+else()
+list(APPEND HEADERS 
+FGPUIDialog.hxx
+)
+
+list(APPEND SOURCES
+FGPUIDialog.cxx
+)
+
+endif()
+
 if (HAVE_QT)
     qt5_wrap_ui(uic_sources SetupRootDialog.ui
                             InstallSceneryDialog.ui

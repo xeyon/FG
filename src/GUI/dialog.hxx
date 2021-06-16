@@ -5,6 +5,8 @@
 
 #include <string>
 
+#include <simgear/structure/SGWeakReferenced.hxx>
+
 // forward decls
 class SGPropertyNode;
 
@@ -16,7 +18,7 @@ class SGPropertyNode;
  * the properties in that tree.  The manager recreates the dialog
  * every time it needs to show it.
  */
-class FGDialog
+class FGDialog : public SGWeakReferenced
 {
 public:
 

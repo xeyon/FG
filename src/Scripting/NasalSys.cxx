@@ -1551,6 +1551,12 @@ void FGNasalSys::deleteModule(const char* moduleName)
     naFreeContext(ctx);
 }
 
+naRef FGNasalSys::getModule(const std::string& moduleName) const
+{
+    naRef mod = naHash_cget(_globals, (char*)moduleName.c_str());
+    return mod;
+}
+
 naRef FGNasalSys::getModule(const char* moduleName)
 {
     naRef mod = naHash_cget(_globals, (char*) moduleName);

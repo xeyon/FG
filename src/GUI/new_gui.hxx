@@ -30,6 +30,8 @@ class puFont;
 class NewGUI : public SGSubsystem
 {
 public:
+    using FGDialogRef = SGSharedPtr<FGDialog>;
+
     /**
      * Constructor.
      */
@@ -47,6 +49,7 @@ public:
     void shutdown() override;
     void unbind() override;
     void update(double delta_time_sec) override;
+    void postinit() override;
 
     // Subsystem identification.
     static const char* staticSubsystemClassId() { return "gui"; }
@@ -134,7 +137,7 @@ public:
      *
      * @return The active dialog, or 0 if none is active.
      */
-    virtual FGDialog * getActiveDialog ();
+    virtual FGDialogRef getActiveDialog();
 
 
     /**
@@ -142,7 +145,7 @@ public:
      *
      * @return The named dialog, or 0 if it isn't active.
      */
-    virtual FGDialog * getDialog (const std::string &name);
+    virtual FGDialogRef getDialog(const std::string& name);
 
 
     virtual FGColor *getColor (const char * name) const {
@@ -208,8 +211,10 @@ private:
     void readDir (const SGPath& path);
 
     std::unique_ptr<FGMenuBar> _menubar;
-    FGDialog * _active_dialog;
-    typedef std::map<std::string,FGDialog *> DialogDict;
+    FGDialogRef _active_dialog;
+
+
+    typedef std::map<std::string, FGDialogRef> DialogDict;
     DialogDict _active_dialogs;
 
     typedef std::map<std::string, SGPath> NamePathDict;

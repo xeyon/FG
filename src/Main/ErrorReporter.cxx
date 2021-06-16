@@ -35,7 +35,9 @@
 #include <simgear/structure/commands.hxx>
 
 #include <GUI/MessageBox.hxx>
+#include <GUI/dialog.hxx>
 #include <GUI/new_gui.hxx>
+
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Main/locale.hxx>

@@ -6,7 +6,7 @@ set(SOURCES
 	environment_ctrl.cxx
 	environment_mgr.cxx
 	ephemeris.cxx
-        climate.cxx
+    climate.cxx
 	fgclouds.cxx
 	fgmetar.cxx
 	metarairportfilter.cxx
@@ -17,7 +17,7 @@ set(SOURCES
 	terrainsampler.cxx
 	presets.cxx
 	gravity.cxx
-        magvarmanager.cxx
+    magvarmanager.cxx
 	)
 
 set(HEADERS
