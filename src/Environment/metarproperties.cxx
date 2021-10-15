@@ -205,7 +205,7 @@ static const double thickness_value[] = { 0, 65, 600, 750, 1000 };
 const char* MetarProperties::get_metar() const
 {
     if (!_metar) return "";
-    return _metar->getData();
+    return _metar->getRawDataPtr();
 }
     
 void MetarProperties::set_metar( const char * metarString )
