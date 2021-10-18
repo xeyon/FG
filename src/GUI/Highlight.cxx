@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <map>
 #include <string>
+#include <iterator>
 
 
 /* Returns translated string for specified menu/menuitem name. */
