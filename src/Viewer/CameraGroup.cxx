@@ -913,6 +913,11 @@ osg::Camera* getGUICamera(CameraGroup* cgroup)
     return cgroup->getGUICamera()->compositor->getPass(0)->camera;
 }
 
+const CameraGroup::CameraList& CameraGroup::getCameras()
+{
+    return _cameras;
+}
+
 static bool
 computeCameraIntersection(const CameraGroup *cgroup,
                           const CameraInfo *cinfo,
