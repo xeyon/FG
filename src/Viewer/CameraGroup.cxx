@@ -151,9 +151,9 @@ public:
     }
 
     virtual void valueChanged(SGPropertyNode* prop) {
-        if (!strcmp(prop->getName(), "znear")) {
+        if (prop->getNameString() == "znear") {
             _cameraGroup->_zNear = prop->getFloatValue();
-        } else if (!strcmp(prop->getName(), "zfar")) {
+        } else if (prop->getNameString() == "zfar") {
             _cameraGroup->_zFar = prop->getFloatValue();
         }
     }
@@ -869,12 +869,12 @@ CameraGroup* CameraGroup::buildCameraGroup(osgViewer::View* view,
 
     for (int i = 0; i < gnode->nChildren(); ++i) {
         SGPropertyNode* pNode = gnode->getChild(i);
-        const char* name = pNode->getName();
-        if (!strcmp(name, "camera")) {
+        std::string name = pNode->getNameString();
+        if (name == "camera") {
             cgroup->buildCamera(pNode);
-        } else if (!strcmp(name, "window")) {
+        } else if (name == "window") {
             WindowBuilder::getWindowBuilder()->buildWindow(pNode);
-        } else if (!strcmp(name, "gui")) {
+        } else if (name == "gui") {
             cgroup->buildGUICamera(pNode);
         }
     }
@@ -1082,8 +1082,8 @@ void CameraGroup::buildDefaultGroup(osgViewer::View* viewer)
     if (oldSyntax) {
         for (int i = 0; i < renderingNode->nChildren(); ++i) {
             SGPropertyNode* propNode = renderingNode->getChild(i);
-            const char* propName = propNode->getName();
-            if (!strcmp(propName, "window") || !strcmp(propName, "camera")) {
+            const string propName = propNode->getNameString();
+            if (propName == "window" || propName == "camera") {
                 SGPropertyNode* copiedNode
                     = cgroupNode->getNode(propName, propNode->getIndex(), true);
                 copyProperties(propNode, copiedNode);

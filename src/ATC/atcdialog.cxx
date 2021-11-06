@@ -44,7 +44,7 @@
 
 using std::string;
 
-static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name)
+static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const std::string& name)
 {
     SGPropertyNode* p;
 
@@ -52,7 +52,7 @@ static SGPropertyNode *getNamedNode(SGPropertyNode *prop, const char *name)
         if ((p = getNamedNode(prop->getChild(i), name)))
             return p;
 
-    if (!strcmp(prop->getStringValue("name"), name))
+    if (prop->getStringValue("name") == name)
         return prop;
     return 0;
 }

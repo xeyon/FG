@@ -225,9 +225,9 @@ string ATISEncoder::processTokens( SGPropertyNode_ptr node )
 
 string ATISEncoder::processToken( SGPropertyNode_ptr token ) 
 {
-  HandlerMap::iterator it = handlerMap.find( token->getName());
+  HandlerMap::iterator it = handlerMap.find( token->getNameString());
   if( it == handlerMap.end() ) {
-    SG_LOG(SG_ATC, SG_WARN, "ATISEncoder: unknown token: " << token->getName() );
+    SG_LOG(SG_ATC, SG_WARN, "ATISEncoder: unknown token: " << token->getNameString() );
     return EMPTY;
   }
   handler_t h = it->second;

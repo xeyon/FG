@@ -2068,7 +2068,7 @@ MapWidget::DrawAIObject::DrawAIObject(SGPropertyNode* m, const SGGeod& g) :
         
         char buffer[1024];
         ::snprintf(buffer, 1024, "%s\n%dkts",
-                   model->getStringValue("name", "<>"),
+                   model->getStringValue("name", "<>").c_str(),
                    speedKts);
         legend = buffer;
     }

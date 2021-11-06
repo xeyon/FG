@@ -83,7 +83,7 @@ static void s_RecordPropertyDiffs(
 {
     assert(a);
     assert(b);
-    assert(!strcmp(a->getName(), b->getName()));
+    assert(a->getNameString() == b->getNameString());
     assert(a->getPath() == b->getPath());
     assert(a->getIndex() == b->getIndex());
     
@@ -96,9 +96,9 @@ static void s_RecordPropertyDiffs(
         }
     }
     // If values differ, write a's value to out and change b's value to a's value.
-    const char* a_value = a->getStringValue();
-    const char* b_value = b->getStringValue();
-    if (strcmp(a_value, b_value)) {
+    const std::string a_value = a->getStringValue();
+    const std::string b_value = b->getStringValue();
+    if (a_value != b_value) {
         // Values are different so write out node <a> and update b.
         SG_LOG(SG_SYSTEMS, SG_DEBUG, "recording property change:"
                 << a->getPath()
@@ -114,7 +114,7 @@ static void s_RecordPropertyDiffs(
     int bn = b->nChildren();
     for (int i=0; i<bn; ++i) {
         SGPropertyNode* bc = b->getChild(i);
-        SGPropertyNode* ac = a->getChild(bc->getName(), bc->getIndex(), false /*create*/);
+        SGPropertyNode* ac = a->getChild(bc->getNameString(), bc->getIndex(), false /*create*/);
         if (!ac) {
             // Child node is in b but not in a; we write out special
             // information about the deleted node and remove from b.
@@ -129,7 +129,7 @@ static void s_RecordPropertyDiffs(
     int an = a->nChildren();
     for (int i=0; i<an; ++i) {
         SGPropertyNode* ac = a->getChild(i);
-        SGPropertyNode* bc = b->getChild(ac->getName(), ac->getIndex(), true /*create*/);
+        SGPropertyNode* bc = b->getChild(ac->getNameString(), ac->getIndex(), true /*create*/);
         // Recurse.
         s_RecordPropertyDiffs(out, ac, bc, path_exclude_prefixes);
     }
@@ -282,7 +282,7 @@ FGFlightRecorder::reinit(SGPropertyNode_ptr ConfigNode)
     else
     {
         // set name of active flight recorder type 
-        const char* pRecorderName =
+        const std::string pRecorderName =
                 m_ConfigNode->getStringValue("name",
                                              "aircraft-specific flight recorder");
         SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: Using custom recorder configuration: " << pRecorderName);
@@ -357,8 +357,8 @@ FGFlightRecorder::getDefault(void)
     // set name of active flight recorder type
     SG_LOG(SG_SYSTEMS, SG_INFO, "FlightRecorder: No custom configuration. Loading generic default recorder.");
 
-    const char* Path = m_RecorderNode->getStringValue("default-config",NULL);
-    if (!Path)
+    const std::string Path = m_RecorderNode->getStringValue("default-config", "");
+    if (Path.empty())
     {
         SG_LOG(SG_SYSTEMS, SG_ALERT, "FlightRecorder: No default flight recorder specified! Check defaults.xml!");
     }
@@ -423,13 +423,13 @@ FGFlightRecorder::processSignalList(const char* pSignalType, TSignalList& Signal
     {
         SignalNode = SignalListNode->getChild("signal",Index,false);
         if (SignalNode.valid()&&
-            (0==strcmp(pSignalType, SignalNode->getStringValue("type","float"))))
+            (std::string(pSignalType) == SignalNode->getStringValue("type", "float")))
         {
-            string PropertyPath = SignalNode->getStringValue("property","");
+            string PropertyPath = SignalNode->getStringValue("property", "");
             if (!PropertyPath.empty())
             {
                 PropertyPath = PropPrefix + PropertyPath;
-                const char* pInterpolation = SignalNode->getStringValue("interpolation","linear");
+                const std::string pInterpolation = SignalNode->getStringValue("interpolation", "linear");
 
                 // Check if current signal has a "%i" place holder. Otherwise count is 1.
                 string::size_type IndexPos = PropertyPath.find("%i");
@@ -462,17 +462,17 @@ FGFlightRecorder::processSignalList(const char* pSignalType, TSignalList& Signal
                         Capture.Signal = fgGetNode(PPath.c_str(),true);
                     }
 
-                    if (0==strcmp(pInterpolation,"discrete"))
+                    if (pInterpolation == "discrete")
                         Capture.Interpolation = discrete;
                     else 
-                    if ((0==strcmp(pInterpolation,"angular"))||
-                        (0==strcmp(pInterpolation,"angular-rad")))
+                    if ((pInterpolation == "angular")||
+                        (pInterpolation == "angular-rad"))
                         Capture.Interpolation = angular_rad;
                     else
-                    if (0==strcmp(pInterpolation,"angular-deg"))
+                    if (pInterpolation == "angular-deg")
                         Capture.Interpolation = angular_deg;
                     else
-                    if (0==strcmp(pInterpolation,"linear"))
+                    if (pInterpolation == "linear")
                         Capture.Interpolation = linear;
                     else
                     {

@@ -137,18 +137,18 @@ static bool ReadFGReplayData2(
     ret->raw_data.resize(0);
     for (auto data: config->getChildren("data"))
     {
-        const char* data_type = data->getStringValue();
+        std::string data_type = data->getStringValue();
         SG_LOG(SG_SYSTEMS, SG_BULK, "in.tellg()=" << in.tellg() << " data_type=" << data_type);
         uint32_t    length;
         readRaw(in, length);
         SG_LOG(SG_SYSTEMS, SG_DEBUG, "length=" << length);
         if (!in) break;
-        if (load_signals && !strcmp(data_type, "signals"))
+        if (load_signals && data_type == "signals")
         {
             ret->raw_data.resize(length);
             in.read(&ret->raw_data.front(), ret->raw_data.size());
         }
-        else if (load_multiplayer && !strcmp(data_type, "multiplayer"))
+        else if (load_multiplayer && data_type == "multiplayer")
         {
             /* Multiplayer information is a vector of vectors. */
             ret->multiplayer_messages.clear();
@@ -168,7 +168,7 @@ static bool ReadFGReplayData2(
                         );
             }
         }
-        else if (load_extra_properties && !strcmp(data_type, "extra-properties"))
+        else if (load_extra_properties && data_type == "extra-properties")
         {
             ReadFGReplayDataExtraProperties(in, ret, length);
         }
@@ -439,14 +439,14 @@ static void writeFrame2(FGReplayData* r, std::ostream& out, SGPropertyNode_ptr c
 {
     for (auto data: config->getChildren("data"))
     {
-        const char* data_type = data->getStringValue();
-        if (!strcmp(data_type, "signals"))
+        std::string data_type = data->getStringValue();
+        if (data_type == "signals")
         {
             uint32_t    signals_size = r->raw_data.size();
             writeRaw(out, signals_size);
             out.write(&r->raw_data.front(), r->raw_data.size());
         }
-        else if (!strcmp(data_type, "multiplayer"))
+        else if (data_type == "multiplayer")
         {
             uint32_t    length = 0;
             for (auto message: r->multiplayer_messages)
@@ -463,7 +463,7 @@ static void writeFrame2(FGReplayData* r, std::ostream& out, SGPropertyNode_ptr c
                 out.write(&message->front(), message_size);
             }
         }
-        else if (!strcmp(data_type, "extra-properties"))
+        else if (data_type == "extra-properties")
         {
             uint32_t    length = r->extra_properties.size();
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "data_type=" << data_type << " out.tellp()=" << out.tellp()
@@ -493,19 +493,19 @@ bool continuousWriteFrame(Continuous& continuous, FGReplayData* r, std::ostream&
     bool has_extra_properties = false;
     for (auto data: config->getChildren("data"))
     {
-        const char* data_type = data->getStringValue();
-        if (!strcmp(data_type, "signals"))
+        std::string data_type = data->getStringValue();
+        if (data_type == "signals")
         {
             has_signals = true;
         }
-        else if (!strcmp(data_type, "multiplayer"))
+        else if (data_type == "multiplayer")
         {
             if (!r->multiplayer_messages.empty())
             {
                 has_multiplayer = true;
             }
         }
-        else if (!strcmp(data_type, "extra-properties"))
+        else if (data_type == "extra-properties")
         {
             if (!r->extra_properties.empty())
             {

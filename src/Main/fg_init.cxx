@@ -365,7 +365,7 @@ private:
     
     vector<SGPropertyNode_ptr> cache = _cache->getChildren("aircraft");
     for (unsigned int i = 0; i < cache.size(); i++) {
-      const char *name = cache[i]->getStringValue("file", "");
+      const std::string name = cache[i]->getStringValue("file", "");
       if (!simgear::strutils::iequals(_searchAircraft, name)) {
         continue;
       }

@@ -198,8 +198,8 @@ static void popupTip(const char* message, int delay)
 
 SGPath makeSavePath(FGTapeType type, SGPath* path_timeless)
 {
-    const char* tape_directory = fgGetString("/sim/replay/tape-directory", "");
-    const char* aircraftType  = fgGetString("/sim/aircraft", "unknown");
+    std::string tape_directory = fgGetString("/sim/replay/tape-directory", "");
+    std::string aircraftType  = fgGetString("/sim/aircraft", "unknown");
     if (path_timeless) *path_timeless = "";
     SGPath  path = SGPath(tape_directory);
     path.append(aircraftType);
@@ -296,10 +296,10 @@ static void loadMessages(FGReplayInternal& self)
 
     for (auto it = msgs.begin(); it != msgs.end();++it)
     {
-        const char* msgText = (*it)->getStringValue("text", "");
+        std::string msgText = (*it)->getStringValue("text", "");
         const double msgTime = (*it)->getDoubleValue("time", -1.0);
-        const char* msgSpeaker = (*it)->getStringValue("speaker", "pilot");
-        if (msgText[0] != 0 && msgTime >= 0)
+        std::string msgSpeaker = (*it)->getStringValue("speaker", "pilot");
+        if (!msgText.empty() && msgTime >= 0)
         {
             FGReplayMessages data;
             data.sim_time = msgTime;
@@ -605,7 +605,7 @@ static bool saveRawReplayData(
         for (auto data: meta->getNode("meta")->getChildren("data"))
         {
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "data->getStringValue()=" << data->getStringValue());
-            if (!strcmp(data->getStringValue(), "multiplayer"))
+            if (data->getStringValue() == "multiplayer")
             {
                 uint32_t length = 0;
                 for (auto message: frame->multiplayer_messages)
@@ -1622,19 +1622,20 @@ static void indexContinuousRecording(FGReplayInternal& self, const void* data, s
                 }
                 if (length)
                 {
-                    stats[data->getStringValue()].num_frames += 1;
-                    stats[data->getStringValue()].bytes += length;
-                    if (!strcmp(data->getStringValue(), "signals"))
+                    std::string data_type = data->getStringValue();
+                    stats[data_type].num_frames += 1;
+                    stats[data_type].bytes += length;
+                    if (data_type == "signals")
                     {
                         frameinfo.has_signals = true;
                     }
-                    else if (!strcmp(data->getStringValue(), "multiplayer"))
+                    else if (data_type == "multiplayer")
                     {
                         frameinfo.has_multiplayer = true;
                         ++self.m_continuous->m_num_frames_multiplayer;
                         self.m_continuous->m_in_multiplayer = true;
                     }
-                    else if (!strcmp(data->getStringValue(), "extra-properties"))
+                    else if (data_type == "extra-properties")
                     {
                         frameinfo.has_extra_properties = true;
                         ++self.m_continuous->m_num_frames_extra_properties;
@@ -2012,7 +2013,7 @@ FGReplayInternal::loadTape(
             bool multiplayer = false;
             for (auto data: meta_meta.getChildren("data"))
             {
-                if (!strcmp(data->getStringValue(), "multiplayer"))
+                if (data->getStringValue() == "multiplayer")
                 {
                     multiplayer = true;
                 }

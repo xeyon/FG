@@ -339,17 +339,17 @@ private:
     }
 
 
-    int getNumMaturity(const char * str)
+    int getNumMaturity(const std::string& str)
     {
         // Changes should also be reflected in $FG_ROOT/options.xml
         const char* levels[] = {"alpha","beta","early-production","production"};
 
-        if (!strcmp(str, "all")) {
+        if (str == "all") {
             return 0;
         }
 
         for (size_t i=0; i<(sizeof(levels)/sizeof(levels[0]));i++)
-            if (strcmp(str,levels[i])==0)
+            if (str == levels[i])
                 return i;
 
         return 0;
@@ -809,7 +809,7 @@ static int
 fgOptAltitude( const char *arg )
 {
     fgSetBool("/sim/presets/onground", false);
-    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+    if ( fgGetString("/sim/startup/units") == "feet" )
         fgSetDouble("/sim/presets/altitude-ft", atof( arg ));
     else
         fgSetDouble("/sim/presets/altitude-ft",
@@ -821,7 +821,7 @@ static int
 fgOptUBody( const char *arg )
 {
     fgSetString("/sim/presets/speed-set", "UVW");
-    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	fgSetDouble("/sim/presets/uBody-fps", atof( arg ));
     else
 	fgSetDouble("/sim/presets/uBody-fps",
@@ -833,7 +833,7 @@ static int
 fgOptVBody( const char *arg )
 {
     fgSetString("/sim/presets/speed-set", "UVW");
-    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	fgSetDouble("/sim/presets/vBody-fps", atof( arg ));
     else
 	fgSetDouble("/sim/presets/vBody-fps",
@@ -845,7 +845,7 @@ static int
 fgOptWBody( const char *arg )
 {
     fgSetString("/sim/presets/speed-set", "UVW");
-    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	fgSetDouble("/sim/presets/wBody-fps", atof(arg));
     else
 	fgSetDouble("/sim/presets/wBody-fps",
@@ -857,7 +857,7 @@ static int
 fgOptVNorth( const char *arg )
 {
     fgSetString("/sim/presets/speed-set", "NED");
-    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	fgSetDouble("/sim/presets/speed-north-fps", atof( arg ));
     else
 	fgSetDouble("/sim/presets/speed-north-fps",
@@ -869,7 +869,7 @@ static int
 fgOptVEast( const char *arg )
 {
     fgSetString("/sim/presets/speed-set", "NED");
-    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	fgSetDouble("/sim/presets/speed-east-fps", atof(arg));
     else
 	fgSetDouble("/sim/presets/speed-east-fps",
@@ -881,7 +881,7 @@ static int
 fgOptVDown( const char *arg )
 {
     fgSetString("/sim/presets/speed-set", "NED");
-    if ( !strcmp(fgGetString("/sim/startup/units"), "feet") )
+    if ( fgGetString("/sim/startup/units") == "feet" )
 	fgSetDouble("/sim/presets/speed-down-fps", atof(arg));
     else
 	fgSetDouble("/sim/presets/speed-down-fps",
@@ -2416,7 +2416,7 @@ OptionResult Options::initAircraft()
   } else {
     SG_LOG(SG_INPUT, SG_INFO, "No user specified aircraft, using default" );
     // ensure aircraft-id is valid
-    fgSetString("/sim/aircraft-id", fgGetString("/sim/aircraft"));
+    fgSetString("/sim/aircraft-id", fgGetString("/sim/aircraft").c_str());
   }
 
   if (p->showAircraft) {

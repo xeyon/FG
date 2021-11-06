@@ -173,7 +173,7 @@ void FGAICarrier::update(double dt) {
 
     //automatic turn into wind with a target wind of 25 kts otd
     //SG_LOG(SG_AI, SG_ALERT, "AICarrier: MPControl " << MPControl << " AIControl " << AIControl);
-    if (strcmp(_ai_latch_node->getStringValue(), "")) {
+    if (_ai_latch_node->getStringValue() != "") {
         SG_LOG(SG_AI, SG_DEBUG, "FGAICarrier::update(): not updating because ai-latch=" << _ai_latch_node->getStringValue());
     }
     else if (!_MPControl && _AIControl){

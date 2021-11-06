@@ -171,7 +171,7 @@ compare_values (SGPropertyNode * value1, SGPropertyNode * value2)
     case simgear::props::DOUBLE:
         return (value1->getDoubleValue() == value2->getDoubleValue());
     default:
-        return !strcmp(value1->getStringValue(), value2->getStringValue());
+        return value1->getStringValue() == value2->getStringValue();
     }
 }
 
@@ -253,7 +253,7 @@ do_pause (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_load (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    SGPath file(arg->getStringValue("file", "fgfs.sav"));
+    SGPath file(arg->getStringValue("file", "fgfs.sav").c_str());
 
     if (file.extension() != "sav")
         file.concat(".sav");
@@ -286,7 +286,7 @@ do_load (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_save (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    SGPath file(arg->getStringValue("file", "fgfs.sav"));
+    SGPath file(arg->getStringValue("file", "fgfs.sav").c_str());
 
     if (file.extension() != "sav")
         file.concat(".sav");
@@ -543,7 +543,7 @@ do_property_adjust (const SGPropertyNode * arg, SGPropertyNode * root)
                 * arg->getDoubleValue("offset"));
 
   double unmodifiable, modifiable;
-  split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all"),
+  split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all").c_str(),
               &unmodifiable, &modifiable);
   modifiable += amount;
   limit_value(&modifiable, arg);
@@ -575,7 +575,7 @@ do_property_multiply (const SGPropertyNode * arg, SGPropertyNode * root)
   double factor = arg->getDoubleValue("factor", 1.0);
 
   double unmodifiable, modifiable;
-  split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all"),
+  split_value(prop->getDoubleValue(), arg->getStringValue("mask", "all").c_str(),
               &unmodifiable, &modifiable);
   modifiable *= factor;
   limit_value(&modifiable, arg);

@@ -581,13 +581,13 @@ void TimeManager::updateLocalTimeString()
              aircraftLocalTime->tm_min, aircraftLocalTime->tm_sec);
 
     // check against current string to avoid changes all the time
-    const char* s = _localTimeStringNode->getStringValue();
-    if (strcmp(s, buf) != 0) {
+    string s = _localTimeStringNode->getStringValue();
+    if (s != string(buf)) {
         _localTimeStringNode->setStringValue(buf);
     }
 
-    const char* zs = _localTimeZoneNode->getStringValue();
-    if (strcmp(zs, _impl->get_description()) != 0) {
+    string zs = _localTimeZoneNode->getStringValue();
+    if (zs != string(_impl->get_description())) {
         _localTimeZoneNode->setStringValue(_impl->get_description());
     }
 }

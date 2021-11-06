@@ -903,7 +903,7 @@ bool DigitalFilter::configure( SGPropertyNode& prop_root,
   for( int i = 0; i < cfg.nChildren(); ++i )
   {
     SGPropertyNode_ptr child = cfg.getChild(i);
-    std::string cname(child->getName());
+    std::string cname(child->getNameString());
     bool ok = false;
     if (!ok) ok = _implementation->configure(*child, cname, prop_root);
     if (!ok) ok = configure(*child, cname, prop_root);
