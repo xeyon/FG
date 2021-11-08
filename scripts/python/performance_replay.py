@@ -61,6 +61,8 @@ if __name__ == '__main__':
                 f' --load-tape={tape}'
                 f' --timeofday=noon'
                 f' --prop:bool:/sim/replay/log-frame-times=true'
+                f' --prop:bool:/sim/replay/replay-main-view=true'
+                f' --prop:bool:/sim/replay/replay-main-window-size=true'
                 f' --prop:bool:/sim/replay/looped=false'
             )
 
