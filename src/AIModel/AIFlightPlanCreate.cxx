@@ -468,8 +468,8 @@ bool FGAIFlightPlan::createLandingTaxi(FGAIAircraft * ac, FGAirport * apt,
    // int route;
     for (int i = 0; i < size - 2; i++) {
         taxiRoute.next(node, &route);
-        char buffer[20];
-        snprintf(buffer, 20, "landingtaxi-%d-%d",  node->getIndex(), i);
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "landingtaxi-%d-%d",  node->getIndex(), i);
         FGAIWaypoint *wpt =
             createOnGround(ac, buffer, node->geod(), apt->getElevation(),
                            ac->getPerformance()->vTaxi());
