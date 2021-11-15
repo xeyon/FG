@@ -23,10 +23,12 @@ FGMenuBar::getLocalizedLabel(SGPropertyNode* node)
     if (!node)
         return {};
 
-    std::string name = node->getStringValue("name", "");
-    const auto translated = globals->get_locale()->getLocalizedString(name, "menu");
-    if (!translated.empty())
-        return translated;
+    std::string name = node->getStringValue("name", ""); 
+    if (!name.empty()) {
+        const auto translated = globals->get_locale()->getLocalizedString(name, "menu");
+        if (!translated.empty())
+            return translated;
+    }
 
     // return default with fallback to name
     std::string label = node->getStringValue("label", name.c_str());
