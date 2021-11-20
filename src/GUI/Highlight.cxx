@@ -20,7 +20,7 @@
 
 
 /* Returns translated string for specified menu/menuitem name. */
-static std::string s_get_menu_name(SGPropertyNode* node)
+static std::string s_getMenuName(SGPropertyNode* node)
 {
     /* We use 'label' if available, otherwise we translate 'name' using
     sim/intl/locale/... */
@@ -42,7 +42,7 @@ std::string HighlightMenu::description() const
             SGPropertyNode* item = menu->getChild("item", this->item);
             if (item)
             {
-                ret += s_get_menu_name(menu) + '/' + s_get_menu_name(item);
+                ret += s_getMenuName(menu) + '/' + s_getMenuName(item);
             }
         }
     }
@@ -161,26 +161,26 @@ struct NodeHighlighting : SGPropertyChangeListener
         // default shader to take the alpha value from the material value
         // and not the glColor. In many cases the pick animation geometry is
         // transparent, so the outline would not be visible without this hack.
-        set_rgba_default(m_node, "ambient", 0, 0, 0, 1);
-        set_rgba_default(m_node, "diffuse", 0.5, 0.5, 0.5, .95);
-        set_rgba_default(m_node, "emission", 0.75, 0.375, 0, 1);
-        set_rgba_default(m_node, "specular", 0.0, 0.0, 0.0, 0);
+        setRgbaDefault(m_node, "ambient", 0, 0, 0, 1);
+        setRgbaDefault(m_node, "diffuse", 0.5, 0.5, 0.5, .95);
+        setRgbaDefault(m_node, "emission", 0.75, 0.375, 0, 1);
+        setRgbaDefault(m_node, "specular", 0.0, 0.0, 0.0, 0);
         
         /* Listen for changes to highlight material properties. */
         m_node->addChangeListener(this, true /*initial*/);
     }
     
-    static void set_rgba_default(SGPropertyNode* root, const std::string& path,
+    static void setRgbaDefault(SGPropertyNode* root, const std::string& path,
             double red, double green, double blue, double alpha)
     {
-        set_property_default(root, path + "/red", red);
-        set_property_default(root, path + "/green", green);
-        set_property_default(root, path + "/blue", blue);
-        set_property_default(root, path + "/alpha", alpha);
+        setPropertyDefault(root, path + "/red", red);
+        setPropertyDefault(root, path + "/green", green);
+        setPropertyDefault(root, path + "/blue", blue);
+        setPropertyDefault(root, path + "/alpha", alpha);
     }
     
     // Sets property value if property does not exist.
-    static void set_property_default(SGPropertyNode* root, const std::string& path, double default_value)
+    static void setPropertyDefault(SGPropertyNode* root, const std::string& path, double default_value)
     {
         SGPropertyNode* property = root->getNode(path, false /*create*/);
         if (!property) root->setDoubleValue(path, default_value);
@@ -252,7 +252,7 @@ struct NodeHighlighting : SGPropertyChangeListener
     }
     
     /* Un-highlight all nodes. */
-    int clear_all()
+    int clearAll()
     {
         int ret = 0;
         for(;;)
@@ -398,7 +398,7 @@ int Highlight::highlightNodes(osg::Node* node)
     }
     if (!s_node_highlighting) return 0;
     
-    s_node_highlighting->clear_all();
+    s_node_highlighting->clearAll();
     
     int num_props = 0;
     
