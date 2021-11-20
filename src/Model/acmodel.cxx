@@ -98,7 +98,7 @@ struct VisitorHighlight : osg::NodeVisitor
         SG_LOG(SG_GENERAL, SG_DEBUG, spaces() << "group: " << group.libraryName() << "::" << group.className());
         for (auto name: m_highlight_names)
         {
-            m_highlight->add_property_node(name, &group);
+            m_highlight->addPropertyNode(name, &group);
         }
         m_level += 1;
         traverse(group);

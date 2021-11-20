@@ -98,7 +98,7 @@ static void scanMenus()
             std::vector<std::string> dialog_names;
             findAllLeafValues(item, "dialog-name", dialog_names);
             for (auto dialog_name: dialog_names) {
-                highlight->add_menu_dialog(HighlightMenu(menu->getIndex(), item->getIndex()), dialog_name);
+                highlight->addMenuDialog(HighlightMenu(menu->getIndex(), item->getIndex()), dialog_name);
             }
         }
     }
@@ -464,7 +464,7 @@ NewGUI::readDir (const SGPath& path)
           std::vector<std::string> property_paths;
           findAllLeafValues(props, "property", property_paths);
           for (auto property_path: property_paths) {
-            highlight->add_property_dialog(property_path, name);
+            highlight->addPropertyDialog(property_path, name);
           }
         }
       }

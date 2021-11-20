@@ -327,7 +327,7 @@ struct FdmInitialisedListener : SGPropertyChangeListener
     {
         SG_LOG(SG_GENERAL, SG_DEBUG, "fdm property association: " << from << " => " << to);
         Highlight* highlight = (Highlight*) ref;
-        highlight->add_property_property(from, to);
+        highlight->addPropertyProperty(from, to);
     }
     void valueChanged(SGPropertyNode* node) override
     {
@@ -378,7 +378,7 @@ static std::string canonical(const std::string property)
 }
 
 
-int Highlight::highlight_nodes(osg::Node* node)
+int Highlight::highlightNodes(osg::Node* node)
 {
     if (!s_output_stats)
     {
@@ -429,23 +429,23 @@ int Highlight::highlight_nodes(osg::Node* node)
                 -> property4
                     -> other nodes
         */
-        for (auto& property1: Highlight::find_node_properties(node))
+        for (auto& property1: Highlight::findNodeProperties(node))
         {
             /* <property1> animates <node>. */
             items.insert(NameValue("property", property1));
             
-            for (auto& property2: Highlight::find_property_to_properties(property1))
+            for (auto& property2: Highlight::findPropertyToProperties(property1))
             {
                 /* <property2> is set by <property1> (which animates <node>). */
                 items.insert(NameValue("property", property2));
             }
             
-            for (auto& property3: Highlight::find_property_from_properties(property1))
+            for (auto& property3: Highlight::findPropertyFromProperties(property1))
             {
                 /* <property3> sets <property1> (which animates <node>). */
                 items.insert(NameValue("property", property3));
                 
-                for (auto& property4: Highlight::find_property_to_properties(property3))
+                for (auto& property4: Highlight::findPropertyToProperties(property3))
                 {
                     /* <property4> is set by <property3> (which also
                     sets <property1>, which animates <node>). */
@@ -460,7 +460,7 @@ int Highlight::highlight_nodes(osg::Node* node)
         {
             const std::string& property = nv.value;
             SG_LOG(SG_GENERAL, SG_DEBUG, "Looking at property=" << property);
-            const HighlightInfo& info = Highlight::find_property_info(property);
+            const HighlightInfo& info = Highlight::findPropertyInfo(property);
             for (auto& node: info.nodes)
             {
                 num_props += s_node_highlighting->highlight(node, true);
@@ -468,7 +468,7 @@ int Highlight::highlight_nodes(osg::Node* node)
             for (auto& dialog: info.dialogs)
             {
                 items.insert(NameValue("dialog", dialog));
-                for (auto& menu: Highlight::find_menu_from_dialog(dialog))
+                for (auto& menu: Highlight::findMenuFromDialog(dialog))
                 {
                     items.insert(NameValue("menu", menu.description()));
                 }
@@ -543,7 +543,7 @@ static const HighlightInfo info_empty;
 static const std::set<std::string> set_string_empty;
 static const std::set<HighlightMenu> set_menu_empty;
 
-const HighlightInfo& Highlight::find_property_info(const std::string& property)
+const HighlightInfo& Highlight::findPropertyInfo(const std::string& property)
 {
     std::string property2 = canonical(property);
     auto it = s_property_to_info.find(property2);
@@ -551,35 +551,35 @@ const HighlightInfo& Highlight::find_property_info(const std::string& property)
     return it->second;
 }
 
-const std::set<std::string>& Highlight::find_node_properties(osg::Node* node)
+const std::set<std::string>& Highlight::findNodeProperties(osg::Node* node)
 {
     auto it = s_node_to_properties.find(node);
     if (it == s_node_to_properties.end()) return set_string_empty;
     return it->second;
 }
 
-const std::set<std::string>& Highlight::find_dialog_properties(const std::string& dialog)
+const std::set<std::string>& Highlight::findDialogProperties(const std::string& dialog)
 {
     auto it = s_dialog_to_properties.find(dialog);
     if (it == s_dialog_to_properties.end()) return set_string_empty;
     return it->second;
 }
 
-const std::set<std::string>& Highlight::find_keypress_properties(const std::string& keypress)
+const std::set<std::string>& Highlight::findKeypressProperties(const std::string& keypress)
 {
     auto it = s_keypress_to_properties.find(keypress);
     if (it == s_keypress_to_properties.end()) return set_string_empty;
     return it->second;
 }
 
-const std::set<std::string>& Highlight::find_menu_properties(const HighlightMenu& menu)
+const std::set<std::string>& Highlight::findMenuProperties(const HighlightMenu& menu)
 {
     auto it = s_menu_to_properties.find(menu);
     if (it == s_menu_to_properties.end()) return set_string_empty;
     return it->second;
 }
 
-const std::set<std::string>& Highlight::find_property_to_properties(const std::string& property)
+const std::set<std::string>& Highlight::findPropertyToProperties(const std::string& property)
 {
     std::string property2 = canonical(property);
     auto it = s_property_to_properties.find(property2);
@@ -587,7 +587,7 @@ const std::set<std::string>& Highlight::find_property_to_properties(const std::s
     return it->second;
 }
 
-const std::set<std::string>& Highlight::find_property_from_properties(const std::string& property)
+const std::set<std::string>& Highlight::findPropertyFromProperties(const std::string& property)
 {
     std::string property2 = canonical(property);
     auto it = s_property_from_properties.find(property2);
@@ -595,7 +595,7 @@ const std::set<std::string>& Highlight::find_property_from_properties(const std:
     return it->second;
 }
 
-const std::set<HighlightMenu>& Highlight::find_menu_from_dialog(const std::string& dialog)
+const std::set<HighlightMenu>& Highlight::findMenuFromDialog(const std::string& dialog)
 {
     auto it = s_dialog_to_menus.find(dialog);
     if (it == s_dialog_to_menus.end()) return set_menu_empty;
@@ -605,7 +605,7 @@ const std::set<HighlightMenu>& Highlight::find_menu_from_dialog(const std::strin
 
 /* Functions that populate our internal data. */
 
-void Highlight::add_property_node(const std::string& property, osg::ref_ptr<osg::Node> node)
+void Highlight::addPropertyNode(const std::string& property, osg::ref_ptr<osg::Node> node)
 {
     std::string property2 = canonical(property);
     s_property_to_info[property2].nodes.insert(node);
@@ -613,7 +613,7 @@ void Highlight::add_property_node(const std::string& property, osg::ref_ptr<osg:
         SG_LOG(SG_INPUT, SG_DEBUG, "node=" << node.get() << " property=" << property2);
 }
 
-void Highlight::add_property_dialog(const std::string& property, const std::string& dialog)
+void Highlight::addPropertyDialog(const std::string& property, const std::string& dialog)
 {
     std::string property2 = canonical(property);
     s_property_to_info[property2].dialogs.insert(dialog);
@@ -621,7 +621,7 @@ void Highlight::add_property_dialog(const std::string& property, const std::stri
         SG_LOG(SG_INPUT, SG_DEBUG, "dialog=" << dialog << " property=" << property2);
 }
 
-void Highlight::add_property_keypress(const std::string& property, const std::string& keypress)
+void Highlight::addPropertyKeypress(const std::string& property, const std::string& keypress)
 {
     std::string property2 = canonical(property);
     s_property_to_info[property2].keypresses.insert(keypress);
@@ -629,7 +629,7 @@ void Highlight::add_property_keypress(const std::string& property, const std::st
         SG_LOG(SG_INPUT, SG_DEBUG, "keypress=" << keypress << " property=" << property2);
 }
 
-void Highlight::add_property_menu(HighlightMenu menu, const std::string& property)
+void Highlight::addPropertyMenu(HighlightMenu menu, const std::string& property)
 {
     std::string property2 = canonical(property);
     s_property_to_info[property2].menus.insert(menu);
@@ -637,14 +637,14 @@ void Highlight::add_property_menu(HighlightMenu menu, const std::string& propert
         SG_LOG(SG_INPUT, SG_DEBUG, "menu=(" << menu.menu << " " << menu.item << ") property=" << property2);
 }
 
-void Highlight::add_menu_dialog(HighlightMenu menu, const std::string& dialog)
+void Highlight::addMenuDialog(HighlightMenu menu, const std::string& dialog)
 {
     s_menu_to_dialog[menu] = dialog;
     if (s_dialog_to_menus[dialog].insert(menu).second)
         SG_LOG(SG_INPUT, SG_DEBUG, "menu (" << menu.menu << " " << menu.item << ") dialog=" << dialog);
 }
 
-void Highlight::add_property_property(const std::string& from0, const std::string& to0)
+void Highlight::addPropertyProperty(const std::string& from0, const std::string& to0)
 {
     std::string from = canonical(from0);
     std::string to = canonical(to0);
@@ -657,11 +657,11 @@ void Highlight::add_property_property(const std::string& from0, const std::strin
         // Add transitive associations.
         for (auto& toto: s_property_to_properties[to])
         {
-            Highlight::add_property_property(from, toto);
+            Highlight::addPropertyProperty(from, toto);
         }
         for (auto& fromfrom: s_property_from_properties[from])
         {
-            Highlight::add_property_property(fromfrom, to);
+            Highlight::addPropertyProperty(fromfrom, to);
         }
     }
 }

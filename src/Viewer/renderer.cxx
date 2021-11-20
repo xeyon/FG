@@ -1011,7 +1011,7 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
 
         for (npi = np.rbegin(); npi != np.rend(); ++npi) {
             if (!higlight_num_props) {
-                higlight_num_props = highlight->highlight_nodes(*npi);
+                higlight_num_props = highlight->highlightNodes(*npi);
             }
             SGSceneUserData* ud = SGSceneUserData::getSceneUserData(*npi);
             if (!ud || (ud->getNumPickCallbacks() == 0))

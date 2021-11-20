@@ -928,7 +928,7 @@ bool DigitalFilter::configure( SGPropertyNode& prop_root,
   Highlight* highlight = globals->get_subsystem<Highlight>();
   for (auto in: inputs) {
     for (auto& out: _output_list) {
-        highlight->add_property_property(
+        highlight->addPropertyProperty(
                 in->getPath(true /*simplify*/),
                 out->getPath(true /*simplify*/)
                 );
