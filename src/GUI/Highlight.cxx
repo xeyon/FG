@@ -323,12 +323,6 @@ struct FdmInitialisedListener : SGPropertyChangeListener
     {
         m_fdm_initialised->addChangeListener(this, true /*initial*/);
     }
-    static void property_associations_callback(void* ref, const std::string& from, const std::string& to)
-    {
-        SG_LOG(SG_GENERAL, SG_DEBUG, "fdm property association: " << from << " => " << to);
-        Highlight* highlight = (Highlight*) ref;
-        highlight->addPropertyProperty(from, to);
-    }
     void valueChanged(SGPropertyNode* node) override
     {
         if (m_fdm_initialised->getBoolValue())
@@ -338,7 +332,13 @@ struct FdmInitialisedListener : SGPropertyChangeListener
             FDMShell* fdmshell = (FDMShell*) globals->get_subsystem("flight");
             FGInterface* fginterface = fdmshell->getInterface();
             assert(fginterface);
-            fginterface->property_associations(highlight, property_associations_callback);
+            fginterface->property_associations(
+                    [highlight](const std::string& from, const std::string& to)
+                    {
+                        SG_LOG(SG_GENERAL, SG_DEBUG, "fdm property association: " << from << " => " << to);
+                        highlight->addPropertyProperty(from, to);
+                    }
+                    );
             s_fdm_initialised_listener.reset();
         }
     }
