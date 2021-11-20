@@ -329,16 +329,19 @@ struct FdmInitialisedListener : SGPropertyChangeListener
         {
             SG_LOG(SG_GENERAL, SG_DEBUG, "Getting property associations from FDM");
             Highlight* highlight = globals->get_subsystem<Highlight>();
-            FDMShell* fdmshell = (FDMShell*) globals->get_subsystem("flight");
-            FGInterface* fginterface = fdmshell->getInterface();
-            assert(fginterface);
-            fginterface->property_associations(
-                    [highlight](const std::string& from, const std::string& to)
-                    {
-                        SG_LOG(SG_GENERAL, SG_DEBUG, "fdm property association: " << from << " => " << to);
-                        highlight->addPropertyProperty(from, to);
-                    }
-                    );
+            if (highlight)
+            {
+                FDMShell* fdmshell = (FDMShell*) globals->get_subsystem("flight");
+                FGInterface* fginterface = fdmshell->getInterface();
+                assert(fginterface);
+                fginterface->property_associations(
+                        [highlight](const std::string& from, const std::string& to)
+                        {
+                            SG_LOG(SG_GENERAL, SG_DEBUG, "fdm property association: " << from << " => " << to);
+                            highlight->addPropertyProperty(from, to);
+                        }
+                        );
+            }
             s_fdm_initialised_listener.reset();
         }
     }

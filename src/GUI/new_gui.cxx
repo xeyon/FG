@@ -89,6 +89,9 @@ static void scanMenus()
     SGPropertyNode* menubar = globals->get_props()->getNode("sim/menubar/default");
     assert(menubar);
     Highlight* highlight = globals->get_subsystem<Highlight>();
+    if (!highlight) {
+        return;
+    }
     for (int menu_p=0; menu_p<menubar->nChildren(); ++menu_p) {
         SGPropertyNode* menu = menubar->getChild(menu_p);
         if (menu->getNameString() != "menu") continue;
@@ -464,7 +467,12 @@ NewGUI::readDir (const SGPath& path)
           std::vector<std::string> property_paths;
           findAllLeafValues(props, "property", property_paths);
           for (auto property_path: property_paths) {
-            highlight->addPropertyDialog(property_path, name);
+            // We could maybe hoist this test for hightlight to avoid reaching
+            // here if it is null, but that's difficult to test, so we do it
+            // here instead.
+            if (highlight) {
+              highlight->addPropertyDialog(property_path, name);
+            }
           }
         }
       }
