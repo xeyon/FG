@@ -89,6 +89,7 @@ void TimeManager::init()
   _localTimeStringNode = fgGetNode("/sim/time/local-time-string", true);
   _localTimeZoneNode = fgGetNode("/sim/time/local-timezone", true);
   _warpDelta = fgGetNode("/sim/time/warp-delta", true);
+  _frameNumber = fgGetNode("/sim/frame-number", true);
   
   SGPath zone(globals->get_fg_root());
   zone.append("Timezone");
@@ -426,6 +427,7 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
 
 void TimeManager::update(double dt)
 {
+  _frameNumber->setIntValue(_frameNumber->getIntValue() + 1);
   bool freeze = _clockFreeze->getBoolValue();
   time_t now = time(NULL);
 

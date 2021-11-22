@@ -107,6 +107,7 @@ private:
     SGPropertyNode_ptr _maxFrameRate;
     SGPropertyNode_ptr _localTimeStringNode;
     SGPropertyNode_ptr _localTimeZoneNode;
+    SGPropertyNode_ptr _frameNumber;
 
     bool _lastClockFreeze = false;
     bool _adjustWarpOnUnfreeze = false;
