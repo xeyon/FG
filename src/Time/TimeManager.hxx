@@ -108,6 +108,7 @@ private:
     SGPropertyNode_ptr _localTimeStringNode;
     SGPropertyNode_ptr _localTimeZoneNode;
     SGPropertyNode_ptr _frameNumber;
+    SGPropertyNode_ptr _simFixedDt;
 
     bool _lastClockFreeze = false;
     bool _adjustWarpOnUnfreeze = false;

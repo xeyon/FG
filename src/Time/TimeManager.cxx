@@ -90,6 +90,7 @@ void TimeManager::init()
   _localTimeZoneNode = fgGetNode("/sim/time/local-timezone", true);
   _warpDelta = fgGetNode("/sim/time/warp-delta", true);
   _frameNumber = fgGetNode("/sim/frame-number", true);
+  _simFixedDt = fgGetNode("/sim/time/fixed-dt", true);
   
   SGPath zone(globals->get_fg_root());
   zone.append("Timezone");
@@ -220,7 +221,27 @@ static double TimeUTC()
 
 void TimeManager::computeTimeDeltasSimple(double& simDt, double& realDt)
 {
-    double t = TimeUTC();
+    double t;
+    double fixed_dt = _simFixedDt->getDoubleValue();
+    static bool fixed_dt_prev = 0;
+    if (fixed_dt)
+    {
+        // Always increase time by fixed amount, regardless of elapsed
+        // time. E.g. this can be used to generate high-quality videos.
+        t = _simple_time_fdm + fixed_dt;
+        fixed_dt_prev = fixed_dt;
+    }
+    else
+    {
+        t = TimeUTC();
+        
+        if (fixed_dt_prev)
+        {
+            // Avoid bogus sleep to match _maxFrameRate.
+            _simple_time_fdm = _simple_time_utc = t - fixed_dt_prev;
+            fixed_dt_prev = 0.0;
+        }
+    }
     double modelHz = _modelHz->getDoubleValue();
     bool scenery_loaded = _sceneryLoaded->getBoolValue();
 
@@ -236,7 +257,7 @@ void TimeManager::computeTimeDeltasSimple(double& simDt, double& realDt)
     // inline instead of calling throttleUpdateRate().
     //
     double sleep_time = 0;
-    if (scenery_loaded) {
+    if (scenery_loaded && !fixed_dt) {
         double max_frame_rate = _maxFrameRate->getDoubleValue();
         if (max_frame_rate != 0) {
             double delay_end = _simple_time_utc + 1.0/max_frame_rate;
