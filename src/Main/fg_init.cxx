@@ -1349,7 +1349,7 @@ void fgStartNewReset()
     globals->set_matlib(NULL);
     
     flightgear::unregisterMainLoopProperties();
-    FGReplayData::resetStatisticsProperties();
+    FGReplay::resetStatisticsProperties();
 
     simgear::clearSharedTreeGeometry();
     simgear::clearEffectCache();
