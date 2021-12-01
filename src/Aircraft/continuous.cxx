@@ -580,6 +580,26 @@ static void popupTip(const char* message, int delay)
     globals->get_commands()->execute("show-message", args);
 }
 
+void continuous_replay_video_end(Continuous& continuous)
+{
+    if (continuous.m_replay_create_video)
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Stopping replay create-video");
+        auto view_mgr = globals->get_subsystem<FGViewMgr>();
+        if (view_mgr)
+        {
+            view_mgr->video_stop();
+        }
+        continuous.m_replay_create_video = false;
+    }
+    if (continuous.m_replay_fixed_dt_prev != -1)
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Resetting fixed-dt to" << continuous.m_replay_fixed_dt_prev);
+        fgSetDouble("/sim/time/fixed-dt", continuous.m_replay_fixed_dt_prev);
+        continuous.m_replay_fixed_dt_prev = -1;
+    }
+}
+
 bool replayContinuous(FGReplayInternal& self, double time)
 {
     // We need to detect whether replay() updates the values for the main
@@ -645,6 +665,7 @@ bool replayContinuous(FGReplayInternal& self, double time)
     if (p == self.m_continuous->m_in_time_to_frameinfo.end())
     {
         // We are at end of recording; replay last frame.
+        continuous_replay_video_end(*self.m_continuous);
         --p;
         offset = p->second.offset;
         ret = true;

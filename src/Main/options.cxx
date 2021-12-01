@@ -1625,7 +1625,15 @@ fgOptLoadTape(const char* arg)
             SGPropertyNode_ptr arg = new SGPropertyNode();
             arg->setStringValue("tape", _tape.utf8Str() );
             arg->setBoolValue( "same-aircraft", 0 );
-            if (!replay->loadTape(_tape, false /*preview*/, *arg, _filerequest)) {
+            if (!replay->loadTape(
+                    _tape,
+                    false /*preview*/,
+                    fgGetBool("/sim/startup/load-tape/create-video"),
+                    fgGetDouble("/sim/startup/load-tape/fixed-dt", 0),
+                    *arg,
+                    _filerequest
+                    ))
+            {
                 // Force shutdown if we can't load tape specified on command-line.
                 SG_LOG(SG_GENERAL, SG_POPUP, "Exiting because unable to load fgtape: " << _tape.str());
                 flightgear::modalMessageBox("Exiting because unable to load fgtape", _tape.str(), "");
@@ -2002,6 +2010,8 @@ struct OptionDesc {
     {"no-default-config",            false, OPTION_IGNORE, "", false, "", 0},
     {"prop",                         true,  OPTION_FUNC | OPTION_MULTI,   "", false, "", fgOptSetProperty},
     {"load-tape",                    true,  OPTION_FUNC,   "", false, "", fgOptLoadTape },
+    {"load-tape-create-video",       true,  OPTION_BOOL,    "/sim/startup/load-tape/create-video", true, "", nullptr },
+    {"load-tape-fixed-dt",           true,  OPTION_DOUBLE, "/sim/startup/load-tape/fixed-dt", false, "", nullptr },
     {"developer",                    true,  OPTION_IGNORE | OPTION_BOOL, "", false, "", nullptr },
     {"jsbsim-output-directive-file", true,  OPTION_STRING, "/sim/jsbsim/output-directive-file", false, "", nullptr },
     {"disable-gui",                  false, OPTION_FUNC, "", false, "", fgOptDisableGUI },

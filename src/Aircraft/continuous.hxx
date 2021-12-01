@@ -31,6 +31,10 @@ struct Continuous : SGPropertyChangeListener
     std::ifstream                   m_indexing_in;
     std::streampos                  m_indexing_pos;
     
+    bool                            m_replay_create_video = false;
+    double                          m_replay_fixed_dt = -1;
+    double                          m_replay_fixed_dt_prev = -1;
+    
     // Only used for gathering statistics that are then written into
     // properties.
     //
@@ -121,3 +125,5 @@ bool replayContinuousInternal(
         );
 
 bool replayContinuous(FGReplayInternal& self, double time);
+
+void continuous_replay_video_end(Continuous& continuous);

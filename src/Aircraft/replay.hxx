@@ -73,6 +73,10 @@ struct FGReplay : SGSubsystem
         preview
             If true we read the header (and return it in <meta_meta> but do not
             start replaying.
+        create_video
+            If true we automatically encode a video while replaying.
+        fixed_dt
+            If non-zero we set /sim/time/fixed-dt while replaying.
         meta_meta
             Filled in with contents of recording header's "meta" tree.
         filerequest
@@ -83,6 +87,8 @@ struct FGReplay : SGSubsystem
     bool loadTape(
             const SGPath& filename,
             bool preview,
+            bool create_video,
+            double fixed_dt,
             SGPropertyNode& meta_meta,
             simgear::HTTP::FileRequestRef file_request=nullptr
             );

@@ -978,6 +978,7 @@ FGReplayInternal::update( double dt )
             }
             assert(m_continuous->m_in_time_to_frameinfo.empty());
 
+            continuous_replay_video_end(*m_continuous);
             guiMessage("Replay stopped. Your controls!");
         }
     }
@@ -1722,6 +1723,8 @@ bool loadTapeContinuous(
         std::ifstream&  in,
         const SGPath& filename,
         bool preview,
+        bool create_video,
+        double fixed_dt,
         SGPropertyNode& meta_meta,
         simgear::HTTP::FileRequestRef file_request
         )
@@ -1749,6 +1752,8 @@ bool loadTapeContinuous(
             ->m_in_config->getNode("meta/continuous-compression", true /*create*/)
             ->getIntValue()
             ;
+    continuous->m_replay_create_video = create_video;
+    continuous->m_replay_fixed_dt = fixed_dt;
     SG_LOG(SG_SYSTEMS, SG_DEBUG, "m_in_compression=" << continuous->m_in_compression);
     SG_LOG(SG_SYSTEMS, SG_DEBUG, "filerequest=" << file_request.get());
 
@@ -1768,6 +1773,31 @@ bool loadTapeContinuous(
         ::indexContinuousRecording(replay_internal, nullptr, 0);
     }
 
+    if (continuous->m_replay_fixed_dt)
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Replaying with fixed_dt=" << continuous->m_replay_fixed_dt);
+        continuous->m_replay_fixed_dt_prev = fgGetDouble("/sim/time/fixed-dt");
+        fgSetDouble("/sim/time/fixed-dt", continuous->m_replay_fixed_dt);
+    }
+    else
+    {
+        continuous->m_replay_fixed_dt_prev = -1;
+    }
+    if (continuous->m_replay_create_video)
+    {
+        SG_LOG(SG_GENERAL, SG_ALERT, "Replaying with create-video");
+        auto view_mgr = globals->get_subsystem<FGViewMgr>();
+        if (view_mgr)
+        {
+            view_mgr->video_start(
+                    "" /*name*/,
+                    "" /*codec*/,
+                    -1 /*quality*/,
+                    -1 /*speed*/,
+                    0 /*bitrate*/
+                    );
+        }
+    }
     replay_internal.start(true /*new_tape*/);
     return true;
 }
@@ -1775,11 +1805,16 @@ bool loadTapeContinuous(
 /** Read a flight recorder tape with given filename from disk.
  * Copies MetaData's "meta" node into MetaMeta out-param.
  * Actual data and signal configuration is not read when in "Preview" mode.
+ *
+ * If create_video is true we automatically encode a video while replaying. If fixed_dt
+ * is not zero we also set /sim/time/fixed-dt while replaying.
  */
 bool
 FGReplayInternal::loadTape(
         const SGPath& filename,
         bool preview,
+        bool create_video,
+        double fixed_dt,
         SGPropertyNode& meta_meta,
         simgear::HTTP::FileRequestRef file_request
         )
@@ -1803,7 +1838,7 @@ FGReplayInternal::loadTape(
     int e = loadContinuousHeader(filename.str(), &in, m_continuous->m_in_config);
     if (e == 0)
     {
-        return loadTapeContinuous(*this, in, filename, preview, meta_meta, file_request);
+        return loadTapeContinuous(*this, in, filename, preview, create_video, fixed_dt, meta_meta, file_request);
     }
     
     // Not a continuous recording.
@@ -2052,6 +2087,8 @@ FGReplayInternal::loadTape(const SGPropertyNode* config_data)
         return loadTape(
                 path,
                 preview,
+                config_data->getBoolValue("create-video"),
+                config_data->getDoubleValue("fixed-dt", -1),
                 *meta_meta
                 );
     }

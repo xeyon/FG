@@ -90,11 +90,13 @@ bool
 FGReplay::loadTape(
         const SGPath& filename,
         bool preview,
+        bool create_video,
+        double fixed_dt,
         SGPropertyNode& meta_meta,
         simgear::HTTP::FileRequestRef file_request
         )
 {
-    return m_internal->loadTape(filename, preview, meta_meta, file_request);
+    return m_internal->loadTape(filename, preview, create_video, fixed_dt, meta_meta, file_request);
 }
 
 
