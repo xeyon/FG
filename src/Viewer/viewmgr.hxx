@@ -31,6 +31,8 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/math/SGMath.hxx>
+#include <simgear/screen/video-encoder.hxx>
+
 
 // forward decls
 namespace flightgear
@@ -92,6 +94,27 @@ public:
 
     void add_view( flightgear::View * v );
 
+    // Start video encoding to <path>.
+    //
+    // If <name> is "" we generate a name containing current date and time.
+    //
+    // If <codec> is "" we use /sim/video/codec.
+    //
+    // If quality is -1 we use /sim/video/quality; similarly for speed. If
+    // bitrate is 0 we use /sim/video/bitrate.
+    //
+    // We show popup warning if values are out of range - quality and speed
+    // must be -1 or 0-1, bitrate must be >= 0.
+    //
+    void video_start(
+            const std::string& name,
+            const std::string& codec,
+            double quality,
+            double speed,
+            int bitrate
+            );
+    void video_stop();
+
 private:
     simgear::TiedPropertyList _tiedProperties;
 
@@ -104,6 +127,8 @@ private:
     viewer_list views;
 
     int _current = 0;
+
+    std::unique_ptr<simgear::VideoEncoder>  _video_encoder;
 };
 
 #endif // _VIEWMGR_HXX
