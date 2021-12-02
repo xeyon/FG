@@ -268,16 +268,16 @@ void FGAICarrier::update(double dt) {
 
         // the distance from the eyepoint to the flols
         double dist_tdp = norm(eyeWrtFlols_tdp);
-        double angle_tdp = 0;
+        //double angle_tdp = 0;
 
         // now the angle, positive angles are upwards
         if (fabs(dist_tdp) < SGLimits<double>::min()) {
-            angle_tdp = 0;
+            //angle_tdp = 0;
         }
         else {
             double sAngle = -eyeWrtFlols_tdp(2) / dist_tdp;
             sAngle = SGMiscd::min(1, SGMiscd::max(-1, sAngle));
-            angle_tdp = SGMiscd::rad2deg(asin(sAngle));
+            //angle_tdp = SGMiscd::rad2deg(asin(sAngle));
         }
 //        printf("angle %5.2f td angle %5.2f \n", _flols_angle, angle_tdp);
         //angle += 1.481; // adjust for FLOLS offset (measured on Nimitz class)
