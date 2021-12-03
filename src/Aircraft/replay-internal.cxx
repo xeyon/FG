@@ -38,6 +38,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 
 #include <float.h>
+#include <locale>
 #include <string.h>
 
 
@@ -1809,6 +1810,32 @@ bool loadTapeContinuous(
     return ok;
 }
 
+
+struct NumberCommasHelper : std::numpunct<char>
+{
+    virtual char do_thousands_sep() const
+    {
+        return ',';
+    }
+
+    virtual std::string do_grouping() const
+    {
+        return "\03";
+    }
+};
+
+static std::locale s_comma_locale(std::locale(), new NumberCommasHelper());
+
+/* Returns number as string with commas every 3 digits. */
+static std::string numberCommas(size_t n)
+{
+    std::stringstream buffer;
+    buffer.imbue(s_comma_locale);
+    buffer << n;
+    return buffer.str();
+}
+
+
 /** Read a flight recorder tape with given filename from disk.
  * Copies MetaData's "meta" node into MetaMeta out-param.
  * Actual data and signal configuration is not read when in "Preview" mode.
@@ -1841,6 +1868,9 @@ FGReplayInternal::loadTape(
                 );
         return false;
     }
+    size_t file_size = filename.sizeInBytes();
+    meta_meta.setLongValue("tape-size", file_size);
+    meta_meta.setStringValue("tape-size-str", numberCommas(file_size));
     m_continuous->m_in_config = new SGPropertyNode;
     int e = loadContinuousHeader(filename.str(), &in, m_continuous->m_in_config);
     if (e == 0)
