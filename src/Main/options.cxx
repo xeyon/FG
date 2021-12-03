@@ -2085,7 +2085,12 @@ public:
 
     switch ( desc->type & 0xffff ) {
       case OPTION_BOOL:
-        fgSetBool( desc->property, desc->b_param );
+        if (arg_value == "0" || arg_value == "false") {
+            SG_LOG( SG_GENERAL, SG_ALERT, "Ignoring bool option '" << desc->option << "' because value is " << arg_value);
+        }
+        else {
+            fgSetBool( desc->property, desc->b_param );
+        }
         break;
       case OPTION_STRING:
         if ( desc->has_param && !arg_value.empty() ) {
