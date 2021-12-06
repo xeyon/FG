@@ -187,7 +187,37 @@ static bool ReadFGReplayData2(
     return true;
 }
 
-std::unique_ptr<FGReplayData> ReadFGReplayData(
+/* Removes items more than <n> away from <it>. <n> can be -ve. */
+template<typename Container, typename Iterator>
+static void remove_far_away(Container& container, Iterator it, int n)
+{
+    SG_LOG(SG_GENERAL, SG_DEBUG, "container.size()=" << container.size());
+    if (n > 0)
+    {
+        for (int i=0; i<n; ++i)
+        {
+            if (it == container.end())  return;
+            ++it;
+        }
+        container.erase(it, container.end());
+    }
+    else
+    {
+        for (int i=0; i<-n-1; ++i)
+        {
+            if (it == container.begin())    return;
+            --it;
+        }
+        container.erase(container.begin(), it);
+    }
+    SG_LOG(SG_GENERAL, SG_DEBUG, "container.size()=" << container.size());
+}
+
+/* Returns FGReplayData for frame at specified position in file. Uses
+continuous.m_in_pos_to_frame as a cache, and trims this cache using
+remove_far_away(). */
+static std::shared_ptr<FGReplayData> ReadFGReplayData(
+        Continuous& continuous,
         std::ifstream& in,
         size_t pos,
         SGPropertyNode* config,
@@ -197,40 +227,83 @@ std::unique_ptr<FGReplayData> ReadFGReplayData(
         int in_compression
         )
 {
-    /* Need to clear any eof bit, otherwise seekg() will not work (which is
-    pretty unhelpful). E.g. see:
-        https://stackoverflow.com/questions/16364301/whats-wrong-with-the-ifstream-seekg
-    */
-    SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame. pos=" << pos);
-    in.clear();
-    in.seekg(pos);
+    std::shared_ptr<FGReplayData>   ret;
+    auto it = continuous.m_in_pos_to_frame.find(pos);
     
-    std::unique_ptr<FGReplayData>   ret(new FGReplayData);
-
-    readRaw(in, ret->sim_time);
-    if (!in)
+    if (it != continuous.m_in_pos_to_frame.end())
     {
-        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape frame at offset " << pos);
-        return nullptr;
+        if (0
+            || (load_signals && !it->second->load_signals)
+            || (load_multiplayer && !it->second->load_multiplayer)
+            || (load_extra_properties && !it->second->load_extra_properties)
+            )
+        {
+            /* This frame is in the continuous.m_in_pos_to_frame cache, but
+            doesn't contain all of the required items, so we need to reload. */
+            continuous.m_in_pos_to_frame.erase(it);
+            it = continuous.m_in_pos_to_frame.end();
+        }
     }
-    bool ok;
-    if (in_compression)
+    if (it == continuous.m_in_pos_to_frame.end())
     {
-        uint8_t     flags;
-        uint32_t    compressed_size;
-        in.read((char*) &flags, sizeof(flags));
-        in.read((char*) &compressed_size, sizeof(compressed_size));
-        simgear::ZlibDecompressorIStream    in_decompress(in, SGPath(), simgear::ZLibCompressionFormat::ZLIB_RAW);
-        ok = ReadFGReplayData2(in_decompress, config, load_signals, load_multiplayer, load_extra_properties, ret.get());
+        /* Load FGReplayData at offset <pos>.
+
+        We need to clear any eof bit, otherwise seekg() will not work (which is
+        pretty unhelpful). E.g. see:
+            https://stackoverflow.com/questions/16364301/whats-wrong-with-the-ifstream-seekg
+        */
+        SG_LOG(SG_SYSTEMS, SG_BULK, "reading frame. pos=" << pos);
+        in.clear();
+        in.seekg(pos);
+
+        ret.reset(new FGReplayData);
+
+        readRaw(in, ret->sim_time);
+        if (!in)
+        {
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape frame at offset " << pos);
+            return nullptr;
+        }
+        bool ok;
+        if (in_compression)
+        {
+            uint8_t     flags;
+            uint32_t    compressed_size;
+            in.read((char*) &flags, sizeof(flags));
+            in.read((char*) &compressed_size, sizeof(compressed_size));
+            simgear::ZlibDecompressorIStream    in_decompress(in, SGPath(), simgear::ZLibCompressionFormat::ZLIB_RAW);
+            ok = ReadFGReplayData2(in_decompress, config, load_signals, load_multiplayer, load_extra_properties, ret.get());
+        }
+        else
+        {
+            ok = ReadFGReplayData2(in, config, load_signals, load_multiplayer, load_extra_properties, ret.get());
+        }
+        if (!ok)
+        {
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape frame at offset " << pos);
+            return nullptr;
+        }
+        it = continuous.m_in_pos_to_frame.lower_bound(pos);
+        it = continuous.m_in_pos_to_frame.insert(it, std::make_pair(pos, ret));
+        
+        /* Delete faraway items. */
+        size_t size_old = continuous.m_in_pos_to_frame.size();
+        int n = 2;
+        size_t size_max = 2*n - 1;
+        remove_far_away(continuous.m_in_pos_to_frame, it, n);
+        remove_far_away(continuous.m_in_pos_to_frame, it, -n);
+        size_t size_new = continuous.m_in_pos_to_frame.size();
+        SG_LOG(SG_GENERAL, SG_DEBUG, ""
+                << " n=" << size_old
+                << " size_max=" << size_max
+                << " size_old=" << size_old
+                << " size_new=" << size_new
+                );
+        assert(size_new <= size_max);
     }
     else
     {
-        ok = ReadFGReplayData2(in, config, load_signals, load_multiplayer, load_extra_properties, ret.get());
-    }
-    if (!ok)
-    {
-        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape frame at offset " << pos);
-        return nullptr;
+        ret = it->second;
     }
     return ret;
 }
@@ -514,7 +587,17 @@ SGPropertyNode_ptr continuousWriteHeader(
     return config;
 }
 
-bool replayContinuousInternal(
+/* Replays one frame from Continuous recording. <offset> and <offset_old> are
+offsets in file of frames that are >= and < <time> respectively. <offset_old>
+may be 0, in which case it is ignored.
+
+We load the frame(s) from disc, omitting some data depending on
+replay_signals, replay_multiplayer and replay_extra_properties. Then call
+m_pRecorder->replay(), which updates the global state.
+
+Returns true on success, otherwise we failed to read from Continuous recording.
+*/
+static bool replayContinuousInternal(
         Continuous& continuous,
         FGFlightRecorder* recorder,
         double time,
@@ -529,7 +612,8 @@ bool replayContinuousInternal(
         int* ysize
         )
 {
-    std::unique_ptr<FGReplayData> replay_data = ReadFGReplayData(
+    std::shared_ptr<FGReplayData> replay_data = ReadFGReplayData(
+            continuous,
             continuous.m_in,
             offset,
             continuous.m_in_config,
@@ -544,10 +628,11 @@ bool replayContinuousInternal(
         return false;
     }
     assert(replay_data.get());
-    std::unique_ptr<FGReplayData> replay_data_old;
+    std::shared_ptr<FGReplayData> replay_data_old;
     if (offset_old)
     {
         replay_data_old = ReadFGReplayData(
+                continuous,
                 continuous.m_in,
                 offset_old,
                 continuous.m_in_config,
@@ -557,11 +642,12 @@ bool replayContinuousInternal(
                 continuous.m_in_compression
                 );
     }
-    if (replay_extra_properties) SG_LOG(SG_SYSTEMS, SG_BULK,
+    if (replay_extra_properties) SG_LOG(SG_SYSTEMS, SG_DEBUG,
             "replay():"
             << " time=" << time
             << " offset=" << offset
             << " offset_old=" << offset_old
+            << " replay_data_old=" << replay_data_old
             << " replay_data->raw_data.size()=" << replay_data->raw_data.size()
             << " replay_data->multiplayer_messages.size()=" << replay_data->multiplayer_messages.size()
             << " replay_data->extra_properties.size()=" << replay_data->extra_properties.size()
@@ -733,12 +819,19 @@ bool replayContinuous(FGReplayInternal& self, double time)
 
         if (replay_this_frame)
         {
+            size_t pos_prev = 0;
+            if (p_before != self.m_continuous->m_in_time_to_frameinfo.begin())
+            {
+                auto p_before_prev = p_before;
+                --p_before_prev;
+                pos_prev = p_before_prev->second.offset;
+            }
             bool ok = replayContinuousInternal(
                     *self.m_continuous,
                     self.m_flight_recorder.get(),
                     p_before->first,
                     p_before->second.offset,
-                    0 /*offset_old*/,
+                    pos_prev /*offset_old*/,
                     false /*replay_signals*/,
                     p_before->first > time - multiplayer_recent /*replay_multiplayer*/,
                     true /*replay_extra_properties*/,

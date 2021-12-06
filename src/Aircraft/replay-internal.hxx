@@ -46,6 +46,10 @@ extern const char* const FlightRecorderFileMagic;
 /* Data for a single frame. */
 struct FGReplayData
 {
+    bool load_signals;
+    bool load_multiplayer;
+    bool load_extra_properties;
+    
     double sim_time;
     
     // Our aircraft state.

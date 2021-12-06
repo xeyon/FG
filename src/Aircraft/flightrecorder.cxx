@@ -737,6 +737,83 @@ static void setInt(const std::string& value, int* out)
     }
 }
 
+/* Converts string to double, writing to out-para <out> and setting <ok> to
+true. If conversion fails or fails to use the entire input string, sets ok to
+false. */
+static void string_to_double(const std::string& s, double& out, bool& ok)
+{
+    errno = 0;
+    char* end;
+    out = strtod(s.c_str(), &end);
+    if (errno || !end || *end != 0)
+    {
+        ok = false;
+        return;
+    }
+    ok = true;
+}
+
+/* Updates property <path> to <value_next_string>. If property is also in
+<frame_prev> and values look like floating point, we interpolate using <ratio>.
+*/
+static void replayProperty(
+        const std::string& path,
+        const std::string& value_next_string,
+        const FGReplayData* frame_prev,
+        double ratio
+        )
+{
+    SGPropertyNode* p = globals->get_props()->getNode(path, true /*create*/);
+    bool done = false;
+    if (frame_prev)
+    {
+        /* Check whether <path> is in frame_prev's list of property changes. */
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "p && _pLastBuffer");
+        auto p_prev_it = frame_prev->replay_extra_property_changes.find(path);
+        if (p_prev_it != frame_prev->replay_extra_property_changes.end())
+        {
+            /* Property <path> is also in frame_prev. */
+            SG_LOG(SG_SYSTEMS, SG_DEBUG, "property in frame_prev and frame_next:"
+                    << " " << path);
+            const std::string&  value_prev_string = p_prev_it->second;
+            bool value_prev_ok;
+            bool value_next_ok;
+            double value_prev;
+            double value_next;
+            string_to_double(value_prev_string, value_prev, value_prev_ok);
+            string_to_double(value_next_string, value_next, value_next_ok);
+            if (value_prev_ok && value_next_ok)
+            {
+                /* Both values look like floating point so we interpolate. */
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "property is fp");
+                TInterpolation  interpolation = TInterpolation::linear;
+                if (simgear::strutils::ends_with(path, "-deg"))
+                {
+                    interpolation = TInterpolation::angular_deg;
+                }
+                else if (simgear::strutils::ends_with(path, "-rad"))
+                {
+                    interpolation = TInterpolation::angular_rad;
+                }
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "calling weighting() ratio=" << ratio);
+                double value_interpolated = weighting(
+                        interpolation,
+                        ratio,
+                        value_prev,
+                        value_next
+                        );
+                SG_LOG(SG_GENERAL, SG_DEBUG, "Interpolating " << path
+                        << ": [" << value_prev << " .. " << value_next
+                        << "] => " << value_interpolated
+                        );
+                globals->get_props()->setDoubleValue(path, value_interpolated);
+                done = true;
+            }
+        }
+    }
+    if (!done) p->setStringValue(path, value_next_string);
+}
+
 /** Replay.
  * Restore all properties with data from given buffer. */
 void
@@ -750,11 +827,10 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
 {
     const char* pLastBuffer = (_pLastBuffer && !_pLastBuffer->raw_data.empty()) ? &_pLastBuffer->raw_data.front() : nullptr;
     const char* pBuffer = (_pNextBuffer && !_pNextBuffer->raw_data.empty()) ? &_pNextBuffer->raw_data.front() : nullptr;
-    
+    double ratio = 1.0;
     if (pBuffer) {
         /* Replay signals. */
         int Offset = 0;
-        double ratio = 1.0;
         if (pLastBuffer)
         {
             double NextSimTime = _pNextBuffer->sim_time;
@@ -953,13 +1029,57 @@ FGFlightRecorder::replay(double SimTime, const FGReplayData* _pNextBuffer,
             if (replay_main_view) {
                 SG_LOG(SG_SYSTEMS, SG_DEBUG, "SimTime=" << SimTime
                         << " replaying view change: " << path << "=" << value);
-                globals->get_props()->setStringValue(path, value);
+                /* Interpolate floating point values if possible. */
+                replayProperty(path, value, _pLastBuffer, ratio);
             }
         }
         else if (replay_extra_properties) {
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "SimTime=" << SimTime
                     << " replaying extra_property change: " << path << "=" << value);
-            globals->get_props()->setStringValue(path, value);
+            SGPropertyNode* p = globals->get_props()->getNode(path, true /*create*/);
+            bool done = false;
+            if (p && _pLastBuffer) {
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "p && _pLastBuffer");
+                auto p_prev_it = _pLastBuffer->replay_extra_property_changes.find(path);
+                if (p_prev_it != _pLastBuffer->replay_extra_property_changes.end()) {
+                    /* Property <path> is in both _pLastBuffer and
+                    _pNextBuffer, so if it is floating point, we will
+                    interpolate. */
+                    SG_LOG(SG_SYSTEMS, SG_DEBUG, "property in _pLastBuffer and _pNextBuffer:"
+                            << " " << path);
+                    const std::string&  valus_prev = p_prev_it->second;
+                    size_t  value_prev_len;
+                    size_t  value_next_len;
+                    double value_prev = std::stod(valus_prev, &value_prev_len);
+                    double value_next = std::stod(value, &value_next_len);
+                    if (value_prev_len == valus_prev.size() && value_next_len == value.size()) {
+                        /* Both values look like floating point so we will
+                        interpolate. */
+                        SG_LOG(SG_SYSTEMS, SG_DEBUG, "property is fp");
+                        TInterpolation  interpolation = TInterpolation::linear;
+                        if (simgear::strutils::ends_with(path, "-deg")) {
+                            interpolation = TInterpolation::angular_deg;
+                        }
+                        else if (simgear::strutils::ends_with(path, "-rad")) {
+                            interpolation = TInterpolation::angular_rad;
+                        }
+                        SG_LOG(SG_SYSTEMS, SG_DEBUG, "calling weighting()");
+                        double value_interpolated = weighting(
+                                interpolation,
+                                ratio,
+                                value_prev,
+                                value_next
+                                );
+                        SG_LOG(SG_GENERAL, SG_DEBUG, "Interpolating " << path
+                                << ": [" << value_prev << " .. " << value_next
+                                << "] => " << value_interpolated
+                                );
+                        globals->get_props()->setDoubleValue(path, value_interpolated);
+                        done = true;
+                    }
+                }
+            }
+            if (!done) p->setStringValue(path, value);
         }
     }
 }

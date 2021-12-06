@@ -27,6 +27,8 @@ struct Continuous : SGPropertyChangeListener
     SGPropertyNode_ptr              m_in_config;
     double                          m_in_time_last = 0;
     double                          m_in_frame_time_last = 0;
+    std::map<size_t, std::shared_ptr<FGReplayData>>
+                                    m_in_pos_to_frame;
     
     std::ifstream                   m_indexing_in;
     std::streampos                  m_indexing_pos;
@@ -48,29 +50,15 @@ struct Continuous : SGPropertyChangeListener
     int                 m_in_compression = 0;
 };
 
-// Attempts to load Continuous recording header properties into
-// <properties>. If in is null we use internal std::fstream, otherwise we
-// use *in.
-//
-// Returns 0 on success, +1 if we may succeed after further download, or -1
-// if recording is not a Continuous recording.
-//
+/* Attempts to load Continuous recording header properties into
+<properties>. If in is null we use internal std::fstream, otherwise we use *in.
+
+Returns 0 on success, +1 if we may succeed after further download, or -1 if
+recording is not a Continuous recording. */
 int loadContinuousHeader(const std::string& path, std::istream* in, SGPropertyNode* properties);
 
 
-// Reads all or part of a FGReplayData from Continuous file.
-std::unique_ptr<FGReplayData> ReadFGReplayData(
-        std::ifstream& in,
-        size_t pos,
-        SGPropertyNode* config,
-        bool load_signals,
-        bool load_multiplayer,
-        bool load_extra_properties,
-        int in_compression
-        );
-
-// Writes one frame of continuous record information.
-//
+/* Writes one frame of continuous record information. */
 bool continuousWriteFrame(
         Continuous& continuous,
         FGReplayData* r,
@@ -78,18 +66,17 @@ bool continuousWriteFrame(
         SGPropertyNode_ptr config
         );
 
-// Opens continuous recording file and writes header.
-//
-// If MetaData is unset, we initialise it by calling saveSetup(). Otherwise
-// should be already set up.
-//
-// If Config is unset, we make it point to a new node populated by
-// m_pRecorder->getConfig(). Otherwise it should be already set up to point to
-// such information.
-//
-// If path_override is not "", we use it as the path (instead of the path
-// determined by saveSetup().
-//
+/* Opens continuous recording file and writes header.
+
+If MetaData is unset, we initialise it by calling saveSetup(). Otherwise should
+be already set up.
+
+If Config is unset, we make it point to a new node populated by
+m_pRecorder->getConfig(). Otherwise it should be already set up to point to
+such information.
+
+If path_override is not "", we use it as the path (instead of the path
+determined by saveSetup(). */
 SGPropertyNode_ptr continuousWriteHeader(
         Continuous&         continuous,
         FGFlightRecorder*   m_pRecorder,
@@ -98,32 +85,12 @@ SGPropertyNode_ptr continuousWriteHeader(
         FGTapeType          tape_type
         );
 
-// Replays one frame from Continuous recording. <offset> and <offset_old>
-// are offsets in file of frames that are >= and < <time> respectively.
-// <offset_old> may be 0, in which case it is ignored.
-//
-// We load the frame(s) from disc, omitting some data depending on
-// replay_signals, replay_multiplayer and replay_extra_properties. Then call
-// m_pRecorder->replay(), which updates the global state.
-//
-// Returns true on success, otherwise we failed to read from Continuous
-// recording.
-//
-bool replayContinuousInternal(
-        Continuous& continuous,
-        FGFlightRecorder* recorder,
-        double time,
-        size_t offset,
-        size_t offset_old,
-        bool replay_signals,
-        bool replay_multiplayer,
-        bool replay_extra_properties,
-        int* xpos,
-        int* ypos,
-        int* xsize,
-        int* ysize
-        );
+/* Replays one frame from Continuous recording.
 
+Returns true on success, otherwise we failed to read from Continuous recording.
+*/
 bool replayContinuous(FGReplayInternal& self, double time);
 
+/* Stops any video recording that was started because of
+continuous->m_replay_create_video. */
 void continuous_replay_video_end(Continuous& continuous);
