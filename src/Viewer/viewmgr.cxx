@@ -366,7 +366,7 @@ FGViewMgr::add_view( flightgear::View * v )
   v->init();
 }
 
-void FGViewMgr::video_start(
+bool FGViewMgr::video_start(
         const std::string& name_in,
         const std::string& codec_in,
         double quality,
@@ -413,6 +413,11 @@ void FGViewMgr::video_start(
     SGPath  path = SGPath(fgGetString("/sim/video/directory"));
     SGPath  path_link = path;
     path.append(name);
+    if (path.exists())
+    {
+        videoEncodingError("Video encoding failure, output file already exists: " + path.str());
+        return false;
+    }
     path_link.append(name_link);
     path_link.remove();
     bool ok = path_link.makeLink(path.file());
@@ -464,7 +469,9 @@ void FGViewMgr::video_start(
     catch (std::exception& e)
     {
         videoEncodingError(e.what());
+        return false;
     }
+    return true;
 }
 
 void FGViewMgr::video_stop()

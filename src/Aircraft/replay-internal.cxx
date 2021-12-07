@@ -1783,13 +1783,15 @@ bool loadTapeContinuous(
     {
         continuous->m_replay_fixed_dt_prev = -1;
     }
-    if (continuous->m_replay_create_video)
+    
+    bool ok = true;
+    if (ok && continuous->m_replay_create_video)
     {
         SG_LOG(SG_GENERAL, SG_ALERT, "Replaying with create-video");
         auto view_mgr = globals->get_subsystem<FGViewMgr>();
         if (view_mgr)
         {
-            view_mgr->video_start(
+            ok = view_mgr->video_start(
                     "" /*name*/,
                     "" /*codec*/,
                     -1 /*quality*/,
@@ -1797,9 +1799,14 @@ bool loadTapeContinuous(
                     0 /*bitrate*/
                     );
         }
+        else
+        {
+            SG_LOG(SG_GENERAL, SG_ALERT, "Cannot handle create_video=true because FGViewMgr not available");
+            ok = false;
+        }
     }
-    replay_internal.start(true /*new_tape*/);
-    return true;
+    if (ok) ok = replay_internal.start(true /*new_tape*/);
+    return ok;
 }
 
 /** Read a flight recorder tape with given filename from disk.
