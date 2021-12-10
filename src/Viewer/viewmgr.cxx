@@ -175,9 +175,40 @@ static void videoEncodingPopup(const std::string& message, int delay)
     globals->get_commands()->execute("show-message", args);
 }
 
+static void vidoEncodingUpdateStatus(const std::string& path)
+{
+    fgSetString("/sim/video/encoding-path", path);
+    bool encoding = (path != "");
+    SGPropertyNode* node = fgGetNode("/sim/menubar/default");
+    
+    /* Enable/disable menu items 'File/Video encode start' and 'File/Video
+    encode stop'. */
+    for (auto a: node->getChildren("menu"))
+    {
+        std::string name = a->getStringValue("name");
+        if (name == "file")
+        {
+            for (auto b: a->getChildren("item"))
+            {
+                std::string name = b->getStringValue("name");
+                if (name == "video-start")
+                {
+                    b->setBoolValue("enabled", !encoding);
+                }
+                if (name == "video-stop")
+                {
+                    b->setBoolValue("enabled", encoding);
+                }
+            }
+            break;
+        }
+    }
+}
+
 static void videoEncodingError(const std::string& message)
 {
     globals->get_props()->setIntValue("/sim/video/error", 1);
+    vidoEncodingUpdateStatus("");
     videoEncodingPopup(message, 15);
 }
 
@@ -471,6 +502,8 @@ bool FGViewMgr::video_start(
         videoEncodingError(e.what());
         return false;
     }
+    
+    vidoEncodingUpdateStatus(path.str());
     return true;
 }
 
@@ -479,6 +512,7 @@ void FGViewMgr::video_stop()
     if (_video_encoder)
     {
         _video_encoder.reset();
+        vidoEncodingUpdateStatus("");
         videoEncodingPopup("Video encoding stopped", 5);
     }
     else
