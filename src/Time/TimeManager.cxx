@@ -226,7 +226,7 @@ void TimeManager::computeTimeDeltasSimple(double& simDt, double& realDt)
 {
     double t;
     double fixed_dt = _simFixedDt->getDoubleValue();
-    static bool fixed_dt_prev = 0;
+    static double fixed_dt_prev = 0.0;
     if (fixed_dt)
     {
         // Always increase time by fixed amount, regardless of elapsed
@@ -240,7 +240,9 @@ void TimeManager::computeTimeDeltasSimple(double& simDt, double& realDt)
         
         if (fixed_dt_prev)
         {
-            // Avoid bogus sleep to match _maxFrameRate.
+            // We are changing from fixed-dt mode to normal mode; avoid bogus
+            // sleep to match _maxFrameRate, otherwise we can end up pausing
+            // for a long time.
             _simple_time_fdm = _simple_time_utc = t - fixed_dt_prev;
             fixed_dt_prev = 0.0;
         }
@@ -388,7 +390,8 @@ void TimeManager::computeTimeDeltas(double& simDt, double& realDt)
   }
 
   // this dt will be clamped by the max sim time by frame.
-  double dt = (currentStamp - _lastStamp).toSecs();
+  double fixed_dt = _simFixedDt->getDoubleValue();
+  double dt = (fixed_dt) ? fixed_dt : (currentStamp - _lastStamp).toSecs();
 
   // here we have a true real dt for a clock "real time".
   double mpProtocolDt = dt;
