@@ -134,9 +134,12 @@ void TimeManager::init()
     }
     _computeDrift->setBoolValue(true);
 
+  _simpleTimeEnabledPrev = false;
   _simpleTimeEnabled = fgGetNode("/sim/time/simple-time/enabled", true);
   _simpleTimeUtc = fgGetNode("/sim/time/simple-time/utc", true);
   _simpleTimeFdm = fgGetNode("/sim/time/simple-time/fdm", true);
+  _simple_time_utc = 0;
+  _simple_time_fdm = 0;
 }
 
 void TimeManager::unbind()
