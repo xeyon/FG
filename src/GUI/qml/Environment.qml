@@ -91,10 +91,6 @@ Item {
                     } else if (timeOfDay.selectedIndex > 0) {
                         _config.setArg("timeofday", timeOfDay.args[timeOfDay.selectedIndex])
                     }
-
-                    if (season.selectedIndex > 0) {
-                        _config.setArg("season", season.args[season.selectedIndex])
-                    }
                 }
             }
 
