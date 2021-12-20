@@ -198,6 +198,7 @@ void FGClimate::update(double dt)
 
             // convert from color shades to koppen-classicfication
             _gl.elevation_m = 5600.0*color[1];
+            _gl.precipitation_annual = 150.0 + 9000.0*color[2];
             _code = static_cast<int>(floorf(255.0f*color[0]/4.0f));
             if (_code >= MAX_CLIMATE_CLASSES)
             {
@@ -478,8 +479,6 @@ void FGClimate::set_tropical()
     _set(_gl.temperature_water, temp_water);
 
     _set(_gl.relative_humidity, relative_humidity);
-
-    _set(_gl.precipitation_annual, 3000.0);
     _set(_gl.precipitation, precipitation);
 
     _gl.has_autumn = false;
@@ -543,12 +542,6 @@ void FGClimate::set_dry()
     _set(_gl.temperature_water, temp_water);
 
     _set(_gl.relative_humidity, relative_humidity);
-
-    if (_code == 5 || _code == 6) {     // steppe
-        _set(_gl.precipitation_annual, 200.0);
-    } else {
-        _set(_gl.precipitation_annual, 100.0);
-    }
     _set(_gl.precipitation, precipitation);
     _gl.has_autumn = false;
 }
@@ -644,8 +637,6 @@ void FGClimate::set_temperate()
     _set(_gl.temperature_water, temp_water);
 
     _set(_gl.relative_humidity, relative_humidity);
-
-    _set(_gl.precipitation_annual, 990.0);
     _set(_gl.precipitation, precipitation);
 
     _gl.has_autumn = true;
@@ -765,8 +756,6 @@ void FGClimate::set_continetal()
     _set(_gl.temperature_water, temp_water);
 
     _set(_gl.relative_humidity, relative_humidity);
-
-    _set(_gl.precipitation_annual, 990.0);
     _set(_gl.precipitation, precipitation);
 
     _gl.has_autumn = true;
@@ -816,8 +805,6 @@ void FGClimate::set_polar()
     _set(_gl.temperature_water, temp_water);
 
     _set(_gl.relative_humidity, relative_humidity);
-
-    _set(_gl.precipitation_annual, 990.0);
     _set(_gl.precipitation, precipitation);
 
     _gl.has_autumn = true;
@@ -850,8 +837,14 @@ void FGClimate::set_environment()
     }
 
     // Sea water will start to freeze at -2° water temperaure.
-    if (_is_autumn < 0.95 || _sl.temperature_mean > -2.0) {
-        _set(_ice_cover, 0.0);
+    if (_is_autumn < 0.95 || _sl.temperature_mean > -2.0)
+    {
+        // Inland water will start to freeze at 0⁰ water temperature.
+        if (_gl.temperature_mean > 0.0) {
+            _set(_ice_cover, 0.0);
+        } else {
+            _set(_ice_cover, 0.05);
+        }
     }
     else {
         _set(_ice_cover, std::min(-(_sl.temperature_water+2.0)/10.0, 1.0));
