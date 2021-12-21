@@ -137,6 +137,7 @@ void FGClimate::reinit()
     _dust_cover = -99999.0;
     _wetness = -99999.0;
     _lichen_cover = -99999.0;
+    _inland_ice_cover = false;
 }
 
 // Set all environment parameters based on the koppen-classicfication
@@ -837,17 +838,17 @@ void FGClimate::set_environment()
     }
 
     // Sea water will start to freeze at -2° water temperaure.
-    if (_is_autumn < 0.95 || _sl.temperature_mean > -2.0)
-    {
-        // Inland water will start to freeze at 0⁰ water temperature.
-        if (_gl.temperature_mean > 0.0) {
-            _set(_ice_cover, 0.0);
-        } else {
-            _set(_ice_cover, 0.05);
-        }
-    }
-    else {
+    if (_is_autumn < 0.95 || _sl.temperature_mean > -2.0) {
+        _set(_ice_cover, 0.0);
+    } else {
         _set(_ice_cover, std::min(-(_sl.temperature_water+2.0)/10.0, 1.0));
+    }
+
+    // Inland water will start to freeze at 0⁰ water temperature.
+    if (_gl.temperature_mean > 0.5) {
+        _inland_ice_cover = false;
+    } else {
+        _inland_ice_cover = true;
     }
 
     // less than 20 mm/month of precipitation is considered dry.
@@ -911,6 +912,7 @@ void FGClimate::set_environment()
             fgSetDouble("/environment/snow-level-m", _snow_level);
         }
         fgSetDouble("/environment/surface/snow-thickness-factor", _snow_thickness);
+        fgSetBool("/environment/surface/ice-cover", _inland_ice_cover);
         fgSetDouble("/environment/sea/surface/ice-cover", _ice_cover);
         fgSetDouble("/environment/surface/dust-cover-factor", _dust_cover);
         fgSetDouble("/environment/surface/wetness-set", _wetness);
@@ -1247,6 +1249,8 @@ void FGClimate::report()
     std::cout << "  Wind direction: " << _wind_direction << " degrees"
               << std::endl;
     std::cout << "  Snow level:     " << _snow_level << " m." << std::endl;
+    std::cout << "  Inland water bodies ice cover: "
+                 << _inland_ice_cover ? "yes" : "no" << std::endl;
     std::cout << "  Snow thickness.(0.0 = thin .. 1.0 = thick): "
               << _snow_thickness << std::endl;
     std::cout << "  Ice cover......(0.0 = none .. 1.0 = thick): " << _ice_cover
