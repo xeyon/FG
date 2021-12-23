@@ -278,18 +278,17 @@ const FGAirport* APTLoader::loadAirport(const string aptDat, const std::string a
     // Beware that linesIt->str may end with an '\r' character, see above!
     unsigned int rowCode = linesIt->rowCode;
 
-    if ( rowCode == 10 ) { // Runway v810
-      parseRunwayLine810(aptDat, linesIt->number,
+    if ( rowCode == 100 ) { // Runway
+      parseRunwayLine(aptDat, linesIt->number,
                          simgear::strutils::split(linesIt->str));
-    } else if ( rowCode == 100 ) { // Runway v850
-      parseRunwayLine850(aptDat, linesIt->number,
-                         simgear::strutils::split(linesIt->str));
-    } else if ( rowCode == 101 ) { // Water Runway v850
-      parseWaterRunwayLine850(aptDat, linesIt->number,
+    } else if ( rowCode == 101 ) { // Water Runway
+      parseWaterRunwayLine(aptDat, linesIt->number,
                               simgear::strutils::split(linesIt->str));
-    } else if ( rowCode == 102 ) { // Helipad v850
-      parseHelipadLine850(aptDat, linesIt->number,
+    } else if ( rowCode == 102 ) { // Helipad
+      parseHelipadLine(aptDat, linesIt->number,
                           simgear::strutils::split(linesIt->str));
+    } else if ( rowCode == 105 ) {
+        // ignore runway skidmark
     } else if ( rowCode == 18 ) {
       // beacon entry (ignore)
     } else if ( rowCode == 14 ) {  // Viewpoint/control tower
@@ -310,19 +309,19 @@ const FGAirport* APTLoader::loadAirport(const string aptDat, const std::string a
                       simgear::strutils::split(linesIt->str));
     } else if (rowCode == 110) {
         current_block = Pavement;
-        parsePavementLine850(simgear::strutils::split(linesIt->str, 0, 4));
+        parsePavementLine(simgear::strutils::split(linesIt->str, 0, 4));
     } else if (rowCode >= 111 && rowCode <= 116) {
         switch (current_block) {
         case Pavement :
-          parseNodeLine850(&pavements, aptDat, linesIt->number, rowCode,
+          parseNodeLine(&pavements, aptDat, linesIt->number, rowCode,
                                    simgear::strutils::split(linesIt->str));
           break;
         case AirportBoundary :
-          parseNodeLine850(&airport_boundary, aptDat, linesIt->number, rowCode,
+          parseNodeLine(&airport_boundary, aptDat, linesIt->number, rowCode,
                                           simgear::strutils::split(linesIt->str));
           break;
         case LinearFeature :
-          parseNodeLine850(&linear_feature, aptDat, linesIt->number, rowCode,
+          parseNodeLine(&linear_feature, aptDat, linesIt->number, rowCode,
                                         simgear::strutils::split(linesIt->str));
           break;
         default :
@@ -470,89 +469,12 @@ void APTLoader::parseAirportLine(unsigned int rowCode,
                                              id, name);
 }
 
-void APTLoader::parseRunwayLine810(const string& aptDat, unsigned int lineNum,
-                                   const vector<string>& token)
-{
-  if (token.size() < 11) {
-    SG_LOG( SG_GENERAL, SG_WARN,
-            aptDat << ":" << lineNum << ": invalid v810 runway line " <<
-            "(row code 10): at least 11 fields are required" );
-    return;
-  }
-
-  double lat = atof( token[1].c_str() );
-  double lon = atof( token[2].c_str() );
-  rwy_lat_accum += lat;
-  rwy_lon_accum += lon;
-  rwy_count++;
-
-  const string& rwy_no(token[3]);
-
-  double heading = atof( token[4].c_str() );
-  double length = atoi( token[5].c_str() );
-  double width = atoi( token[8].c_str() );
-  length *= SG_FEET_TO_METER;
-  width *= SG_FEET_TO_METER;
-
-  // adjust lat / lon to the start of the runway/taxiway, not the middle
-  SGGeod pos_1 = SGGeodesy::direct( SGGeod::fromDegFt(lon, lat, last_apt_elev),
-                                    heading, -length/2 );
-
-  last_rwy_heading = heading;
-
-  int surface_code = atoi( token[10].c_str() );
-
-  if (rwy_no[0] == 'x') {  // Taxiway
-    cache->insertRunway(
-      FGPositioned::TAXIWAY, rwy_no, pos_1, currentAirportPosID,
-      heading, length, width, 0.0, 0.0, surface_code);
-  } else if (rwy_no[0] == 'H') {  // Helipad
-    SGGeod pos(SGGeod::fromDegFt(lon, lat, last_apt_elev));
-    cache->insertRunway(FGPositioned::HELIPAD, rwy_no, pos, currentAirportPosID,
-                        heading, length, width, 0.0, 0.0, surface_code);
-  } else {
-    // (pair of) runways
-    string rwy_displ_threshold = token[6];
-    vector<string> displ
-      = simgear::strutils::split( rwy_displ_threshold, "." );
-    double displ_thresh1 = atof( displ[0].c_str() );
-    double displ_thresh2 = atof( displ[1].c_str() );
-    displ_thresh1 *= SG_FEET_TO_METER;
-    displ_thresh2 *= SG_FEET_TO_METER;
-
-    string rwy_stopway = token[7];
-    vector<string> stop
-      = simgear::strutils::split( rwy_stopway, "." );
-    double stopway1 = atof( stop[0].c_str() );
-    double stopway2 = atof( stop[1].c_str() );
-    stopway1 *= SG_FEET_TO_METER;
-    stopway2 *= SG_FEET_TO_METER;
-
-    SGGeod pos_2 = SGGeodesy::direct( pos_1, heading, length );
-
-    PositionedID rwy = cache->insertRunway(FGPositioned::RUNWAY, rwy_no, pos_1,
-                                           currentAirportPosID, heading, length,
-                                           width, displ_thresh1, stopway1,
-                                           surface_code);
-
-    PositionedID reciprocal = cache->insertRunway(
-      FGPositioned::RUNWAY,
-      FGRunway::reverseIdent(rwy_no), pos_2,
-      currentAirportPosID,
-      SGMiscd::normalizePeriodic(0, 360, heading + 180.0),
-      length, width, displ_thresh2, stopway2,
-      surface_code);
-
-    cache->setRunwayReciprocal(rwy, reciprocal);
-  }
-}
-
-void APTLoader::parseRunwayLine850(const string& aptDat, unsigned int lineNum,
+void APTLoader::parseRunwayLine(const string& aptDat, unsigned int lineNum,
                                    const vector<string>& token)
 {
   if (token.size() < 26) {
     SG_LOG( SG_GENERAL, SG_WARN,
-            aptDat << ":" << lineNum << ": invalid v850 runway line " <<
+            aptDat << ":" << lineNum << ": invalid runway line " <<
             "(row code 100): at least 26 fields are required" );
     return;
   }
@@ -626,13 +548,13 @@ void APTLoader::parseRunwayLine850(const string& aptDat, unsigned int lineNum,
   cache->setRunwayReciprocal(rwy, reciprocal);
 }
 
-void APTLoader::parseWaterRunwayLine850(const string& aptDat,
+void APTLoader::parseWaterRunwayLine(const string& aptDat,
                                         unsigned int lineNum,
                                         const vector<string>& token)
 {
   if (token.size() < 9) {
     SG_LOG( SG_GENERAL, SG_WARN,
-            aptDat << ":" << lineNum << ": invalid v850 water runway line " <<
+            aptDat << ":" << lineNum << ": invalid water runway line " <<
             "(row code 101): at least 9 fields are required" );
     return;
   }
@@ -676,12 +598,12 @@ void APTLoader::parseWaterRunwayLine850(const string& aptDat,
   cache->setRunwayReciprocal(rwy, reciprocal);
 }
 
-void APTLoader::parseHelipadLine850(const string& aptDat, unsigned int lineNum,
+void APTLoader::parseHelipadLine(const string& aptDat, unsigned int lineNum,
                                     const vector<string>& token)
 {
   if (token.size() < 12) {
     SG_LOG( SG_GENERAL, SG_WARN,
-            aptDat << ":" << lineNum << ": invalid v850 helipad line " <<
+            aptDat << ":" << lineNum << ": invalid helipad line " <<
             "(row code 102): at least 12 fields are required" );
     return;
   }
@@ -729,7 +651,7 @@ void APTLoader::parseViewpointLine(const string& aptDat, unsigned int lineNum,
   }
 }
 
-void APTLoader::parsePavementLine850(const vector<string>& token)
+void APTLoader::parsePavementLine(const vector<string>& token)
 {
   if ( token.size() >= 5 ) {
     pavement_ident = token[4];
@@ -741,7 +663,7 @@ void APTLoader::parsePavementLine850(const vector<string>& token)
   }
 }
 
-void APTLoader::parseNodeLine850(NodeList *nodelist,
+void APTLoader::parseNodeLine(NodeList *nodelist,
                                  const string& aptDat,
                                  unsigned int lineNum, int rowCode,
                                  const vector<string>& token)
@@ -751,7 +673,7 @@ void APTLoader::parseNodeLine850(NodeList *nodelist,
 
   if (token.size() < minNbTokens[rowCode-111]) {
     SG_LOG( SG_GENERAL, SG_WARN,
-            aptDat << ":" << lineNum << ": invalid v850 node line " <<
+            aptDat << ":" << lineNum << ": invalid node line " <<
             "(row code " << rowCode << "): at least " <<
             minNbTokens[rowCode-111] << " fields are required" );
     return;
