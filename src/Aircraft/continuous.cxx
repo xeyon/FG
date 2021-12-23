@@ -624,7 +624,7 @@ static bool replayContinuousInternal(
             );
     if (!replay_data)
     {
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to read fgtape frame at offset=" << offset << " time=" << time);
+        SG_LOG(SG_SYSTEMS, SG_DEBUG, "Failed to read fgtape frame at offset=" << offset << " time=" << time);
         return false;
     }
     assert(replay_data.get());
