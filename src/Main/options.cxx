@@ -1191,8 +1191,8 @@ fgOptViewOffset( const char *arg )
         FGViewer *pilot_view =
 	    (FGViewer *)globals->get_viewmgr()->get_view( 0 ); */
     // this will work without calls to the viewer...
-    fgSetDouble( "/sim/current-view/heading-offset-deg",
-                    default_view_offset  * SGD_RADIANS_TO_DEGREES );
+    fgSetDouble("/sim/view[0]/config/heading-offset-deg",
+                default_view_offset * SGD_RADIANS_TO_DEGREES);
     // $$$ end - added VS Renganathan, 14 Oct 2K
     return FG_OPTIONS_OK;
 }
