@@ -1,6 +1,6 @@
 #include "iaxclient_lib.h"
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !defined(SG_SOUND_USES_OPENALSOFT)
 #include <OpenAL/al.h>
 #include <OpenAL/alc.h>
 #elif defined(OPENALSDK)
