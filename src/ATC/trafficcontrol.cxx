@@ -886,7 +886,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             }
         }
     } else {
-        FGATCDialogNew::instance()->addEntry(1, text);
+        //FGATCDialogNew::instance()->addEntry(1, text);
     }
 }
 
@@ -1286,7 +1286,7 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
                 trans_num->setIntValue(-1);
                 // PopupCallback(n);
                 SG_LOG(SG_ATC, SG_BULK, "Selected transmission message " << n);
-                FGATCDialogNew::instance()->removeEntry(1);
+                //FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 SG_LOG(SG_ATC, SG_BULK, "Creating message for " << i->getAircraft()->getCallSign());
                 transmit(&(*i), &(*parent), msgId, msgDir, false);

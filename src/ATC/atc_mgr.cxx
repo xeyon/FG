@@ -355,7 +355,7 @@ void FGATCManager::update ( double time ) {
     controller = user_ai_ac->getATCController();
 
     // Update the ATC dialog
-    FGATCDialogNew::instance()->update(time);
+    //FGATCDialogNew::instance()->update(time);
 
     // Controller manager - if controller is set, then will update controller
     if (controller) {
