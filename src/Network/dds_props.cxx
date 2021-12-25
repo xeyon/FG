@@ -167,13 +167,13 @@ void FGDDSProps::setProp(FG_DDS_prop& prop, SGPropertyNode_ptr p)
             prop.val._u.Float64 = p->getDoubleValue();
         } else if (type == simgear::props::ALIAS) {
             prop.val._d = FG_DDS_ALIAS;
-            prop.val._u.String = const_cast<char*>(p->getStringValue());
+            prop.val._u.String = const_cast<char*>(p->getStringValue().c_str());
         } else if (type == simgear::props::STRING) {
             prop.val._d = FG_DDS_STRING;
-            prop.val._u.String = const_cast<char*>(p->getStringValue());
+            prop.val._u.String = const_cast<char*>(p->getStringValue().c_str());
         } else if (type == simgear::props::UNSPECIFIED) {
             prop.val._d = FG_DDS_UNSPECIFIED;
-            prop.val._u.String = const_cast<char*>(p->getStringValue());
+            prop.val._u.String = const_cast<char*>(p->getStringValue().c_str());
         } else {
             prop.val._d = FG_DDS_NONE;
             prop.val._u.Int32 = 0;
