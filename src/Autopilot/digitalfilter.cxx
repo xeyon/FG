@@ -56,7 +56,7 @@ class DigitalFilterImplementation:
     void setDigitalFilter( DigitalFilter * digitalFilter ) { _digitalFilter = digitalFilter; }
     virtual void collectDependentProperties(std::set<const SGPropertyNode*>& props) const = 0;
   protected:
-    DigitalFilter * _digitalFilter;
+    DigitalFilter * _digitalFilter = nullptr;
 };
 
 /* --------------------------------------------------------------------------------- */
