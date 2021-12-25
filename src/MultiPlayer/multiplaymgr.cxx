@@ -1378,7 +1378,7 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
   else
       PosMsg->pad = 0;
 
-  strncpy(PosMsg->Model, fgGetString("/sim/model/path").c_str(), MAX_MODEL_NAME_LEN);
+  strncpy(PosMsg->Model, fgGetString("/sim/model/path").c_str(), MAX_MODEL_NAME_LEN-1);
   PosMsg->Model[MAX_MODEL_NAME_LEN - 1] = '\0';
   if (fgGetBool("/sim/freeze/replay-state", true)&&
       fgGetBool("/sim/multiplay/freeze-on-replay",true))
