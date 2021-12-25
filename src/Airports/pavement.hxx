@@ -1,4 +1,4 @@
-// pavement.hxx - class to represent complex taxiway specified in apt.dat
+// pavement.hxx - class to represent complex taxiway specified in v850 apt.dat
 //
 // Copyright (C) 2009 Frederic Bouvier
 //
