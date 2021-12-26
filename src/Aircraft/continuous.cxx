@@ -44,7 +44,7 @@ static void writeRaw(std::ostream& out, const T& data)
 // Reads uncompressed vector<char> from file. Throws if length field is longer
 // than <max_length>.
 template<typename SizeType>
-static SizeType VectorRead(std::istream& in, std::vector<char>& out, uint32_t max_length=(1<<31))
+static SizeType VectorRead(std::istream& in, std::vector<char>& out, uint32_t max_length=(1u << 31))
 {
     SizeType    length;
     readRaw(in, length);
