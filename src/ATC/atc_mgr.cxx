@@ -403,7 +403,7 @@ void FGATCManager::update ( double time ) {
    }
 
    // update the active ATC stations
-   for (AtcVecIterator atc = activeStations.begin(); atc != activeStations.end(); atc++) {
+   for (AtcVecIterator atc = activeStations.begin(); atc != activeStations.end(); ++atc) {
        (*atc)->update(time);
    }
 }
