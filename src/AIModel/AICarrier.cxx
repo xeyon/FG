@@ -712,11 +712,12 @@ void FGAICarrier::UpdateElevator(double dt) {
     _elevator_pos_norm = (_elevator_pos_norm_raw * _elevator_time_constant) + (_elevator_pos_norm * (1 - _elevator_time_constant));
 
     //sanitise the output
-    if (_elevator_pos_norm_raw >= 1) {
-        _elevator_pos_norm_raw = 1;
-    } else if (_elevator_pos_norm_raw <= 0) {
-        _elevator_pos_norm_raw = 0;
+    if (_elevator_pos_norm_raw >= 1.0) {
+        _elevator_pos_norm_raw = 1.0;
+    } else if (_elevator_pos_norm_raw <= 0.0) {
+        _elevator_pos_norm_raw = 0.0;
     }
+
     return;
 
 } // end UpdateElevator
@@ -754,10 +755,10 @@ void FGAICarrier::UpdateJBD(double dt) {
     _jbd_elevator_pos_norm = (_jbd_elevator_pos_norm_raw * _jbd_time_constant) + (_jbd_elevator_pos_norm * (1 - _jbd_time_constant));
 
     //sanitise the output
-    if (_jbd_elevator_pos_norm >= 1) {
-        _jbd_elevator_pos_norm = 1;
-    } else if (_jbd_elevator_pos_norm <= 0) {
-        _jbd_elevator_pos_norm = 0;
+    if (_jbd_elevator_pos_norm >= 1.0) {
+        _jbd_elevator_pos_norm = 1.0;
+    } else if (_jbd_elevator_pos_norm <= 0.0) {
+        _jbd_elevator_pos_norm = 0.0;
     }
 
     return;
