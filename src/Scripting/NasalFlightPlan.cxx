@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <optional>
 
 #include "NasalFlightPlan.hxx"
 
