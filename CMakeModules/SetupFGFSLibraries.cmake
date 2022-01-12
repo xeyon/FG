@@ -117,6 +117,10 @@ function (setup_fgfs_library_includes target)
         _apply_target_includes(${target} JSBSim)
     endif()    
     
+    if(ENABLE_OSGXR)
+        _apply_target_includes(${target} osgXR::osgXR)
+    endif()
+
     _apply_target_includes(${target} fgsqlite3)
     _apply_target_includes(${target} fgvoicesynth)
     _apply_target_includes(${target} fgembeddedresources)
