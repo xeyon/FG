@@ -403,7 +403,7 @@ void FGRouteMgr::init() {
 
 void FGRouteMgr::postinit()
 {
-  setFlightPlan(new FlightPlan());
+  setFlightPlan(FlightPlan::create());
   _plan->setIdent("default-flightplan");
     
   SGPath path = SGPath::fromUtf8(_pathNode->getStringValue());
@@ -454,7 +454,7 @@ bool FGRouteMgr::saveRoute(const SGPath& p)
 
 bool FGRouteMgr::loadRoute(const SGPath& p)
 {
-  FlightPlan* fp = new FlightPlan;
+  FlightPlan* fp = FlightPlan::create();
   if (!fp->load(p)) {
     delete fp;
     return false;

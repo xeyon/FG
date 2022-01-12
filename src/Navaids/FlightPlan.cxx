@@ -82,7 +82,8 @@ const char* restrictionToString(RouteRestriction aRestrict);
 typedef std::vector<FlightPlan::DelegateFactoryRef> FPDelegateFactoryVec;
 static FPDelegateFactoryVec static_delegateFactories;
   
-FlightPlan::FlightPlan() :
+FlightPlan::FlightPlan(bool isRoute) :
+    _isRoute(isRoute),
   _currentIndex(-1),
     _followLegTrackToFix(true),
     _aircraftCategory(ICAO_AIRCRAFT_CATEGORY_C),
@@ -104,7 +105,17 @@ FlightPlan::FlightPlan() :
     }
   }
 }
-  
+
+FlightPlanRef FlightPlan::create()
+{
+    return new FlightPlan(false);
+}
+
+FlightPlanRef FlightPlan::createRoute()
+{
+    return new FlightPlan(true);
+}
+
 FlightPlan::~FlightPlan()
 {
 // clean up delegates
@@ -116,9 +127,12 @@ FlightPlan::~FlightPlan()
     }
 }
   
-FlightPlan* FlightPlan::clone(const string& newIdent) const
+FlightPlanRef FlightPlan::clone(const string& newIdent, bool convertIntoFlightPlan) const
 {
-  FlightPlan* c = new FlightPlan();
+    // this is the only place we allow conversion of a route into an active FP,
+    // by design. Forces people to clone-to-a-flight-plan if they want to
+    // activate a route.
+  FlightPlanRef c = new FlightPlan(convertIntoFlightPlan ? false : _isRoute);
   c->_ident = newIdent.empty() ? _ident : newIdent;
   c->lockDelegates();
   
@@ -161,6 +175,8 @@ FlightPlan* FlightPlan::clone(const string& newIdent) const
   for (int l=0; l < numLegs(); ++l) {
     c->_legs.push_back(_legs[l]->cloneFor(c));
   }
+    
+    c->expandVias();
   c->unlockDelegates();
   return c;
 }
@@ -193,25 +209,55 @@ FlightPlan::LegRef FlightPlan::insertWayptAtIndex(Waypt* aWpt, int aIndex)
   return legAtIndex(index);
 }
   
+static WayptVec copyWaypointsExpandingVias(WayptRef preceeding, const WayptVec& wps)
+{
+    WayptVec result;
+    result.reserve(wps.size());
+    
+    for (auto wp : wps) {
+        if (wp->type() == "via") {
+            Via* via = static_cast<Via*>(wp.get());
+            WayptVec viaPoints = via->expandToWaypoints(preceeding);
+            result.insert(result.end(), viaPoints.begin(), viaPoints.end());
+        } else {
+            // everything else is copied directly
+            result.push_back(wp);
+        }
+    }
+    
+    return result;
+}
+
 void FlightPlan::insertWayptsAtIndex(const WayptVec& wps, int aIndex)
 {
   if (wps.empty()) {
     return;
   }
   
-  int index = aIndex;
-  if ((aIndex == -1) || (aIndex > (int) _legs.size())) {
-    index = _legs.size();
-  }
-  
+    int index = aIndex;
+    if ((aIndex == -1) || (aIndex > (int) _legs.size())) {
+      index = _legs.size();
+    }
+    
+    WayptVec toInsertWps = wps;
+    // catch insert of VIAs here
+    if (!_isRoute && (index > 0)) {
+        const auto pre = _legs.at(index - 1)->waypoint();
+        toInsertWps = copyWaypointsExpandingVias(pre, wps);
+    } else if (index == 0) {
+        if (wps.front()->type() == "via") {
+            SG_LOG(SG_AUTOPILOT, SG_DEV_ALERT, "Inserting a VIA at leg 0 of flight-plan, VIA cannot be expanded");
+        }
+    }
+   
   auto it = _legs.begin() + index;
-  int endIndex = index + wps.size() - 1;
+  int endIndex = index + toInsertWps.size() - 1;
   if (_currentIndex >= endIndex) {
-    _currentIndex += wps.size();
+    _currentIndex += toInsertWps.size();
   }
  
   LegVec newLegs;
-  for (WayptRef wp : wps) {
+  for (WayptRef wp : toInsertWps) {
       newLegs.push_back(LegRef{new Leg(this, wp)});
   }
   
@@ -356,9 +402,16 @@ int FlightPlan::clearWayptsWithFlag(WayptFlag flag)
   unlockDelegates();
   return numDeleted;
 }
-    
+
+bool FlightPlan::isRoute() const
+{
+    return _isRoute;
+}
+
 bool FlightPlan::isActive() const
 {
+    if (_isRoute)
+        return false;
     return (_currentIndex >= 0);
 }
 
@@ -389,6 +442,10 @@ void FlightPlan::sequence()
     
 void FlightPlan::finish()
 {
+    if (_isRoute) {
+        throw sg_exception("Called finish on FlightPlan marked isRoute");
+    }
+    
   if (_currentIndex == -1) {
     return;
   }
@@ -754,6 +811,10 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
     d->setIntValue("version", 2);
     
     // general data
+    if (_isRoute) {
+        d->setBoolValue("is-route", true);
+    }
+    
     d->setStringValue("flight-rules", static_icaoFlightRulesCode[static_cast<int>(_flightRules)]);
     d->setStringValue("flight-type", static_icaoFlightTypeCode[static_cast<int>(_flightType)]);
     if (!_callsign.empty()) {
@@ -858,6 +919,10 @@ bool FlightPlan::load(const SGPath& path)
         _departureChanged = true;
         Status = true;
     } else if (loadXmlFormat(path)) { // XML property data
+        if (!_isRoute) {
+            expandVias();
+        }
+        
         // we don't want to re-compute the arrival / departure after
         // a load, since we assume the flight-plan had it specified already
         // especially, the XML might have a SID/STAR embedded, which we don't
@@ -874,6 +939,10 @@ bool FlightPlan::load(const SGPath& path)
         _arrivalChanged = true;
         _departureChanged = true;
         Status = true;
+        
+        if (!_isRoute) {
+            expandVias(); // plain text could in principle contain VIAs
+        }
     }
     
     if (Status == true) {
@@ -917,6 +986,10 @@ bool FlightPlan::load(std::istream &stream)
         SG_LOG(SG_NAVAID, SG_ALERT, "Failed to load flight-plan '" << e.getOrigin()
                << "'. " << e.getMessage());
         Status = false;
+    }
+    
+    if (!_isRoute) {
+        expandVias();
     }
     
     // we don't want to re-compute the arrival / departure after
@@ -1104,7 +1177,6 @@ bool FlightPlan::loadXmlFormat(const SGPath& path)
 void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
 {
     // general info
-
     const auto rules = routeData->getStringValue("flight-rules", "V");
     auto it = std::find(static_icaoFlightRulesCode.begin(),
                         static_icaoFlightRulesCode.end(), rules);
@@ -1120,6 +1192,13 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
     _aircraftType = routeData->getStringValue("aircraft-type");
     _estimatedDuration = routeData->getIntValue("estimated-duration-minutes");
 
+    if (routeData->hasValue("is-route")) {
+        if (_isRoute != routeData->getBoolValue("is-route")) {
+            // this is actually okay, we will expand any VIAs
+            SG_LOG(SG_NAVAID, SG_INFO, "Loading XML marked with 'is-route' into FlightPlan with is-route not set");
+        }
+    }
+    
   // departure nodes
   SGPropertyNode* dep = routeData->getChild("departure");
   if (dep) {
@@ -1390,8 +1469,51 @@ WayptRef FlightPlan::waypointFromString(const string& tgt, const SGGeod& vicinit
     return Waypt::createFromString(this, tgt, basePosition);
 }
 
+bool FlightPlan::expandVias()
+{
+    // must be called with the delegats locked, so that
+    // waypointsChanged can be set on finish
+    
+    assert(_delegateLock > 0);
+    bool didChangeAny = false;
+    
+    for (unsigned int i=1; i < _legs.size(); ) {
+      if (_legs[i]->waypoint()->type() == "via") {
+        WayptRef preceeding = _legs[i - 1]->waypoint();
+        Via* via = static_cast<Via*>(_legs[i]->waypoint());
+        WayptVec wps = via->expandToWaypoints(preceeding);
+        
+        // delete the VIA leg
+        auto it = _legs.begin() + i;
+        LegRef l = *it;
+        _legs.erase(it);
+        
+        // create new legs and insert
+          it = _legs.begin() + i;
+        
+        LegVec newLegs;
+        for (WayptRef wp : wps) {
+            newLegs.push_back(LegRef{new Leg(this, wp)});
+        }
+        
+          didChangeAny = true;
+        _legs.insert(it, newLegs.begin(), newLegs.end());
+      } else {
+        ++i; // normal case, no expansion
+      }
+    }
+    
+    return didChangeAny;
+}
+
 void FlightPlan::activate()
 {
+    if (_isRoute) {
+        // no allowed, clone and make the non-route FP active
+        SG_LOG(SG_NAVAID, SG_DEV_ALERT, "tried to activate an is-route FlightPlan");
+        return;
+    }
+    
   FGRouteMgr* routeManager = globals->get_subsystem<FGRouteMgr>();
   if (routeManager) {
     if (routeManager->flightPlan() != this) {
@@ -1404,32 +1526,7 @@ void FlightPlan::activate()
   
   _currentIndex = 0;
   _currentWaypointChanged = true;
-  
-  for (unsigned int i=1; i < _legs.size(); ) {
-    if (_legs[i]->waypoint()->type() == "via") {
-      WayptRef preceeding = _legs[i - 1]->waypoint();
-      Via* via = static_cast<Via*>(_legs[i]->waypoint());
-      WayptVec wps = via->expandToWaypoints(preceeding);
-      
-      // delete the VIA leg
-      auto it = _legs.begin() + i;
-      LegRef l = *it;
-      _legs.erase(it);
-      
-      // create new legs and insert
-        it = _legs.begin() + i;
-      
-      LegVec newLegs;
-      for (WayptRef wp : wps) {
-          newLegs.push_back(LegRef{new Leg(this, wp)});
-      }
-      
-      _waypointsChanged = true;
-      _legs.insert(it, newLegs.begin(), newLegs.end());
-    } else {
-      ++i; // normal case, no expansion
-    }
-  }
+    _waypointsChanged = expandVias();
   
   for (auto d : _delegates) {
     d->activated();

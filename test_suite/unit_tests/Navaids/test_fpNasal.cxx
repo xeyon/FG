@@ -54,7 +54,7 @@ static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& d
                          const std::string& destICAO, const std::string& destRunway,
                          const std::string& waypoints)
 {
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     FGTestApi::setUp::populateFPWithNasal(f, depICAO, depRunway, destICAO, destRunway, waypoints);
     return f;
 }
@@ -252,7 +252,7 @@ void FPNasalTests::testSIDTransitionAPI()
     CPPUNIT_ASSERT_EQUAL(fp->sidTransition()->ident(), string{"CANDR"});
     
 // test specify SID via transition in Nasal
-    rm->setFlightPlan(new FlightPlan{});
+    rm->setFlightPlan(FlightPlan::create());
     
     ok = FGTestApi::executeNasal(R"(
          var fp = flightplan();

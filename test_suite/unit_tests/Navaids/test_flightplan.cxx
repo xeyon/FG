@@ -257,7 +257,7 @@ static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& d
                          const std::string& destICAO, const std::string& destRunway,
                          const std::string& waypoints)
 {
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     FGTestApi::setUp::populateFPWithoutNasal(f, depICAO, depRunway, destICAO, destRunway, waypoints);
     return f;
 }
@@ -399,8 +399,8 @@ void FlightplanTests::testRoutePathFinalLegVQPR15()
     static_factory = std::make_shared<TestFPDelegateFactory>();
     FlightPlan::registerDelegateFactory(static_factory);
     
-    FlightPlanRef f = new FlightPlan;
-    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(f);
+    FlightPlanRef f = FlightPlan::create();
+//    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(f);
     
     auto vidp = FGAirport::findByIdent("VIDP"s);
     f->setDeparture(vidp->getRunwayByIdent("09"s));
@@ -445,7 +445,7 @@ void FlightplanTests::testBasicAirways()
     CPPUNIT_ASSERT_EQUAL(awy->ident(), "J547"s);
 
     FGAirportRef kord = FGAirport::findByIdent("KORD"s);
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     f->setDeparture(kord);
 
     CPPUNIT_ASSERT(awy->findEnroute("KITOK"s));
@@ -473,7 +473,7 @@ void FlightplanTests::testBasicAirways()
 void FlightplanTests::testAirwayNetworkRoute()
 {
     FGAirportRef egph = FGAirport::findByIdent("EGPH"s);
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     f->setDeparture(egph);
 
     auto highLevelNet = Airway::highLevel();
@@ -491,7 +491,7 @@ void FlightplanTests::testAirwayNetworkRoute()
 void FlightplanTests::testParseICAORoute()
 {
     FGAirportRef kord = FGAirport::findByIdent("KORD"s);
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     f->setDeparture(kord);
     f->setDestination(FGAirport::findByIdent("KSAN"s));
 
@@ -509,7 +509,7 @@ void FlightplanTests::testParseICANLowLevelRoute()
     const char* route = "DCT DPA V6 IOW V216 LAA V210 GOSIP V83 ACHES V210 BLOKE V83 ALS V210 RSK V95 INW V12 HOXOL V264 OATES V12 JUWSO V264 PKE";
 
     FGAirportRef kord = FGAirport::findByIdent("KORD"s);
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     f->setDeparture(kord);
     f->setDestination(FGAirport::findByIdent("KSAN"s));
 
@@ -554,7 +554,7 @@ void FlightplanTests::testBug1814()
   )";
 
     std::istringstream stream(fpXML);
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     bool ok = f->load(stream);
     CPPUNIT_ASSERT(ok);
 
@@ -605,7 +605,7 @@ void FlightplanTests::testLoadSaveMachRestriction()
      )";
     
      std::istringstream stream(fpXML);
-     FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
      bool ok = f->load(stream);
      CPPUNIT_ASSERT(ok);
 
@@ -624,7 +624,7 @@ void FlightplanTests::testLoadSaveMachRestriction()
     f->save(ss);
     
     std::istringstream iss(ss.str());
-    FlightPlanRef f2 = new FlightPlan;
+    FlightPlanRef f2 = FlightPlan::create();
     ok = f2->load(iss);
     CPPUNIT_ASSERT(ok);
     
@@ -688,7 +688,7 @@ void FlightplanTests::testBasicDiscontinuity()
 
 void FlightplanTests::testOnlyDiscontinuityRoute()
 {
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     FGAirportRef depApt = FGAirport::getByIdent("LFBD"s);
     f->setDeparture(depApt);
 
@@ -717,7 +717,7 @@ void FlightplanTests::testOnlyDiscontinuityRoute()
 
 void FlightplanTests::testLeadingWPDynamic()
 {
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     // plan has no departure, so this discon is floating
     f->insertWayptAtIndex(new Discontinuity(f), 0);
     
@@ -752,7 +752,7 @@ void FlightplanTests::loadFGFPWithoutDepartureArrival()
     static_factory = std::make_shared<TestFPDelegateFactory>();
     FlightPlan::registerDelegateFactory(static_factory);
 
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     
     SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_without_dep_arr.fgfp"s;
     {
@@ -818,7 +818,7 @@ void FlightplanTests::loadFGFPWithEmbeddedProcedures()
     static_factory = std::make_shared<TestFPDelegateFactory>();
     FlightPlan::registerDelegateFactory(static_factory);
 
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     
     SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_with_dep_arr.fgfp"s;
     {
@@ -897,7 +897,7 @@ void FlightplanTests::loadFGFPWithOldProcedures()
     if (!static_haveProcedures)
         return;
     
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     
     SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_old_procedure_idents.fgfp"s;
     {
@@ -939,7 +939,7 @@ void FlightplanTests::loadFGFPWithProcedureIdents()
     if (!static_haveProcedures)
         return;
     
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     
     SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_procedure_idents.fgfp"s;
     {
@@ -1013,7 +1013,7 @@ void FlightplanTests::testCloningFGFP()
     static_factory = std::make_shared<TestFPDelegateFactory>();
     FlightPlan::registerDelegateFactory(static_factory);
 
-    FlightPlanRef fp1 = new FlightPlan;
+    FlightPlanRef fp1 = FlightPlan::create();
     
     SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_cloning.fgfp"s;
     {
@@ -1106,7 +1106,7 @@ void FlightplanTests::testCloningProcedures() {
     
     FlightPlanRef fp1 = makeTestFP("EGKK"s, "08R"s, "EHAM"s, "18R"s,
                                    ""s);
-    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(fp1);
+    //auto ourDelegate = TestFPDelegateFactory::delegateForPlan(fp1);
     
     fp1->setSID(sid);
     auto eham = FGAirport::findByIdent("EHAM"s);

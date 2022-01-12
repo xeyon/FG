@@ -270,7 +270,7 @@ void GPSTests::testLegMode()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
     
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                    "NIK COA DVR TAWNY WOD");
@@ -415,7 +415,7 @@ void GPSTests::testBuiltinRevertToOBSAtEnd()
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
     
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY BDN");
@@ -464,7 +464,7 @@ void GPSTests::testDirectToLegOnFlightplan()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
     
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                  "NIK COA DVR TAWNY WOD");
@@ -528,7 +528,7 @@ void GPSTests::testDirectToLegOnFlightplanAndResumeBuiltin()
     auto rm = globals->get_subsystem<FGRouteMgr>();
    // FGTestApi::setUp::logPositionToKML("gps_dto_resume_leg");
 
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EBBR", "07L", "EGGD", "27",
                                              "NIK COA DVR TAWNY WOD");
@@ -590,7 +590,7 @@ void GPSTests::testDirectToLegOnFlightplanAndResumeBuiltin()
 void GPSTests::testLongLeg()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "KLAX", "25R", "KJFK", "22R","VNY TEB");
     
@@ -683,7 +683,7 @@ void GPSTests::testLongLeg()
 void GPSTests::testLongLegWestbound()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     FGTestApi::setUp::populateFPWithoutNasal(fp, "ENBR", "35", "BIKF", "29","VOO GAKTU");
     
@@ -761,7 +761,7 @@ void GPSTests::testOverflightSequencing()
     
   //  FGTestApi::setUp::logPositionToKML("gps_sequence");
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     
     // let's use New Zealand for some southern hemisphere confusion :)
@@ -860,7 +860,7 @@ void GPSTests::testOffcourseSequencing()
     
  //   FGTestApi::setUp::logPositionToKML("gps_sequence_off");
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     
     
@@ -1007,7 +1007,7 @@ void GPSTests::testOffsetFlight()
     
    // FGTestApi::setUp::logPositionToKML("gps_offset_flight");
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     
     
@@ -1097,7 +1097,7 @@ void GPSTests::testLegIntercept()
 {
   //  FGTestApi::setUp::logPositionToKML("gps_intercept");
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     
         FGTestApi::setUp::populateFPWithoutNasal(fp, "NZCH", "02", "NZAA", "05L",
@@ -1268,7 +1268,7 @@ void GPSTests::testTurnAnticipation()
 {
     //FGTestApi::setUp::logPositionToKML("gps_flyby_sequence");
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
        
    // this route has some deliberately sharp turns to work the turn code
@@ -1384,7 +1384,7 @@ void GPSTests::testRadialIntercept()
    // FGTestApi::setUp::logPositionToKML("gps_radial_intercept");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
        
     FGTestApi::setUp::populateFPWithoutNasal(fp, "LFKC", "36", "LIRF", "25", "BUNAX BEBEV AJO");
@@ -1472,7 +1472,7 @@ void GPSTests::testDMEIntercept()
    // FGTestApi::setUp::logPositionToKML("gps_dme_intercept");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     
     // manually consturct something close to the publichsed approach transition for EGPH ILS 06
@@ -1537,7 +1537,7 @@ void GPSTests::testFinalLegCourse()
 {
     // FGTestApi::setUp::logPositionToKML("gps_final_course");
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
     
     // we can't use the standard function as it puts a waypoint on 
@@ -1565,7 +1565,7 @@ void GPSTests::testFinalLegCourse()
     testDelegate->thePlan = fp;
     CPPUNIT_ASSERT(rm->activate());
     fp->addDelegate(testDelegate);
-    auto gps = setupStandardGPS();
+    setupStandardGPS();
     
     fp->setCurrentIndex(2);
     
@@ -1591,7 +1591,7 @@ void GPSTests::testCourseLegIntermediateWaypoint()
 {
     // FGTestApi::setUp::logPositionToKML("gps_leg_course_intermediate");
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     rm->setFlightPlan(fp);
 
     FGTestApi::setUp::populateFPWithoutNasal(fp, "EGAA", "25", "EGPH", "06", "LISBO BLACA");
@@ -1644,7 +1644,7 @@ void GPSTests::testCourseLegIntermediateWaypoint()
     pilot->setSpeedKts(280);
     pilot->flyGPSCourse(gps);
 
-    bool ok = FGTestApi::runForTimeWithCheck(1200.0, [fp]() {
+    bool ok = FGTestApi::runForTimeWithCheck(1200.0, [&fp]() {
         return fp->currentIndex() == 4;
     });
     CPPUNIT_ASSERT(ok);

@@ -369,7 +369,12 @@ static const char* waypointCommonGetMember(naContext c, Waypt* wpt, const char* 
             assert(awy);
             *out = ghostForAirway(c, awy);
         } else {
-            *out = naNil();
+            Airway* airway = dynamic_cast<Airway*>(wpt->owner());
+            if (airway) {
+                *out = ghostForAirway(c, airway);
+            } else {
+                *out = naNil();
+            }
         }
     } else if (!strcmp(fieldName, "hidden")) {
         *out = naNum(wpt->flag(WPT_HIDDEN));
@@ -664,6 +669,8 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
         *out = naNum(fp->indexOfDestinationRunwayWaypoint());
     else if (!strcmp(fieldName, "totalDistanceNm"))
         *out = naNum(fp->totalDistanceNm());
+    else if (!strcmp(fieldName, "isRoute"))
+        *out = naNum(fp->isRoute());
 
     else {
         return nullptr;
@@ -1078,7 +1085,17 @@ static const char* airwayGhostGetMember(naContext c, void* g, naRef field, naRef
 
 static naRef f_createFlightplan(naContext c, naRef me, int argc, naRef* args)
 {
-    flightgear::FlightPlanRef fp(new flightgear::FlightPlan);
+    bool asRoute = false; // default to a regular Flight-Plan
+    if (argc == 1) {
+        if (naIsNum(args[0])) {
+            asRoute = args[0].num != 0.0;
+        }
+    } else if ((argc == 2) && naIsNum(args[1])) {
+        // args[0] is a string file name, args[1] is our flag
+        asRoute = args[1].num != 0.0;
+    }
+    
+    flightgear::FlightPlanRef fp(asRoute ? FlightPlan::createRoute() : FlightPlan::create());
 
     if ((argc > 0) && naIsString(args[0])) {
         SGPath path(naStr_data(args[0]));
@@ -1807,7 +1824,8 @@ static naRef f_flightplan_clone(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "flightplan.clone called on non-flightplan object");
     }
 
-    return ghostForFlightPlan(c, fp->clone());
+    const bool convertRouteToFP = (argc > 0) && naIsNum(args[0]) && (args[0].num != 0.0);
+    return ghostForFlightPlan(c, fp->clone(fp->ident(), convertRouteToFP));
 }
 
 static naRef f_flightplan_pathGeod(naContext c, naRef me, int argc, naRef* args)
@@ -1840,6 +1858,8 @@ static naRef f_flightplan_finish(naContext c, naRef me, int argc, naRef* args)
     if (!fp) {
         naRuntimeError(c, "flightplan.finish called on non-flightplan object");
     }
+    
+    // forbid on isRoute FPs?
 
     fp->finish();
     return naNil();
@@ -1850,6 +1870,10 @@ static naRef f_flightplan_activate(naContext c, naRef me, int argc, naRef* args)
     FlightPlan* fp = flightplanGhost(me);
     if (!fp) {
         naRuntimeError(c, "activate called on non-flightplan object");
+    }
+    
+    if (fp->isRoute()) {
+        naRuntimeError(c, "activate called on isRoute flightplan");
     }
 
     fp->activate();
@@ -2156,6 +2180,49 @@ static naRef f_airway_contains(naContext c, naRef me, int argc, naRef* args)
     return naNum(awy->containsNavaid(pos));
 }
 
+static naRef f_airway_viaWaypoints(naContext c, naRef me, int argc, naRef* args)
+{
+    Airway* awy = airwayGhost(me);
+    if (!awy) {
+        naRuntimeError(c, "airway.viaWaypoints called on non-airway object");
+    }
+    
+    if ((argc < 1) || (argc > 2)) {
+        naRuntimeError(c, "Airway.viaWaypoints: needs one ro two arguments");
+    }
+
+    auto from = positionedFromArg(args[0]);
+    auto fromWp = awy->findEnroute(from);
+    if (!fromWp) {
+        naRuntimeError(c, "Airway.viaWaypoints: from wp not found");
+    }
+
+    naRef toArg = args[1];
+    FGPositionedRef nav;
+    if (naIsString(toArg)) {
+        WayptRef enroute = awy->findEnroute(naStr_data(toArg));
+        if (!enroute) {
+            naRuntimeError(c, "unknown waypoint on airway %s: %s",
+                           awy->ident().c_str(), naStr_data(toArg));
+        }
+
+        nav = enroute->source();
+    } else {
+        nav = positionedFromArg(toArg);
+        if (!nav) {
+            naRuntimeError(c, "Airway.viaWaypoints: final arg is not a navaid");
+        }
+    }
+
+    auto toWaypt = awy->findEnroute(nav);
+    if (!toWaypt) {
+        naRuntimeError(c, "Airway.viaWaypoints: navaid not on airway");
+    }
+
+    auto wps = awy->via(fromWp, toWaypt);
+    return convertWayptVecToNasal(c, wps);
+}
+
 // Table of extension functions.  Terminate with zeros.
 static struct {
     const char* name;
@@ -2233,6 +2300,7 @@ naRef initNasalFlightPlan(naRef globals, naContext c)
     airwayPrototype = naNewHash(c);
     naSave(c, airwayPrototype);
     hashset(c, airwayPrototype, "contains", naNewFunc(c, naNewCCode(c, f_airway_contains)));
+    hashset(c, airwayPrototype, "viaWaypoints", naNewFunc(c, naNewCCode(c, f_airway_viaWaypoints)));
     hashset(c, airwayPrototype, "HIGH", naNum(Airway::HighLevel));
     hashset(c, airwayPrototype, "LOW", naNum(Airway::LowLevel));
     hashset(c, airwayPrototype, "BOTH", naNum(Airway::Both));

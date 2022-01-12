@@ -213,7 +213,7 @@ void RNAVProcedureTests::testHeadingToAlt()
 //    FGTestApi::setUp::logPositionToKML("heading_to_alt");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -305,7 +305,7 @@ void RNAVProcedureTests::testUglyHeadingToAlt()
   //  FGTestApi::setUp::logPositionToKML("heading_to_alt_ugly");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -401,7 +401,7 @@ void RNAVProcedureTests::testEGPH_TLA6C()
    // FGTestApi::setUp::logPositionToKML("procedure_egph_tla6c");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -513,7 +513,7 @@ void RNAVProcedureTests::testLFKC_AJO1R()
   //  FGTestApi::setUp::logPositionToKML("procedure_LFKC_AJO1R");
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -571,7 +571,7 @@ void RNAVProcedureTests::testTransitionsSID()
         return;
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -597,7 +597,7 @@ void RNAVProcedureTests::testTransitionsSTAR()
         return;
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -624,7 +624,7 @@ void RNAVProcedureTests::testLEBL_LARP2F()
     FGTestApi::setUp::logPositionToKML("procedure_LEBL-LARP2F");
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;
@@ -684,7 +684,7 @@ void RNAVProcedureTests::testIndexOf()
         return;
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    auto fp = new FlightPlan;
+    auto fp = FlightPlan::create();
     
     auto testDelegate = new TestFPDelegate;
     testDelegate->thePlan = fp;

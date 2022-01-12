@@ -57,9 +57,18 @@ enum class ICAOFlightType
 class FlightPlan : public RouteBase
 {
 public:
-  FlightPlan();
   virtual ~FlightPlan();
 
+    /**
+        create a FlightPlan with isRoute *not* set
+     */
+    static FlightPlanRef create();
+    
+    /**
+        @factory to create a FlightPlan with isRoute=true
+     */
+    static FlightPlanRef createRoute();
+    
   virtual std::string ident() const;
   void setIdent(const std::string& s);
 
@@ -77,8 +86,15 @@ public:
 
     void setIcaoAircraftType(const std::string& ty);
 
-    FlightPlan* clone(const std::string& newIdent = std::string()) const;
+    FlightPlanRef clone(const std::string& newIdent = {}, bool convertToFlightPlan = false) const;
 
+    /**
+     is this flight-pan a route (for planning) or an active flight-plan (which can be flow?)
+     Routes can contain Via, and cannot be active:  FlightPlans contain Legs for procedures and
+     airways, i.e what the GPS/FMC actally flies.
+     */
+    bool isRoute() const;
+    
   /**
    * flight-plan leg encapsulation
    */
@@ -223,7 +239,7 @@ public:
   void finish();
 
     bool isActive() const;
-    
+        
   LegRef currentLeg() const;
   LegRef nextLeg() const;
   LegRef previousLeg() const;
@@ -412,6 +428,8 @@ public:
     using LegVisitor = std::function<void(Leg*)>;
     void forEachLeg(const LegVisitor& lv);
 private:
+    FlightPlan(bool isRoute);
+
   friend class Leg;
   
   int findLegIndex(const Leg* l) const;
@@ -442,12 +460,18 @@ private:
 
   double magvarDegAt(const SGGeod& pos) const;
   bool parseICAOLatLon(const std::string &s, SGGeod &p);
-
+    
+    /**
+        helper to convert VIA legs into a list of regular waypoints after load, etc
+     */
+    bool expandVias();
+    
   std::string _ident;
   std::string _callsign;
   std::string _remarks;
   std::string _aircraftType;
-
+    const bool _isRoute;
+    
   int _currentIndex;
     bool _followLegTrackToFix;
     char _aircraftCategory;

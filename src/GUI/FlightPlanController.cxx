@@ -214,7 +214,7 @@ FlightPlanController::FlightPlanController(QObject *parent, LaunchConfig* config
     _delegate->p = this; // link back to us
 
     qmlRegisterUncreatableType<LegsModel>("FlightGear", 1, 0, "LegsModel", "singleton");
-    _fp.reset(new flightgear::FlightPlan);
+    _fp.reset(flightgear::FlightPlan::createRoute());
     _fp->addDelegate(_delegate.get());
     _legs = new LegsModel();
     _legs->setFlightPlan(_fp);
@@ -230,7 +230,7 @@ FlightPlanController::~FlightPlanController()
 
 void FlightPlanController::clearPlan()
 {
-    auto fp = new flightgear::FlightPlan;
+    auto fp = flightgear::FlightPlan::createRoute();
     _fp->removeDelegate(_delegate.get());
     _fp = fp;
     _fp->addDelegate(_delegate.get());
@@ -243,7 +243,7 @@ void FlightPlanController::clearPlan()
 
 bool FlightPlanController::loadFromPath(QString path)
 {
-    auto fp = new flightgear::FlightPlan;
+    auto fp = flightgear::FlightPlan::createRoute();
     bool ok = fp->load(SGPath(path.toUtf8().data()));
     if (!ok) {
         qWarning() << "Failed to load flightplan " << path;

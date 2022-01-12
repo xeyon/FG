@@ -32,7 +32,7 @@ static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& d
                          const std::string& destICAO, const std::string& destRunway,
                          const std::string& waypoints)
 {
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     FGTestApi::setUp::populateFPWithNasal(f, depICAO, depRunway, destICAO, destRunway, waypoints);
     return f;
 }
@@ -570,7 +570,7 @@ void RouteManagerTests::loadGPX()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
     
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     rm->setFlightPlan(f);
     
     SGPath gpxPath = simgear::Dir::current().path() / "test_gpx.gpx";
@@ -671,7 +671,7 @@ void RouteManagerTests::loadFGFP()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
     
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     rm->setFlightPlan(f);
     
     SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp.fgfp";
@@ -703,7 +703,7 @@ void RouteManagerTests::testRouteWithProcedures()
     
     auto rm = globals->get_subsystem<FGRouteMgr>();
     
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     rm->setFlightPlan(f);
     
     auto kjfk = FGAirport::findByIdent("KJFK");
@@ -771,7 +771,7 @@ void RouteManagerTests::testRouteWithApproachProcedures()
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
 
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     rm->setFlightPlan(f);
 
     auto kjfk = FGAirport::findByIdent("KJFK");
@@ -836,7 +836,7 @@ void RouteManagerTests::testsSelectNavaid()
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
 
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     rm->setFlightPlan(f);
 
     auto usss = FGAirport::findByIdent("USSS");
@@ -871,7 +871,7 @@ void RouteManagerTests::testsSelectWaypoint()
 
     auto rm = globals->get_subsystem<FGRouteMgr>();
 
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     rm->setFlightPlan(f);
 
     auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
@@ -976,7 +976,7 @@ void RouteManagerTests::testRMBug2616()
 void RouteManagerTests::testsSelectWaypoint2()
 {
     auto rm = globals->get_subsystem<FGRouteMgr>();
-    FlightPlanRef f = new FlightPlan;
+    FlightPlanRef f = FlightPlan::create();
     rm->setFlightPlan(f);
     auto rmNode = globals->get_props()->getNode("autopilot/route-manager", true);
     rmNode->setStringValue("input", "UAAA");
