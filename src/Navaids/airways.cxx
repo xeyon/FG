@@ -398,6 +398,21 @@ WayptRef Airway::findEnroute(const std::string &aIdent) const
     return {};
 }
 
+WayptRef Airway::findEnroute(const FGPositionedRef& nav) const
+{
+    loadWaypoints();
+    auto it = std::find_if(_elements.begin(), _elements.end(),
+                           [&nav](WayptRef w)
+    {
+        if (!w) return false;
+        return w->source() == nav;
+    });
+    
+    if (it != _elements.end())
+        return *it;
+    return {};
+}
+
 void Airway::Network::addEdge(int aWay, const SGGeod& aStartPos,
   const std::string& aStartIdent, 
   const SGGeod& aEndPos, const std::string& aEndIdent)

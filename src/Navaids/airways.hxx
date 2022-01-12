@@ -90,6 +90,7 @@ public:
 
     bool containsNavaid(const FGPositionedRef& navaid) const;
 
+    WayptRef findEnroute(const FGPositionedRef& navaid) const;
     
 
   /**
