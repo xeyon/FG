@@ -79,6 +79,22 @@ InputValue::InputValue( SGPropertyNode& prop_root,
   parse(prop_root, cfg, value, offset, scale);
 }
 
+InputValue::~InputValue()
+{
+    if (_pathNode) {
+        _pathNode->removeChangeListener(this);
+    }
+}
+
+void InputValue::initPropertyFromInitialValue()
+{
+    double s = get_scale();
+    if( s != 0 )
+      _property->setDoubleValue( (_value - get_offset())/s );
+    else
+      _property->setDoubleValue(0); // if scale is zero, value*scale is zero
+}
+
 //------------------------------------------------------------------------------
 void InputValue::parse( SGPropertyNode& prop_root,
                         SGPropertyNode& cfg,
@@ -128,6 +144,25 @@ void InputValue::parse( SGPropertyNode& prop_root,
     return;
   }
 
+    if ((n = cfg.getChild("property-path"))) {
+        // cache the root node, in case of changes
+        _rootNode = &prop_root;
+        const auto trimmed = simgear::strutils::strip(n->getStringValue());
+        _pathNode = prop_root.getNode(trimmed, true);
+        _pathNode->addChangeListener(this);
+        
+        // if <property> is defined, should we use it to initialise
+        // the path prop? not doing so for now.
+        
+        const auto path = simgear::strutils::strip(_pathNode->getStringValue());
+        if (!path.empty()) {
+            _property = _rootNode->getNode(path);
+        }
+
+        return;
+    }
+
+    
   // if no <property> element, check for <prop> element for backwards
   // compatibility
   if(    (n = cfg.getChild("property"))
@@ -138,18 +173,11 @@ void InputValue::parse( SGPropertyNode& prop_root,
     _property = prop_root.getNode(trimmed, true);
     if( valueNode )
     {
-      // initialize property with given value
-      // if both <prop> and <value> exist
-      double s = get_scale();
-      if( s != 0 )
-        _property->setDoubleValue( (_value - get_offset())/s );
-      else
-        _property->setDoubleValue(0); // if scale is zero, value*scale is zero
+        initPropertyFromInitialValue();
     }
 
     return;
   } // of have a <property> or <prop>
-
 
   if( !valueNode )
   {
@@ -225,6 +253,21 @@ double InputValue::get_value() const
     return _abs ? fabs(value) : value;
 }
 
+bool InputValue::is_enabled() const
+{
+    if (_pathNode && !_property) {
+        // if we have a configurable path, and it's currently not valid,
+        // mark ourselves as disabled
+        return false;
+    }
+    
+    if (_condition) {
+        return _condition->test();
+    }
+
+    return true; // default to enab;ed
+}
+
 void InputValue::collectDependentProperties(std::set<const SGPropertyNode*>& props) const
 {
     if (_property)      props.insert(_property);
@@ -233,11 +276,35 @@ void InputValue::collectDependentProperties(std::set<const SGPropertyNode*>& pro
     if (_min)           _min->collectDependentProperties(props);
     if (_max)           _max->collectDependentProperties(props);
     if (_expression)    _expression->collectDependentProperties(props);
+    if (_pathNode)      props.insert(_pathNode);
 }
 
+void InputValue::valueChanged(SGPropertyNode *node)
+{
+    assert(node == _pathNode);
+    const auto path = simgear::strutils::strip(_pathNode->getStringValue());
+    if (path.empty()) {
+        // don't consider an empty string to mean the root node, that's not
+        // useful behaviour
+        _property.reset();
+        return;
+    }
+    
+    // important we don't create here: this allows an invalid path
+    // to give us a null _property, which causes us to be marked as
+    // disabled, allowing another input to be used
+    auto propNode = _rootNode->getNode(path);
+    if (propNode) {
+        _property = propNode;
+    } else {
+        _property.reset();
+    }
+}
+    
 void InputValueList::collectDependentProperties(std::set<const SGPropertyNode*>& props) const
 {
     for (auto& iv: *this) {
         iv->collectDependentProperties(props);
     }
 }
+

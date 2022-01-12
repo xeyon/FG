@@ -57,7 +57,7 @@ public:
  * and/or offset, clamped to min/max values, be periodical, bound to 
  * conditions or evaluated from expressions.
  */
-class InputValue : public SGReferenced {
+class InputValue : public SGReferenced, public SGPropertyChangeListener {
 private:
      double             _value;    // The value as a constant or initializer for the property
      bool               _abs;      // return absolute value
@@ -69,14 +69,19 @@ private:
      PeriodicalValue_ptr  _periodical; //
      SGSharedPtr<const SGCondition> _condition;
      SGSharedPtr<SGExpressiond> _expression;  ///< expression to generate the value
-     
+     SGPropertyNode_ptr _pathNode;
+     SGPropertyNode_ptr _rootNode;
+    
+    void valueChanged(SGPropertyNode* node) override;
+    void initPropertyFromInitialValue();
 public:
     InputValue( SGPropertyNode& prop_root,
                 SGPropertyNode& node,
                 double value = 0.0,
                 double offset = 0.0,
                 double scale = 1.0 );
-
+    ~InputValue();
+    
     /**
      *
      * @param prop_root Root node for all properties with relative path
@@ -105,9 +110,7 @@ public:
       return _offset == NULL ? 0.0 : _offset->get_value();
     }
 
-    inline bool is_enabled() const {
-      return _condition == NULL ? true : _condition->test();
-    }
+    bool is_enabled() const;
 
     void collectDependentProperties(std::set<const SGPropertyNode*>& props) const;
 };
