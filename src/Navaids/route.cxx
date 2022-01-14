@@ -99,24 +99,24 @@ WayptRef intersectionFromString(FGPositionedRef p1,
 
 WayptRef viaFromString(const SGGeod& basePosition, const std::string& target)
 {
-    assert(target.find("VIA ") == 0);
-    string_list pieces(simgear::strutils::split(target, "/"));
-    if ((pieces.size() != 4) || (pieces[2] != "TO")) {
+    assert(target.find("VIA-") == 0);
+    string_list pieces(simgear::strutils::split(target.substr(4), "/"));
+    if (pieces.size() != 2) {
         SG_LOG(SG_NAVAID, SG_WARN, "Malformed VIA specification string:" << target);
         return {};
     }
 
-    // TO navaid is pieces[3]
-    FGPositionedRef nav = FGPositioned::findClosestWithIdent(pieces[3], basePosition, nullptr);
+    // TO navaid is pieces[1]
+    FGPositionedRef nav = FGPositioned::findClosestWithIdent(pieces[1], basePosition, nullptr);
     if (!nav) {
         SG_LOG(SG_NAVAID, SG_WARN, "TO navaid:" << pieces[3] << " unknown");
         return {};
     }
 
     // airway ident is pieces[1]
-    AirwayRef airway = Airway::findByIdentAndNavaid(pieces[1], nav);
+    AirwayRef airway = Airway::findByIdentAndNavaid(pieces[0], nav);
     if (!airway) {
-        SG_LOG(SG_NAVAID, SG_WARN, "Unknown airway:" << pieces[1]);
+        SG_LOG(SG_NAVAID, SG_WARN, "Unknown airway:" << pieces[0]);
         return {};
     }
 
@@ -308,7 +308,11 @@ WayptRef Waypt::createFromProperties(RouteBase* aOwner, SGPropertyNode_ptr aProp
 
   flightgear::AirwayRef via;
   if (aProp->hasChild("airway")) {
-      const auto level = static_cast<flightgear::Airway::Level>(aProp->getIntValue("network"));
+      auto level = Airway::Both;
+      if (aProp->hasValue("network")) {
+          level = static_cast<flightgear::Airway::Level>(aProp->getIntValue("network"));
+      }
+      
       via = flightgear::Airway::findByIdent(aProp->getStringValue("airway"), level);
       if (via) {
           // override owner if we are from an airway
@@ -398,7 +402,7 @@ WayptRef Waypt::createFromString(RouteBase* aOwner, const std::string& s, const 
 
     if (wpt) {
         // already handled in the lat/lon test above
-    } else if (target.find("VIA ") == 0) {
+    } else if (target.find("VIA-") == 0) {
         wpt = viaFromString(vicinity, target);
     } else {
         FGPositioned::TypeFilter filter({FGPositioned::Type::AIRPORT, FGPositioned::Type::HELIPORT,
