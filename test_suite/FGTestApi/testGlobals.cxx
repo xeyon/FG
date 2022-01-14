@@ -436,21 +436,13 @@ bool executeNasal(const std::string& code)
     }
 
     nasal->getAndClearErrorList();
-    std::string output, dummyErrors;
-    bool ok = nasal->parseAndRunWithOutput(code, output, dummyErrors);
-    if (!dummyErrors.empty()) {
-        SG_LOG(SG_NASAL, SG_ALERT, "Errors running Nasal:" << dummyErrors);
+    std::string output, parseErrors;
+    bool ok = nasal->parseAndRunWithOutput(code, output, parseErrors);
+    if (!parseErrors.empty()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "Errors running Nasal:" << parseErrors);
         return false;
     }
 
-    auto errors = nasal->getAndClearErrorList();
-    if (!errors.empty()) {
-        for (auto err : errors) {
-            SG_LOG(SG_NASAL, SG_ALERT, "Errors running Nasal:" << err);
-        }
-        return false;
-    }
-    
     return ok;
 }
     

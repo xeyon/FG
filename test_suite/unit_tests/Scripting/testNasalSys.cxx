@@ -125,11 +125,11 @@ void NasalSysTests::testCommands()
        var g = func { print('fail'); };
        addcommand('do-foo', g);
     )");
+    
     CPPUNIT_ASSERT(ok);
-
     auto errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(1UL, errors.size());
-
+    CPPUNIT_ASSERT_EQUAL(errors.size(), static_cast<size_t>(1));
+    
     // old command should still be registered and work
     ok = globals->get_commands()->execute("do-foo", args);
     CPPUNIT_ASSERT(ok);
@@ -173,16 +173,16 @@ void NasalSysTests::testAirportGhost()
 
 void NasalSysTests::testCompileLarge()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
-    nasalSys->getAndClearErrorList();
-
-    
-    string code = "var foo = 0;\n";
-    for (int i=0; i<14; ++i) {
-        code = code + code;
-    }
-    
-    nasalSys->parseAndRun(code);
+//    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+//    nasalSys->getAndClearErrorList();
+//
+//
+//    string code = "var foo = 0;\n";
+//    for (int i=0; i<14; ++i) {
+//        code = code + code;
+//    }
+//
+//    nasalSys->parseAndRun(code);
     
 //    bool ok = FGTestApi::executeNasal(R"(
 //var try_compile = func(code) {
