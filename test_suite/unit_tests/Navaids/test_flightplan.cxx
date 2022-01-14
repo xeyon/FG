@@ -255,9 +255,9 @@ void FlightplanTests::tearDown()
 
 static FlightPlanRef makeTestFP(const std::string& depICAO, const std::string& depRunway,
                          const std::string& destICAO, const std::string& destRunway,
-                         const std::string& waypoints)
+                         const std::string& waypoints, bool asRoute = false)
 {
-    FlightPlanRef f = FlightPlan::create();
+    FlightPlanRef f = asRoute ? FlightPlan::createRoute() : FlightPlan::create();
     FGTestApi::setUp::populateFPWithoutNasal(f, depICAO, depRunway, destICAO, destRunway, waypoints);
     return f;
 }
@@ -468,6 +468,71 @@ void FlightplanTests::testBasicAirways()
     CPPUNIT_ASSERT_EQUAL("HASTE"s, path.at(1)->ident());
     CPPUNIT_ASSERT_EQUAL("DEWIT"s, path.at(2)->ident());
     CPPUNIT_ASSERT_EQUAL("FNT"s, path.at(3)->ident());
+
+    f->insertWayptsAtIndex(path, 0);
+    CPPUNIT_ASSERT_EQUAL(4, static_cast<int>(f->numLegs()));
+    CPPUNIT_ASSERT_EQUAL("DEWIT"s, f->legAtIndex(2)->waypoint()->ident());
+    CPPUNIT_ASSERT_EQUAL(static_cast<RouteBase*>(awy), f->legAtIndex(2)->waypoint()->owner());
+}
+
+void FlightplanTests::testViaInsertIntoFP()
+{
+    Airway* awy = Airway::findByIdent("J547"s, Airway::HighLevel);
+    CPPUNIT_ASSERT_EQUAL(awy->ident(), "J547"s);
+
+    FGAirportRef kord = FGAirport::findByIdent("KORD"s);
+    FlightPlanRef f = FlightPlan::create();
+    f->setDeparture(kord);
+
+    CPPUNIT_ASSERT(awy->findEnroute("KITOK"s));
+    CPPUNIT_ASSERT(awy->findEnroute("LESUB"s));
+
+    auto wpt = awy->findEnroute("FNT"s);
+    CPPUNIT_ASSERT(wpt);
+
+    auto wptKUBBS = f->waypointFromString("KUBBS"s);
+    auto wptFNT = f->waypointFromString("FNT"s);
+    f->insertWayptAtIndex(wptKUBBS, -1);
+    CPPUNIT_ASSERT_EQUAL(1, static_cast<int>(f->numLegs()));
+
+    Via* via = new Via(f, awy, wptFNT->source());
+    f->insertWayptAtIndex(via, -1);
+    CPPUNIT_ASSERT_EQUAL(5, static_cast<int>(f->numLegs()));
+    CPPUNIT_ASSERT_EQUAL("PMM"s, f->legAtIndex(1)->waypoint()->ident());
+    CPPUNIT_ASSERT_EQUAL(static_cast<RouteBase*>(awy), f->legAtIndex(1)->waypoint()->owner());
+}
+
+void FlightplanTests::testViaInsertIntoRoute()
+{
+    Airway* awy = Airway::findByIdent("J547"s, Airway::HighLevel);
+    CPPUNIT_ASSERT_EQUAL(awy->ident(), "J547"s);
+
+    FGAirportRef kord = FGAirport::findByIdent("KORD"s);
+    FlightPlanRef f = FlightPlan::createRoute();
+    f->setDeparture(kord);
+
+    CPPUNIT_ASSERT(awy->findEnroute("KITOK"s));
+    CPPUNIT_ASSERT(awy->findEnroute("LESUB"s));
+
+    auto wpt = awy->findEnroute("FNT"s);
+    CPPUNIT_ASSERT(wpt);
+
+    auto wptKUBBS = f->waypointFromString("KUBBS"s);
+    auto wptFNT = f->waypointFromString("FNT"s);
+    f->insertWayptAtIndex(wptKUBBS, -1);
+    CPPUNIT_ASSERT_EQUAL(1, static_cast<int>(f->numLegs()));
+
+    Via* via = new Via(f, awy, wptFNT->source());
+    f->insertWayptAtIndex(via, -1);
+    CPPUNIT_ASSERT_EQUAL(2, static_cast<int>(f->numLegs()));
+
+// clone and convert to active flight-plan; Vias
+// should be expanded
+    FlightPlanRef activeFP = f->clone("ACT", true);
+
+    CPPUNIT_ASSERT_EQUAL(5, static_cast<int>(activeFP->numLegs()));
+    CPPUNIT_ASSERT_EQUAL("PMM"s, activeFP->legAtIndex(1)->waypoint()->ident());
+    CPPUNIT_ASSERT_EQUAL(static_cast<RouteBase*>(awy), activeFP->legAtIndex(1)->waypoint()->owner());
 }
 
 void FlightplanTests::testAirwayNetworkRoute()
@@ -981,6 +1046,74 @@ void FlightplanTests::loadFGFPWithProcedureIdents()
     CPPUNIT_ASSERT_EQUAL(f->starTransition()->ident(), "KUBAT"s);
 }
 
+void FlightplanTests::loadFGFPAsRoute()
+{
+    static_factory = std::make_shared<TestFPDelegateFactory>();
+    FlightPlan::registerDelegateFactory(static_factory);
+
+    FlightPlanRef f = FlightPlan::createRoute();
+    
+    SGPath fgfpPath = simgear::Dir::current().path() / "test_fgfp_as_route.fgfp"s;
+    {
+        sg_ofstream s(fgfpPath);
+        s << R"(<?xml version="1.0" encoding="UTF-8"?>
+            <PropertyList>
+              <version type="int">2</version>
+                <is-route>true</is-route>
+              <departure>
+                <airport type="string">EGLL</airport>
+                <runway type="string">27R</runway>
+              </departure>
+              <destination>
+                <airport type="string">EDDS</airport>
+              </destination>
+              <route>
+                <wp n="1">
+                  <type type="string">navaid</type>
+                  <ident type="string">BIG</ident>
+                        <lat>51.33087500</lat>
+                        <lon>000.03481100</lon>
+                </wp>
+                <wp n="2">
+                  <type type="string">navaid</type>
+                  <ident type="string">CLN</ident>
+                <lat> 51.84841700</lat>
+                <lon>001.14761100</lon>
+                </wp>
+                <wp n="3">
+                  <type type="string">via</type>
+                  <airway type="string">L620</airway>
+                  <level>1</level>
+                  <to type="string">BASNO</to>
+                    <lat>52.114586</lat>
+                    <lon>2.487947</lon>
+                </wp>
+              </route>
+            </PropertyList>
+        )";
+    }
+    
+    auto ourDelegate = TestFPDelegateFactory::delegateForPlan(f);
+    CPPUNIT_ASSERT(!ourDelegate->didLoad);
+    
+    CPPUNIT_ASSERT(f->load(fgfpPath));
+    CPPUNIT_ASSERT(f->isRoute());
+
+    CPPUNIT_ASSERT(ourDelegate->didLoad);
+    CPPUNIT_ASSERT(ourDelegate->sawArrivalChange);
+    CPPUNIT_ASSERT(ourDelegate->sawDepartureChange);
+    
+    CPPUNIT_ASSERT_EQUAL(5, f->numLegs());
+    CPPUNIT_ASSERT_EQUAL("via"s, f->legAtIndex(3)->waypoint()->type());
+    
+    auto actFP = f->clone("ACT", true);
+    CPPUNIT_ASSERT(!actFP->isRoute());
+    CPPUNIT_ASSERT(!actFP->isActive());
+    // check Via was expanded
+    CPPUNIT_ASSERT_EQUAL(8, actFP->numLegs());
+}
+
+
 void FlightplanTests::testCloningBasic()
 {
     FlightPlanRef fp1 = makeTestFP("EGCC"s, "23L"s, "EHAM"s, "24"s,
@@ -1147,4 +1280,23 @@ void FlightplanTests::testBug2616()
 
     fp1->activate();
     CPPUNIT_ASSERT(fp1->isActive());
+}
+
+void FlightplanTests::testRoute()
+{
+  FlightPlanRef fp1 = makeTestFP("EGKK"s, "08R"s, "EHAM"s, "18R"s,
+                                   "CLN VIA-L620/REDFA SPY"s, true);
+
+  CPPUNIT_ASSERT(fp1->isRoute());
+  CPPUNIT_ASSERT_EQUAL("via"s, fp1->legAtIndex(2)->waypoint()->type());
+
+    // activating a route should fail
+    fp1->activate();
+    CPPUNIT_ASSERT(!fp1->isActive());
+
+    // setting index should still work
+    fp1->setCurrentIndex(2);
+    CPPUNIT_ASSERT_EQUAL(2, fp1->currentIndex());
+    CPPUNIT_ASSERT(!fp1->isActive());
+
 }
