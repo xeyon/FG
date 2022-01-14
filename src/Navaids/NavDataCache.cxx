@@ -2097,7 +2097,7 @@ NavDataCache::insertRunway(FGPositioned::Type ty, const string& ident,
   sqlite3_bind_double(d->insertRunway, 13, smoothness);
   sqlite3_bind_int(d->insertRunway, 14, center_lights);
   sqlite3_bind_int(d->insertRunway, 15, edge_lights);
-  sqlite3_bind_int(d->insertRunway, 116, distance_remaining);
+  sqlite3_bind_int(d->insertRunway, 16, distance_remaining);
 
   return d->execInsert(d->insertRunway);
 }
