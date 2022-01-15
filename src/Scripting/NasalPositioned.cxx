@@ -676,6 +676,9 @@ static naRef f_geodinfo(naContext c, naRef me, int argc, naRef* args)
   const simgear::BVHMaterial *material;
   SGGeod geod = SGGeod::fromDegM(lon, lat, elev);
 
+  if (globals == nullptr)
+    return naNil();
+
   const auto scenery = globals->get_scenery();
   if (scenery == nullptr)
     return naNil();

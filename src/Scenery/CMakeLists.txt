@@ -9,6 +9,7 @@ set(SOURCES
 	tilecache.cxx
 	tileentry.cxx
 	tilemgr.cxx
+  marker.cxx
 	)
 
 set(HEADERS
@@ -21,6 +22,7 @@ set(HEADERS
 	tilecache.hxx
 	tileentry.hxx
 	tilemgr.hxx
+  marker.hxx
 	)
 
 flightgear_component(Scenery "${SOURCES}" "${HEADERS}")
