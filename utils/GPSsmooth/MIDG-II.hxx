@@ -1,10 +1,4 @@
-#ifndef _FG_MIDG_II_HXX
-#define _FG_MIDG_II_HXX
-
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -15,11 +9,6 @@
 #include <simgear/misc/stdint.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/serial/serial.hxx>
-
-using std::cout;
-using std::endl;
-using std::string;
-using std::vector;
 
 
 // encapsulate a midg integer time (fixme, assumes all times in a track
@@ -40,7 +29,7 @@ public:
     inline MIDGTime( const uint32_t midgtime_msec ) {
         msec = midgtime_msec;
         seconds = (double)midgtime_msec / 1000.0;
-        // cout << midgtime << " = " << seconds << endl;
+        // std::cout << midgtime << " = " << seconds << std::endl;
     }
     inline ~MIDGTime() {}
 
@@ -118,8 +107,8 @@ class MIDGTrack {
 
 private:
 
-    vector <MIDGpos> pos_data;
-    vector <MIDGatt> att_data;
+    std::vector <MIDGpos> pos_data;
+    std::vector <MIDGatt> att_data;
 
     // parse message and put current data into vector if message has a
     // newer time stamp than existing data.
@@ -138,7 +127,7 @@ public:
                       MIDGpos *pos, MIDGatt *att );
 
     // load the named file into internal buffers
-    bool load( const string &file );
+    bool load( const std::string &file );
 
     inline int pos_size() const { return pos_data.size(); }
     inline int att_size() const { return att_data.size(); }
@@ -166,6 +155,3 @@ public:
 
 MIDGpos MIDGInterpPos( const MIDGpos A, const MIDGpos B, const double percent );
 MIDGatt MIDGInterpAtt( const MIDGatt A, const MIDGatt B, const double percent );
-
-
-#endif // _FG_MIDG_II_HXX

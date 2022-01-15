@@ -18,17 +18,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AICARRIER_HXX
-#define _FG_AICARRIER_HXX
+#pragma once
 
 #include <list>
 #include <string>
 
 #include <simgear/compiler.h>
 #include <simgear/emesary/Emesary.hxx>
-
-using std::list;
-using std::string;
 
 #include "AIShip.hxx"
 
@@ -46,9 +42,9 @@ public:
 
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
-    void setSign(const string&);
+    void setSign(const std::string&);
     void setDeckAltitudeFt(const double altitude_feet);
-    void setTACANChannelID(const string&);
+    void setTACANChannelID(const std::string&);
     double getDefaultModelRadius() override { return 350.0; }
 
     void bind() override;
@@ -71,7 +67,7 @@ public:
 
     const char* getTypeString(void) const override { return "carrier"; }
 
-    bool getParkPosition(const string& id, SGGeod& geodPos, double& hdng, SGVec3d& uvw);
+    bool getParkPosition(const std::string& id, SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
     /**
      * @brief type-safe wrapper around AIManager::getObjectFromProperty
@@ -102,11 +98,11 @@ private:
             : name(pp.name), offset(pp.offset), heading_deg(pp.heading_deg)
         {
         }
-        ParkPosition(const string& n, const SGVec3d& off = SGVec3d(), double heading = 0)
+        ParkPosition(const std::string& n, const SGVec3d& off = SGVec3d(), double heading = 0)
             : name(n), offset(off), heading_deg(heading)
         {
         }
-        string name;
+        std::string name;
         SGVec3d offset;
         double heading_deg;
     };
@@ -157,16 +153,16 @@ private:
     SGGeod               _mOpBoxPos;                                          // operational box limit for carrier.
     bool                 _MPControl                               = false;    // being controlled by MP. Either this or AIControl will be true
     SGPropertyNode_ptr   _pitch_node;
-    list<ParkPosition>   _ppositions;                                         // List of positions where an aircraft can start.
+    std::list<ParkPosition>   _ppositions;                                    // List of positions where an aircraft can start.
     double               _rel_wind                                = 0;        
     double               _rel_wind_from_deg                       = 0;        
     double               _rel_wind_speed_kts                      = 0;        
     bool                 _returning                               = false;    // set if the carrier is returning to an operating box
     SGPropertyNode_ptr   _roll_node;
-    string               _sign;                                               // The sign (pennant) of this carrier; e.g. CVN-68
+    std::string          _sign;                                               // The sign (pennant) of this carrier; e.g. CVN-68
     SGPropertyNode_ptr   _surface_wind_from_deg_node;                         
     SGPropertyNode_ptr   _surface_wind_speed_node;                            
-    string               _TACAN_channel_id;                                   
+    std::string          _TACAN_channel_id;                                   
     SGVec3d              _towerPosition;                                      
     bool                 _turn_to_base_course                     = true;     
     bool                 _turn_to_launch_hdg                      = true;     
@@ -181,8 +177,4 @@ private:
     double               _wind_from_north                         = 0;        // fps
     double               _wind_speed_kts                          = 0;        //true wind speed
     SGPropertyNode_ptr   _is_user_craft;
-
-
 };
-
-#endif  // _FG_AICARRIER_HXX

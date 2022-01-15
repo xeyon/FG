@@ -13,8 +13,8 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-#ifndef __FGFONTCACHE_HXX
-#define __FGFONTCACHE_HXX
+
+#pragma once
 
 #include <string>
 #include <map>
@@ -32,7 +32,6 @@
 #include <GL/glut.h>
 #endif
 
-using namespace std;
 
 /**
  * A class to keep all fonts available for future use.
@@ -42,7 +41,7 @@ class FGFontCache {
 public:
   FGFontCache ();
   ~FGFontCache ();
-  bool Set_Font (const string& Font_Name,
+  bool Set_Font (const std::string& Font_Name,
                  const float Size,
                  GLuint &Glyph_Texture);
   bool Get_Char (const char Char,
@@ -62,19 +61,17 @@ private:
                          const unsigned short Width,
                          double &X,
                          double &Y) const;
-  static string Get_Size (const float Size);
+  static std::string Get_Size (const float Size);
   static const unsigned short First_Printable_Char;
   static const unsigned short Last_Printable_Char;
   static const unsigned int Texture_Size = 1024;
   FT_Library m_Ft;
-  typedef map <string, FT_Face *> Face_Map_Type;
+  typedef std::map <std::string, FT_Face *> Face_Map_Type;
   Face_Map_Type m_Face_Map;
   FT_Face *m_Current_Face_Ptr;
   char m_Texture[Texture_Size * Texture_Size];
-  typedef map <string, unsigned int> Pos_Map_Type;
+  typedef std::map <std::string, unsigned int> Pos_Map_Type;
   Pos_Map_Type m_Pos_Map;
   unsigned int m_Current_Pos;
   GLuint m_Glyph_Texture;
 };
-
-#endif

@@ -22,7 +22,7 @@ GPSTrack::~GPSTrack() {};
 
 
 // load the specified file, return the number of records loaded
-int GPSTrack::load( const string &file ) {
+int GPSTrack::load( const std::string &file ) {
     int count = 0;
 
     data.clear();
@@ -34,7 +34,7 @@ int GPSTrack::load( const string &file ) {
         return 0;
     }
 
-    vector <string> tokens;
+    std::vector <std::string> tokens;
     GPSPoint p;
 
     while ( ! in.eof() ) {

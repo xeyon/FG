@@ -16,6 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -29,8 +30,6 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
 #include "antenna.hxx"
-
-using std::string;
 
 
 class FGRadioTransmission 
@@ -48,7 +47,7 @@ private:
 	
 	double _terrain_sampling_distance;
 	int _polarization;
-	std::map<string, double[2]> _mat_database;
+	std::map<std::string, double[2]> _mat_database;
 	SGPropertyNode *_root_node;
 	int _propagation_model; /// 0 none, 1 round Earth, 2 ITM
 	double polarization_loss();
@@ -74,7 +73,7 @@ private:
 *	@param: frequency, elevation data, terrain type, horizon distances, calculated loss
 *	@return: none
 ***/
-	void calculate_clutter_loss(double freq, double itm_elev[], std::deque<string*> &materials,
+	void calculate_clutter_loss(double freq, double itm_elev[], std::deque<std::string*> &materials,
 			double transmitter_height, double receiver_height, int p_mode,
 			double horizons[], double &clutter_loss);
 	
@@ -82,7 +81,7 @@ private:
 *		@param: terrain type, median clutter height, radiowave attenuation factor
 *		@return: none
 ***/
-	void get_material_properties(string* mat_name, double &height, double &density);
+	void get_material_properties(std::string* mat_name, double &height, double &density);
 	
 	
 public:
@@ -117,13 +116,13 @@ public:
 *	@param: transmitter position, frequency, ATC text, flag to indicate whether the transmission comes from an ATC groundstation
 *	@return: none
 ***/
-    void receiveATC(SGGeod tx_pos, double freq, string text, int transmission_type);
+    void receiveATC(SGGeod tx_pos, double freq, std::string text, int transmission_type);
     
 /*** TODO: receive multiplayer chat message and voice
 *	@param: transmitter position, frequency, ATC text, flag to indicate whether the transmission comes from an ATC groundstation
 *	@return: none
 ***/
-    void receiveChat(SGGeod tx_pos, double freq, string text, int transmission_type);
+    void receiveChat(SGGeod tx_pos, double freq, std::string text, int transmission_type);
     
 /*** TODO: receive navaid 
 *	@param: transmitter position, frequency, flag 
@@ -139,5 +138,3 @@ public:
 ***/
     double receiveBeacon(SGGeod &tx_pos, double heading, double pitch);
 };
-
-

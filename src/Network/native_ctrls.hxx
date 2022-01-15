@@ -21,9 +21,7 @@
 // $Id$
 
 
-#ifndef _FG_NATIVE_CTRLS_HXX
-#define _FG_NATIVE_CTRLS_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -37,7 +35,6 @@
 using FG_DDS_Ctrls = FGNetCtrls;
 #endif
 
-using std::string;
 
 class FGNativeCtrls : public FGProtocol {
 
@@ -60,5 +57,3 @@ public:
     // close the channel
     bool close();
 };
-
-#endif // _FG_NATIVE_CTRLS_HXX

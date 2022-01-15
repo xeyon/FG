@@ -22,17 +22,13 @@
 // $Id$
 
 
-#ifndef _FG_RUL_HXX
-#define _FG_RUL_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 
 #include <string>
 
 #include "protocol.hxx"
-
-using std::string;
 
 
 class FGRUL : public FGProtocol {
@@ -51,8 +47,3 @@ public:
     // process work for this port
     bool process();
 };
-
-
-#endif // _FG_RUL_HXX
-
-

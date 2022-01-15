@@ -14,8 +14,7 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef GL_UTILS_HXX
-#define GL_UTILS_HXX
+#pragma once
 
 #include <boost/utility.hpp>
 #include <stack>
@@ -29,7 +28,6 @@
 #include <GL/gl.h>
 #endif
 
-using namespace std;
 
 class GL_utils : private boost::noncopyable {
 public:
@@ -78,8 +76,6 @@ private:
     GLfloat m[4][4];
   } Matrix;
 
-  stack <Matrix> m_Matrix[GL_UTILS_LAST];
+  std::stack <Matrix> m_Matrix[GL_UTILS_LAST];
   GLenum_Mode m_Current_Matrix_Mode;
 };
-
-#endif

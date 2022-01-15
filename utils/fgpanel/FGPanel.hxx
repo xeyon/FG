@@ -19,17 +19,12 @@
 //
 //  $Id: FGPanel.hxx,v 1.1 2016/07/20 22:01:30 allaert Exp $
 
-#ifndef FGPANEL_HXX
-#define FGPANEL_HXX
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
 #endif
 
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
 
 #include <simgear/props/propsfwd.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -37,7 +32,6 @@
 #include "FGCroppedTexture.hxx"
 #include "FGPanelInstrument.hxx"
 
-using namespace std;
 
 ////////////////////////////////////////////////////////////////////////
 // Top-level panel.
@@ -85,7 +79,7 @@ public:
     virtual int getHeight () const;
 
 private:
-    typedef vector <FGPanelInstrument *> instrument_list_type;
+    typedef std::vector <FGPanelInstrument *> instrument_list_type;
     int m_width;
     int m_height;
 
@@ -106,5 +100,3 @@ private:
     static GLint Textured_Layer_MVP_Loc;
     static GLint Textured_Layer_Sampler_Loc;
 };
-
-#endif

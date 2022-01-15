@@ -24,10 +24,7 @@
 //
 // $Id$
 
-
-#ifndef _FG_AV400WSIM_HXX
-#define _FG_AV400WSIM_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 #include <stdlib.h>
@@ -36,8 +33,6 @@
 #include <string>
 
 #include "protocol.hxx"
-
-using std::string;
 
 class FlightProperties;
 
@@ -84,9 +79,9 @@ class FGAV400WSimB : public FGProtocol {
     int hz2count;
     int hz2cycles;
     char flight_phase;
-    string hal;
-    string val;
-    string sbas_sel;
+    std::string hal;
+    std::string val;
+    std::string sbas_sel;
     bool req_hostid;
     bool req_sbas;
     int outputctr;
@@ -119,9 +114,9 @@ public:
     bool gen_Wm_message();
     bool gen_Wv_message();
     
-    bool verify_checksum( string message, int datachars );
-    string asciitize_message( string message );
-    string buffer_to_string();
+    bool verify_checksum( std::string message, int datachars );
+    std::string asciitize_message( std::string message );
+    std::string buffer_to_string();
     bool parse_message();
  
     // open hailing frequencies
@@ -137,7 +132,3 @@ public:
     inline void set_hz2( double t ) { hz2 = t, hz2cycles = get_hz() / hz2; }
     
 };
-
-
-
-#endif // _FG_AV400WSIM_HXX

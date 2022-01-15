@@ -13,8 +13,7 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef _RUNWAY_PREF_LOADER_HXX_
-#define _RUNWAY_PREF_LOADER_HXX_
+#pragma once
 
 #include <time.h>
 #include <string>
@@ -24,7 +23,6 @@
 
 #include "runwayprefs.hxx"
 
-using std::string;
 
 class FGRunwayPreferenceXMLLoader : public XMLVisitor {
 public:
@@ -40,18 +38,16 @@ protected:
     virtual void warning (const char * message, int line, int column);
     virtual void error (const char * message, int line, int column);
 
-    time_t processTime(const string &tme);
+    time_t processTime(const std::string &tme);
 
 private:
     FGRunwayPreference* _pref;
 
-    string value;
+    std::string value;
 
-    string scheduleName;
+    std::string scheduleName;
     ScheduleTime currTimes; // Needed for parsing;
 
     RunwayList  rwyList;
     RunwayGroup rwyGroup;
 };
-
-#endif

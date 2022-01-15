@@ -20,12 +20,7 @@
 //
 // $Id$
 
-#ifndef _VOICE_HXX
-#define _VOICE_HXX
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#pragma once
 
 #include <vector>
 
@@ -45,9 +40,6 @@
 #else
 #  include <queue>
 #endif // ENABLE_THREADS
-
-using std::vector;
-
 
 
 class FGVoiceMgr : public SGSubsystem
@@ -124,5 +116,3 @@ protected:
   std::queue<std::string> _msg;
 #endif
 };
-
-#endif // _VOICE_HXX

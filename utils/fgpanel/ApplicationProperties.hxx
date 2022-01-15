@@ -15,13 +15,12 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-#ifndef __APPLICATION_PROPERTIES
-#define __APPLICATION_PROPERTIES
+
+#pragma once
 
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/props/props.hxx>
 
-using namespace std;
 
 class ApplicationProperties {
 public:
@@ -29,7 +28,5 @@ public:
   static SGPath GetRootPath (const char *subDir = NULL);
   static SGPath GetCwd ();
   static SGPropertyNode_ptr Properties;
-  static string root;
+  static std::string root;
 };
-
-#endif

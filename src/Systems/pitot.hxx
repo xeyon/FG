@@ -5,8 +5,7 @@
 // This file is in the Public Domain and comes with no warranty.
 
 
-#ifndef __SYSTEMS_PITOT_HXX
-#define __SYSTEMS_PITOT_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -15,7 +14,6 @@
 #include <simgear/compiler.h>
 
 #include <string>
-using std::string;
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -65,5 +63,3 @@ private:
     SGPropertyNode_ptr _alpha_deg_node;
     SGPropertyNode_ptr _beta_deg_node;
 };
-
-#endif // __SYSTEMS_PITOT_HXX

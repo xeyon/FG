@@ -21,20 +21,18 @@
 // $Id$
 
 
-#ifndef _TILECACHE_HXX
-#define _TILECACHE_HXX
+#pragma once
 
 #include <map>
 
 #include <simgear/bucket/newbucket.hxx>
 #include "tileentry.hxx"
 
-using std::map;
 
 // A class to store and manage a pile of tiles
 class TileCache {
 public:
-    typedef map < long, TileEntry * > tile_map;
+    typedef std::map < long, TileEntry * > tile_map;
     typedef tile_map::iterator tile_map_iterator;
     typedef tile_map::const_iterator const_tile_map_iterator;
 private:
@@ -129,5 +127,3 @@ public:
     // update tile's priority and expiry time according to current request
     void request_tile(TileEntry* t,float priority,bool current_view,double requesttime);
 };
-
-#endif // _TILECACHE_HXX

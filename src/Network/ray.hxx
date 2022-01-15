@@ -21,9 +21,7 @@
 // $Id$
 
 
-#ifndef _FG_RAY_HXX
-#define _FG_RAY_HXX
-
+#pragma once
 
 #include <stdio.h>		// FILE
 
@@ -32,8 +30,6 @@
 #include <string>
 
 #include "protocol.hxx"
-
-using std::string;
 
 
 class FGRAY : public FGProtocol {
@@ -58,6 +54,3 @@ public:
     // process work for this port
     bool process();
 };
-
-
-#endif // _FG_RAY_HXX

@@ -75,8 +75,8 @@
 void uiuc_engine() 
 {
   stack command_list;
-  string linetoken1;
-  string linetoken2;
+  std::string linetoken1;
+  std::string linetoken2;
 
   if (outside_control == false)
     pilot_throttle_no = false;

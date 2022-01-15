@@ -20,14 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIThermal_HXX
-#define _FG_AIThermal_HXX
+#pragma once
 
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
 #include <string>
-using std::string;
 
 
 class FGAIThermal : public FGAIBase {
@@ -89,5 +87,3 @@ private:
 	SGPropertyNode_ptr _aloft_wind_speed_node;
 
 };
-
-#endif  // _FG_AIThermal_HXX

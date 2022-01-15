@@ -90,8 +90,8 @@
 
 void uiuc_coef_sideforce()
 {
-  string linetoken1;
-  string linetoken2;
+  std::string linetoken1;
+  std::string linetoken2;
   stack command_list;
 
   double p_nondim;

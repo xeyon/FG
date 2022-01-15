@@ -20,8 +20,7 @@
 //
 // $Id$
 
-#ifndef _FGMETAR_HXX
-#define _FGMETAR_HXX
+#pragma once
 
 #include <vector>
 #include <map>
@@ -30,14 +29,10 @@
 
 #include <simgear/environment/metar.hxx>
 
-using std::vector;
-using std::map;
-using std::string;
-
 
 class FGMetar : public SGMetar, public SGReferenced {
 public:
-	FGMetar(const string& icao);
+	FGMetar(const std::string& icao);
 
 	long	getAge_min()			const;
 	time_t	getTime()			const { return _time; }
@@ -51,5 +46,3 @@ private:
 	time_t	_time;
 	bool	_snow_cover;
 };
-
-#endif // _FGMETAR_HXX

@@ -17,14 +17,12 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef FGLAYEREDINSTRUMENT_HXX
-#define FGLAYEREDINSTRUMENT_HXX
+#pragma once
 
 #include "FGCroppedTexture.hxx"
 #include "FGInstrumentLayer.hxx"
 #include "FGPanelInstrument.hxx"
 
-using namespace std;
 
 /**
  * An instrument constructed of multiple layers.
@@ -47,8 +45,6 @@ public:
   virtual void addTransformation (FGPanelTransformation * const transformation);
 
 private:
-  typedef vector <FGInstrumentLayer *> layer_list;
+  typedef std::vector <FGInstrumentLayer *> layer_list;
   layer_list m_layers;
 };
-
-#endif

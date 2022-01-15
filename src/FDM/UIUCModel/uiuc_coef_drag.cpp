@@ -88,8 +88,8 @@
 
 void uiuc_coef_drag()
 {
-  string linetoken1;
-  string linetoken2;
+  std::string linetoken1;
+  std::string linetoken2;
   stack command_list;
 
   double q_nondim;

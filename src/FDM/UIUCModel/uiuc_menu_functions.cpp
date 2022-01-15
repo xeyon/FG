@@ -68,10 +68,11 @@
 
 #include "uiuc_menu_functions.h"
 
-bool check_float( const string &token)
+
+bool check_float( const std::string &token)
 {
   float value;
-  istringstream stream(token.c_str()); 
+  std::istringstream stream(token.c_str()); 
   return !((stream >> value).fail());
 }
 

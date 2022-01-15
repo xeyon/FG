@@ -17,12 +17,10 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef FGPANELINSTRUMENT_HXX
-#define FGPANELINSTRUMENT_HXX
+#pragma once
 
 #include <simgear/props/condition.hxx>
 
-using namespace std;
 
 /**
  * Abstract base class for a panel instrument.
@@ -52,5 +50,3 @@ public:
 private:
   int m_x, m_y, m_w, m_h;
 };
-
-#endif

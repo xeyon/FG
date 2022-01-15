@@ -18,8 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef __INSTRUMENTS_TCAS_HXX
-#define __INSTRUMENTS_TCAS_HXX
+#pragma once
 
 #include <assert.h>
 
@@ -30,10 +29,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <Sound/voiceplayer.hxx>
-
-using std::vector;
-using std::deque;
-using std::map;
 
 class SGSampleGroup;
 
@@ -133,7 +128,7 @@ class TCAS : public SGSubsystem
         double RAtimestamp;
     } TrackerTarget;
 
-    typedef map<std::string,TrackerTarget*> TrackerTargets;
+    typedef std::map<std::string,TrackerTarget*> TrackerTargets;
 
     typedef struct
     {
@@ -408,5 +403,3 @@ public:
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif
-
-#endif // __INSTRUMENTS_TCAS_HXX

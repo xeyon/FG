@@ -15,18 +15,16 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-#ifndef __FGPANELPROTOCOL_HXX
-#define __FGPANELPROTOCOL_HXX
+
+#pragma once
 
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/io/iochannel.hxx>
 
-using namespace std;
-
 class PropertySetter;
 
-typedef vector<PropertySetter*> PropertySetterVector;
+typedef std::vector<PropertySetter*> PropertySetterVector;
 
 class FGPanelProtocol : public SGSubsystem {
 public:
@@ -46,5 +44,3 @@ private:
     SGIOChannel *io;
     PropertySetterVector propertySetterVector;
 };
-
-#endif

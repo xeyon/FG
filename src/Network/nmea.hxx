@@ -20,9 +20,7 @@
 //
 // $Id$
 
-
-#ifndef _FG_NMEA_HXX
-#define _FG_NMEA_HXX
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -52,7 +50,7 @@ protected:
     bool mBiDirectionalSupport;
     FlightProperties mFdm;
     const char* mLineFeed;
-    string mNmeaSentence;
+    std::string mNmeaSentence;
 
     void add_with_checksum(char *sentence, unsigned int buf_size);
 
@@ -78,5 +76,3 @@ public:
     // close the channel
     virtual bool close();
 };
-
-#endif // _FG_NMEA_HXX

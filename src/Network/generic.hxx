@@ -20,10 +20,7 @@
 //
 // $Id$
 
-
-#ifndef _FG_SERIAL_HXX
-#define _FG_SERIAL_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -31,13 +28,12 @@
 
 #include "protocol.hxx"
 
-using std::string;
 
 class FGGeneric : public FGProtocol {
 
 public:
 
-    FGGeneric(vector<string>);
+    FGGeneric(vector<std::string>);
     ~FGGeneric();
 
     bool gen_message();
@@ -62,8 +58,8 @@ protected:
     enum e_type { FG_BOOL=0, FG_INT, FG_FLOAT, FG_DOUBLE, FG_STRING, FG_FIXED, FG_BYTE, FG_WORD };
 
     typedef struct {
-     // string name;
-        string format;
+     // std::string name;
+        std::string format;
         e_type type;
         double offset;
         double factor;
@@ -75,17 +71,17 @@ protected:
 
 private:
 
-    string file_name;
+    std::string file_name;
 
     int length;
     char buf[ FG_MAX_MSG_SIZE ];
 
-    string preamble;
-    string postamble;
-    string var_separator;
-    string line_separator;
-    string var_sep_string;
-    string line_sep_string;
+    std::string preamble;
+    std::string postamble;
+    std::string var_separator;
+    std::string line_separator;
+    std::string var_sep_string;
+    std::string line_sep_string;
     vector<_serial_prot> _out_message;
     vector<_serial_prot> _in_message;
 
@@ -126,8 +122,3 @@ private:
     // Special handling for bool (relative change = toggle, no min/max, no wrap)
     static void updateValue(_serial_prot& prot, bool val);
 };
-
-
-#endif // _FG_SERIAL_HXX
-
-

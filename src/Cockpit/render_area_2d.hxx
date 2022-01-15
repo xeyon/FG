@@ -21,12 +21,7 @@
 //
 // $Id$
 
-#ifndef _RENDER_AREA_2D
-#define _RENDER_AREA_2D
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#pragma once
 
 #include <osg/ref_ptr>
 #include <osg/State>
@@ -37,7 +32,6 @@
 
 #include <vector>
 
-using std::vector;
 
 enum RA2DDrawingType {
 	RA2D_LINE,
@@ -107,10 +101,8 @@ private:
 	void RenderQuad( const SGVec2f *p);
 	void RenderQuad( const SGVec2f *p, const SGVec4f *color );
 	
-	vector<RA2DPrimitive> drawing_list;
+	std::vector<RA2DPrimitive> drawing_list;
 	
 	// Control whether to output debugging output
 	bool _ra2d_debug;
 };
-
-#endif

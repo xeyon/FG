@@ -15,18 +15,15 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-#ifndef FGDUMMYTEXTURELOADER_HXX
-#define FGDUMMYTEXTURELOADER_HXX
+
+#pragma once
 
 #include <string.h>
 
 #include "FGTextureLoaderInterface.hxx"
 
-using namespace std;
 
 class FGDummyTextureLoader : public FGTextureLoaderInterface {
 public:
-  virtual GLuint loadTexture (const string& filename);
+  virtual GLuint loadTexture (const std::string& filename);
 };
-
-#endif

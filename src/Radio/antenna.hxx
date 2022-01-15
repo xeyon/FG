@@ -16,6 +16,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#pragma once
+
 #ifndef __cplusplus
 # error This library requires C++
 #endif
@@ -27,7 +29,6 @@
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/debug/logstream.hxx>
 
-using std::string;
 
 class FGRadioAntenna
 {
@@ -39,7 +40,7 @@ private:
 *	@param: name of file
 *	@return: none
 ***/
-	void load_NEC_antenna_pattern(string type);
+	void load_NEC_antenna_pattern(std::string type);
 	
 	int _mirror_y;	
 	int _mirror_z;
@@ -57,7 +58,7 @@ private:
 	
 public:
 	
-	FGRadioAntenna(string type);
+	FGRadioAntenna(std::string type);
     ~FGRadioAntenna();
 
 /*** calculate far-field antenna gain on a 3D volume around it

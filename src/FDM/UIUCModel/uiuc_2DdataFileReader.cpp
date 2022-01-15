@@ -77,6 +77,8 @@
 
 #include "uiuc_2DdataFileReader.h"
 
+using std::string;
+using std::istringstream;
 
 void uiuc_2DdataFileReader( string file_name, 
                             double x[100][100], 

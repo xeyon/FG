@@ -1,6 +1,5 @@
 
-#ifndef _MENU_H_
-#define _MENU_H_
+#pragma once
 
 #include "uiuc_aircraft.h"
 #include "uiuc_convert.h"
@@ -30,7 +29,5 @@
 #include "uiuc_menu_record.h"
 #include "uiuc_menu_misc.h"
 
-//bool check_float(const string &token); // To check whether the token is a float or not
-void uiuc_menu (string aircraft);
-
-#endif //_MENU_H_
+//bool check_float(const std::string &token); // To check whether the token is a float or not
+void uiuc_menu (std::string aircraft);

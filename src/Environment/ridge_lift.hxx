@@ -25,16 +25,9 @@
 //
 
 
-#ifndef _FG_RidgeLift_HXX
-#define _FG_RidgeLift_HXX
-
-#ifdef HAVE_CONFIG
-#  include <config.h>
-#endif
-
+#pragma once
 
 #include <string>
-using std::string;
 
 #include <simgear/props/tiedpropertylist.hxx>
 
@@ -87,5 +80,3 @@ private:
 
     simgear::TiedPropertyList _tiedProperties;
 };
-
-#endif  // _FG_RidgeLift_HXX

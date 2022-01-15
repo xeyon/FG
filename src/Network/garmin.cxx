@@ -87,7 +87,7 @@ void FGGarmin::parse_message(const std::vector<std::string>& tokens)
         double altitude = atof( tokens[1].c_str() );
 
         // #2: altitude units
-        const string& alt_units = tokens[2];
+        const std::string& alt_units = tokens[2];
         if ( alt_units != "F" && alt_units != "f" )
             altitude *= SG_METER_TO_FEET;
 

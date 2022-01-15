@@ -14,8 +14,7 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef GLES_UTILS_HXX
-#define GLES_UTILS_HXX
+#pragma once
 
 #include <boost/utility.hpp>
 #include <string>
@@ -24,13 +23,12 @@
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 
-using namespace std;
 
 class GLES_utils : private boost::noncopyable {
 public:
   static GLES_utils& instance ();
 
-  void init (const string &title);
+  void init (const std::string &title);
 
   void register_display_func (void (*display_func) ());
   void register_idle_func (void (*idle_func) ());
@@ -73,9 +71,7 @@ private:
 #ifdef _RPI
   void init_dispmanx (EGL_DISPMANX_WINDOW_T &native_window);
 #else
-  void init_display (EGL_STATE_T &state, const string &title);
+  void init_display (EGL_STATE_T &state, const std::string &title);
 #endif
   GLboolean user_interrupt ();
 };
-
-#endif

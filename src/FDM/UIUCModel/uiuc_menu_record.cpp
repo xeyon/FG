@@ -82,6 +82,8 @@
 
 #include "uiuc_menu_record.h"
 
+using std::string;
+using std::istringstream;
 using std::cerr;
 using std::cout;
 using std::endl;

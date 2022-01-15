@@ -17,15 +17,13 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef FGINSTRUMENTLAYER_HXX
-#define FGINSTRUMENTLAYER_HXX
+#pragma once
 
 #include <vector>
 #include <simgear/props/condition.hxx>
 
 #include "FGPanelTransformation.hxx"
 
-using namespace std;
 
 /**
  * A single layer of a multi-layered instrument.
@@ -54,8 +52,6 @@ public:
 protected:
   int m_w, m_h;
 
-  typedef vector <FGPanelTransformation *> transformation_list;
+  typedef std::vector <FGPanelTransformation *> transformation_list;
   transformation_list m_transformations;
 };
-
-#endif

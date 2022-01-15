@@ -20,10 +20,7 @@
 //
 // $Id$
 
-
-#ifndef _FG_JOYCLIENT_HXX
-#define _FG_JOYCLIENT_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -32,8 +29,6 @@
 #include <FDM/flight.hxx>
 
 #include "protocol.hxx"
-
-using std::string;
 
 
 class FGJoyClient : public FGProtocol {
@@ -54,6 +49,3 @@ public:
     // close the channel
     bool close();
 };
-
-
-#endif // _FG_JOYCLIENT_HXX

@@ -15,8 +15,8 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
-#ifndef __FGTEXTURELOADERINTERFACE_HXX
-#define __FGTEXTURELOADERINTERFACE_HXX
+
+#pragma once
 
 #include <string>
 
@@ -31,11 +31,8 @@
 
 #include <simgear/compiler.h>
 
-using namespace std;
 
 class FGTextureLoaderInterface {
 public:
-  virtual GLuint loadTexture (const string &filename) = 0;
+  virtual GLuint loadTexture (const std::string &filename) = 0;
 };
-
-#endif

@@ -18,14 +18,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIStorm_HXX
-#define _FG_AIStorm_HXX
+#pragma once
 
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
 #include <string>
-using std::string;
 
 
 class FGAIStorm : public FGAIBase {
@@ -69,5 +67,3 @@ private:
         SGPropertyNode_ptr turb_rate_node;
 
 };
-
-#endif  // _FG_AIStorm_HXX

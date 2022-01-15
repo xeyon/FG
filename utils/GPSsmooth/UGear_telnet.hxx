@@ -23,15 +23,11 @@
 //
 // $Id$
 
-
-#ifndef _UG_TELNET_HXX
-#define _UG_TELNET_HXX
+#pragma once
 
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
 
 #include <simgear/io/sg_netChannel.hxx>
 
@@ -87,6 +83,3 @@ public:
     void handleAccept();
 
 };
-
-#endif // _UG_TELNET_HXX
-

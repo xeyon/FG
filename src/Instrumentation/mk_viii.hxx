@@ -18,8 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef __INSTRUMENTS_MK_VIII_HXX
-#define __INSTRUMENTS_MK_VIII_HXX
+#pragma once
 
 #include <assert.h>
 
@@ -30,9 +29,6 @@
 #include <simgear/props/props.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-using std::vector;
-using std::deque;
-using std::map;
 
 class SGSampleGroup;
 
@@ -578,7 +574,7 @@ class MK_VIII : public SGSubsystem
 
             class TerrainClearanceFilter
             {
-                typedef deque< Sample<double> > samples_type;
+                typedef std::deque< Sample<double> > samples_type;
                 samples_type      samples;
                 double            value;
                 double            last_update;
@@ -613,7 +609,7 @@ class MK_VIII : public SGSubsystem
             bool last_landing_gear;
             bool last_real_flaps_down;
 
-            typedef deque< Sample< Parameter<double> > > altitude_samples_type;
+            typedef std::deque< Sample< Parameter<double> > > altitude_samples_type;
             altitude_samples_type altitude_samples;
 
             struct
@@ -1387,5 +1383,3 @@ public:
 #ifdef _MSC_VER
 #  pragma warning( pop )
 #endif
-
-#endif // __INSTRUMENTS_MK_VIII_HXX

@@ -5,8 +5,8 @@ Written by Theresa Robinson
 robinst@ecf.toronto.edu
 */
 
-#ifndef _FLAPDATA_H
-#define _FLAPDATA_H
+#pragma once
+
 #include <simgear/compiler.h>
 
 #include <cstdio>
@@ -16,8 +16,6 @@ robinst@ecf.toronto.edu
 #include "uiuc_warnings_errors.h"
 //#include "uiuc_aircraft.h"
 
-using std::ifstream;
-using std::istringstream;
 
 class flapStruct {
 private:
@@ -101,7 +99,5 @@ class FlapData {
                 double interpolate(double x1, double y1, double x2, double y2, double x);
                 //A function called by init that reads in the file
                 //of the correct format and stores it in the arrays and tables
-                int readIn(ifstream* f);
+                int readIn(std::ifstream* f);
 };
-
-#endif

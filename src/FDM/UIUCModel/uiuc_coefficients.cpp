@@ -100,7 +100,7 @@
 
 void uiuc_coefficients(double dt)
 {
-  static string uiuc_coefficients_error = " (from uiuc_coefficients.cpp) ";
+  static std::string uiuc_coefficients_error = " (from uiuc_coefficients.cpp) ";
   double l_trim, l_defl;
   double V_rel_wind_dum, U_body_dum;
 

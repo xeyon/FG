@@ -21,18 +21,13 @@
 // $Id$
 
 
-#ifndef _PROTOCOL_HXX
-#define _PROTOCOL_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 #include <simgear/io/iochannel.hxx>
 
 #include <string>
 #include <vector>
-
-using std::string;
-using std::vector;
 
 
 #define FG_MAX_MSG_SIZE 16384
@@ -47,7 +42,7 @@ private:
 
     SGProtocolDir dir;
 
-    // string protocol_str;
+    // std::string protocol_str;
 
     // char buf[FG_MAX_MSG_SIZE];
     // int length;
@@ -68,7 +63,7 @@ public:
     virtual void reinit();
 
     inline SGProtocolDir get_direction() const { return dir; }
-    void set_direction( const string& d );
+    void set_direction( const std::string& d );
 
     inline double get_hz() const { return hz; }
     inline void set_hz( double t ) { hz = t; }
@@ -82,8 +77,8 @@ public:
     virtual bool gen_message();
     virtual bool parse_message();
 
-    // inline string get_protocol() const { return protocol_str; }
-    // inline void set_protocol( const string& str ) { protocol_str = str; }
+    // inline std::string get_protocol() const { return protocol_str; }
+    // inline void set_protocol( const std::string& str ) { protocol_str = str; }
 
     // inline char *get_buf() { return buf; }
     // inline int get_length() const { return length; }
@@ -101,23 +96,17 @@ public:
 };
 
 
-typedef vector < FGProtocol * > io_container;
+typedef std::vector < FGProtocol * > io_container;
 typedef io_container::iterator io_iterator;
 typedef io_container::const_iterator const_io_iterator;
 
 #include <stdexcept>
-using std::invalid_argument;
 
 //namespace flightgear { namespace network {
-class FGProtocolConfigError : public invalid_argument
+class FGProtocolConfigError : public std::invalid_argument
 {
 public:
-    FGProtocolConfigError( const string& what_string )
-	: invalid_argument(what_string) {}
+    FGProtocolConfigError( const std::string& what_string )
+	: std::invalid_argument(what_string) {}
 };
 //}} // end namespace flightgear::network
-
-
-#endif // _PROTOCOL_HXX
-
-

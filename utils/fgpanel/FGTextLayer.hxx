@@ -17,8 +17,7 @@
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef FGTEXTLAYER_HXX
-#define FGTEXTLAYER_HXX
+#pragma once
 
 #include <string>
 #include <simgear/timing/timestamp.hxx>
@@ -26,7 +25,6 @@
 #include "FGFontCache.hxx"
 #include "FGInstrumentLayer.hxx"
 
-using namespace std;
 
 /**
  * A text layer of an instrument.
@@ -46,11 +44,11 @@ public:
 
   class Chunk : public SGConditional {
   public:
-    Chunk (const string &text,
-           const string &fmt = "%s");
+    Chunk (const std::string &text,
+           const std::string &fmt = "%s");
     Chunk (const ChunkType type,
            const SGPropertyNode *node,
-           const string &fmt = "",
+           const std::string &fmt = "",
            const float mult = 1.0,
            const float offs = 0.0,
            const bool truncation = false);
@@ -58,9 +56,9 @@ public:
     const char *getValue () const;
   private:
     ChunkType m_type;
-    string m_text;
+    std::string m_text;
     SGConstPropertyNode_ptr m_node;
-    string m_fmt;
+    std::string m_fmt;
     float m_mult;
     float m_offs;
     bool m_trunc;
@@ -81,20 +79,20 @@ public:
                          const float g,
                          const float b);
   virtual void setPointSize (const float size);
-  virtual void setFontName (const string &name);
+  virtual void setFontName (const std::string &name);
 
 private:
 
   void recalc_value () const;
 
-  typedef vector<Chunk *> chunk_list;
+  typedef std::vector<Chunk *> chunk_list;
   chunk_list m_chunks;
   float m_color[4];
 
   float m_pointSize;
   static SGPath The_Font_Path;
-  mutable string m_font_name;
-  mutable string m_value;
+  mutable std::string m_font_name;
+  mutable std::string m_value;
   mutable SGTimeStamp m_then;
   mutable SGTimeStamp m_now;
 
@@ -107,5 +105,3 @@ private:
   static GLint Text_Layer_Sampler_Loc;
   static GLint Text_Layer_Color_Loc;
 };
-
-#endif

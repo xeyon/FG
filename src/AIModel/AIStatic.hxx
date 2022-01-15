@@ -18,14 +18,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIStatic_HXX
-#define _FG_AIStatic_HXX
+#pragma once
 
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
 #include <string>
-using std::string;
 
 
 class FGAIStatic : public FGAIBase {
@@ -39,5 +37,3 @@ public:
 
     const char* getTypeString(void) const override { return "static"; }
 };
-
-#endif  // _FG_AISTATIC_HXX

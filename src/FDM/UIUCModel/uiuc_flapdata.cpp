@@ -126,7 +126,7 @@ FlapData::~FlapData(){
 //returns zero if it was successful
 int FlapData::init(const char* filename){
 
-        ifstream* f=new ifstream(filename);     //open file for reading in text (ascii) mode
+        std::ifstream* f=new std::ifstream(filename);     //open file for reading in text (ascii) mode
         if (f==NULL) {  //file open error
                 return(1);
         }
@@ -259,7 +259,7 @@ double FlapData::interpolate(double x0, double y0, double x1, double y1, double 
 
 //A function called by init that reads in the file
 //of the correct format and stores it in the arrays and tables
-int FlapData::readIn (ifstream* f){
+int FlapData::readIn (std::ifstream* f){
 
         int i,j,k,l;
         //int count=0;

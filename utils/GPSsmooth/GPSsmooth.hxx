@@ -1,17 +1,10 @@
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#pragma once
 
 #include <simgear/compiler.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
-
-using std::cout;
-using std::endl;
-using std::string;
-using std::vector;
 
 
 // encapsulate a gps integer time (fixme, assumes all times in a track
@@ -33,7 +26,7 @@ public:
         tmp -= mm * 100;
         double ss = tmp;
         seconds = hh*3600 + mm*60 + ss;
-        // cout << gpstime << " = " << seconds << endl;
+        // std::cout << gpstime << " = " << seconds << std::endl;
     }
     inline ~GPSTime() {}
 
@@ -81,14 +74,14 @@ class GPSTrack {
 
 private:
 
-    vector <GPSPoint> data;
+    std::vector <GPSPoint> data;
 
 public:
 
     GPSTrack();
     ~GPSTrack();
 
-    int load( const string &file );
+    int load( const std::string &file );
 
     inline int size() const { return data.size(); }
 

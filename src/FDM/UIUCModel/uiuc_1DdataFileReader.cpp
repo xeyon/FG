@@ -74,6 +74,9 @@
 
 #include "uiuc_1DdataFileReader.h"
 
+using std::string;
+using std::istringstream;
+
 int 
 uiuc_1DdataFileReader( string file_name,  
                          double x[], double y[], int &xmax ) 

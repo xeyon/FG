@@ -1,10 +1,4 @@
-#ifndef _FG_UGEAR_COMMAND_HXX
-#define _FG_UGEAR_COMMAND_HXX
-
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -16,11 +10,6 @@
 #include <simgear/io/iochannel.hxx>
 #include <simgear/serial/serial.hxx>
 
-using std::cout;
-using std::endl;
-using std::string;
-using std::queue;
-
 
 // Manage UGear Command Channel
 class UGCommand {
@@ -30,7 +19,7 @@ private:
     int cmd_send_index;
     int cmd_recv_index;
     bool prime_state;
-    queue <string> cmd_queue;
+    std::queue <std::string> cmd_queue;
 
 public:
 
@@ -40,7 +29,7 @@ public:
     // send current command until acknowledged
     int update( SGSerialPort *serial );
 
-    void add( const string command );
+    void add( const std::string command );
     inline int cmd_queue_size() {
         return cmd_queue.size();
     }
@@ -51,6 +40,3 @@ public:
 
 
 extern UGCommand command_mgr;
-
-
-#endif // _FG_UGEAR_COMMAND_HXX

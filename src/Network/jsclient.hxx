@@ -21,10 +21,7 @@
 //
 // $Id$
 
-
-#ifndef _FG_JSCLIENT_HXX
-#define _FG_JSCLIENT_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -34,15 +31,13 @@
 
 #include "protocol.hxx"
 
-using std::string;
-
 
 class FGJsClient : public FGProtocol {
 
     char buf[256];
     double axis[4];
     SGPropertyNode_ptr axisdef[4];
-    string axisdefstr[4];
+    std::string axisdefstr[4];
     bool active;
 				
 public:
@@ -59,6 +54,3 @@ public:
     // close the channel
     bool close();
 };
-
-
-#endif // _FG_JSCLIENT_HXX

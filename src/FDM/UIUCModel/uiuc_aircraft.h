@@ -136,8 +136,7 @@
 **********************************************************************/
 
 
-#ifndef _AIRCRAFT_H_
-#define _AIRCRAFT_H_
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -630,7 +629,7 @@ struct AIRCRAFT
 #define  recordParts        aircraft_->recordParts
   
   /*= Keywords (token1) ===========================================*/
-  std::map <string,int>      Keyword_map;
+  std::map <std::string,int>      Keyword_map;
 #define      Keyword_map         aircraft_->Keyword_map       
 
   double CD, CX, CL, CZ, Cm, CY, Cl, Cn;
@@ -665,7 +664,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* init ========== Initial values for equations of motion =======*/
 
-  std::map <string,int> init_map;
+  std::map <std::string,int> init_map;
 #define      init_map          aircraft_->init_map          
 
   int recordRate;
@@ -759,7 +758,7 @@ struct AIRCRAFT
   bool trim_case_2;
 #define trim_case_2            aircraft_->trim_case_2
   bool use_uiuc_network;
-  string server_IP;
+  std::string server_IP;
   int port_num;
 #define use_uiuc_network       aircraft_->use_uiuc_network
 #define server_IP              aircraft_->server_IP
@@ -772,7 +771,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* geometry ====== Aircraft-specific geometric quantities =======*/
   
-  std::map <string,int> geometry_map;
+  std::map <std::string,int> geometry_map;
 #define      geometry_map        aircraft_->geometry_map       
   
   double bw, cbar, Sw, ih, bh, chord_h, Sh;
@@ -788,7 +787,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* controlSurface  Control surface deflections and properties ===*/
   
-  std::map <string,int> controlSurface_map;
+  std::map <std::string,int> controlSurface_map;
 #define      controlSurface_map  aircraft_->controlSurface_map
   
   double demax, demin;
@@ -837,7 +836,7 @@ struct AIRCRAFT
 #define elevator_doublet_duration  aircraft_->elevator_doublet_duration
 
   bool elevator_input;
-  string elevator_input_file;
+  std::string elevator_input_file;
   double elevator_input_timeArray[7500];
   double elevator_input_deArray[7500];
   int elevator_input_ntime;
@@ -850,7 +849,7 @@ struct AIRCRAFT
 #define elevator_input_startTime   aircraft_->elevator_input_startTime
 
   bool aileron_input;
-  string aileron_input_file;
+  std::string aileron_input_file;
   double aileron_input_timeArray[1500];
   double aileron_input_daArray[1500];
   int aileron_input_ntime;
@@ -863,7 +862,7 @@ struct AIRCRAFT
 #define aileron_input_startTime   aircraft_->aileron_input_startTime
 
   bool rudder_input;
-  string rudder_input_file;
+  std::string rudder_input_file;
   double rudder_input_timeArray[500];
   double rudder_input_drArray[500];
   int rudder_input_ntime;
@@ -904,7 +903,7 @@ struct AIRCRAFT
 
 
   bool flap_pos_input;
-  string flap_pos_input_file;
+  std::string flap_pos_input_file;
   double flap_pos_input_timeArray[500];
   double flap_pos_input_dfArray[500];
   int flap_pos_input_ntime;
@@ -975,7 +974,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* controlsMixer = Control mixer ================================*/
   
-  std::map <string,int> controlsMixer_map;
+  std::map <std::string,int> controlsMixer_map;
 #define      controlsMixer_map  aircraft_->controlsMixer_map
   
   double nomix;
@@ -985,7 +984,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* mass =========== Aircraft-specific mass properties ===========*/
   
-  std::map <string,int> mass_map;
+  std::map <std::string,int> mass_map;
 #define      mass_map            aircraft_->mass_map
 
   double Weight;
@@ -1011,7 +1010,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* engine ======== Propulsion data ==============================*/
   
-  std::map <string,int> engine_map;
+  std::map <std::string,int> engine_map;
 #define      engine_map            aircraft_->engine_map          
   
   double simpleSingleMaxThrust;
@@ -1034,7 +1033,7 @@ struct AIRCRAFT
 #define eta_q   aircraft_->eta_q
   
   bool Throttle_pct_input;
-  string Throttle_pct_input_file;
+  std::string Throttle_pct_input_file;
   double Throttle_pct_input_timeArray[1500];
   double Throttle_pct_input_dTArray[1500];
   int Throttle_pct_input_ntime;
@@ -1113,7 +1112,7 @@ struct AIRCRAFT
 
 
   bool Xp_input;
-  string Xp_input_file;
+  std::string Xp_input_file;
   double Xp_input_timeArray[5400];
   double Xp_input_XpArray[5400];
   int Xp_input_ntime;
@@ -1125,7 +1124,7 @@ struct AIRCRAFT
 #define Xp_input_ntime      aircraft_->Xp_input_ntime
 #define Xp_input_startTime  aircraft_->Xp_input_startTime
   bool Zp_input;
-  string Zp_input_file;
+  std::string Zp_input_file;
   double Zp_input_timeArray[5400];
   double Zp_input_ZpArray[5400];
   int Zp_input_ntime;
@@ -1137,7 +1136,7 @@ struct AIRCRAFT
 #define Zp_input_ntime      aircraft_->Zp_input_ntime
 #define Zp_input_startTime  aircraft_->Zp_input_startTime
   bool Mp_input;
-  string Mp_input_file;
+  std::string Mp_input_file;
   double Mp_input_timeArray[5400];
   double Mp_input_MpArray[5400];
   int Mp_input_ntime;
@@ -1153,7 +1152,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* CD ============ Aerodynamic x-force quantities (longitudinal) */
   
-  std::map <string,int> CD_map;
+  std::map <std::string,int> CD_map;
 #define      CD_map              aircraft_->CD_map            
   
   double CDo, CDK, CLK, CD_a, CD_adot, CD_q, CD_ih, CD_de, CD_dr, CD_da, CD_beta;
@@ -1174,7 +1173,7 @@ struct AIRCRAFT
 #define CD_dg    aircraft_->CD_dg
   bool b_CLK;
 #define b_CLK      aircraft_->b_CLK
-  string CDfa;
+  std::string CDfa;
   double CDfa_aArray[100];
   double CDfa_CDArray[100];
   int CDfa_nAlpha;
@@ -1184,7 +1183,7 @@ struct AIRCRAFT
 #define CDfa_CDArray       aircraft_->CDfa_CDArray
 #define CDfa_nAlpha        aircraft_->CDfa_nAlpha
 #define CDfaI              aircraft_->CDfaI
-  string CDfCL;
+  std::string CDfCL;
   double CDfCL_CLArray[100];
   double CDfCL_CDArray[100];
   int CDfCL_nCL;
@@ -1194,7 +1193,7 @@ struct AIRCRAFT
 #define CDfCL_CDArray      aircraft_->CDfCL_CDArray
 #define CDfCL_nCL          aircraft_->CDfCL_nCL
 #define CDfCLI             aircraft_->CDfCLI
-  string CDfade;
+  std::string CDfade;
   double CDfade_aArray[100][100];
   double CDfade_deArray[100];
   double CDfade_CDArray[100][100];
@@ -1208,7 +1207,7 @@ struct AIRCRAFT
 #define CDfade_nAlphaArray aircraft_->CDfade_nAlphaArray
 #define CDfade_nde         aircraft_->CDfade_nde
 #define CDfadeI            aircraft_->CDfadeI
-  string CDfdf;
+  std::string CDfdf;
   double CDfdf_dfArray[100];
   double CDfdf_CDArray[100];
   int CDfdf_ndf;
@@ -1218,7 +1217,7 @@ struct AIRCRAFT
 #define CDfdf_CDArray      aircraft_->CDfdf_CDArray
 #define CDfdf_ndf          aircraft_->CDfdf_ndf
 #define CDfdfI             aircraft_->CDfdfI
-  string CDfadf;
+  std::string CDfadf;
   double CDfadf_aArray[100][100];
   double CDfadf_dfArray[100];
   double CDfadf_CDArray[100][100];
@@ -1353,7 +1352,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* CL ============ Aerodynamic z-force quantities (longitudinal) */
   
-  std::map <string,int> CL_map;
+  std::map <std::string,int> CL_map;
 #define      CL_map              aircraft_->CL_map            
   
   double CLo, CL_a, CL_adot, CL_q, CL_ih, CL_de;
@@ -1367,7 +1366,7 @@ struct AIRCRAFT
 #define CL_df    aircraft_->CL_df
 #define CL_ds    aircraft_->CL_ds
 #define CL_dg    aircraft_->CL_dg
-  string CLfa;
+  std::string CLfa;
   double CLfa_aArray[100];
   double CLfa_CLArray[100];
   int CLfa_nAlpha;
@@ -1377,7 +1376,7 @@ struct AIRCRAFT
 #define CLfa_CLArray       aircraft_->CLfa_CLArray
 #define CLfa_nAlpha        aircraft_->CLfa_nAlpha
 #define CLfaI              aircraft_->CLfaI
-  string CLfade;
+  std::string CLfade;
   double CLfade_aArray[100][100];
   double CLfade_deArray[100];
   double CLfade_CLArray[100][100];
@@ -1391,7 +1390,7 @@ struct AIRCRAFT
 #define CLfade_nAlphaArray aircraft_->CLfade_nAlphaArray
 #define CLfade_nde         aircraft_->CLfade_nde
 #define CLfadeI            aircraft_->CLfadeI
-  string CLfdf;
+  std::string CLfdf;
   double CLfdf_dfArray[100];
   double CLfdf_CLArray[100];
   int CLfdf_ndf;
@@ -1401,7 +1400,7 @@ struct AIRCRAFT
 #define CLfdf_CLArray      aircraft_->CLfdf_CLArray
 #define CLfdf_ndf          aircraft_->CLfdf_ndf
 #define CLfdfI             aircraft_->CLfdfI
-  string CLfadf;
+  std::string CLfadf;
   double CLfadf_aArray[100][100];
   double CLfadf_dfArray[100];
   double CLfadf_CLArray[100][100];
@@ -1427,7 +1426,7 @@ struct AIRCRAFT
 #define CZ_deb2  aircraft_->CZ_deb2
 #define CZ_df    aircraft_->CZ_df
 #define CZ_adf   aircraft_->CZ_adf
-  string CZfa;
+  std::string CZfa;
   double CZfa_aArray[100];
   double CZfa_CZArray[100];
   int CZfa_nAlpha;
@@ -1540,7 +1539,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* Cm ============ Aerodynamic m-moment quantities (longitudinal) */
   
-  std::map <string,int> Cm_map;
+  std::map <std::string,int> Cm_map;
 #define      Cm_map              aircraft_->Cm_map            
   
   double Cmo, Cm_a, Cm_a2, Cm_adot, Cm_q;
@@ -1558,7 +1557,7 @@ struct AIRCRAFT
 #define Cm_df    aircraft_->Cm_df
 #define Cm_ds    aircraft_->Cm_ds
 #define Cm_dg    aircraft_->Cm_dg
-  string Cmfa;
+  std::string Cmfa;
   double Cmfa_aArray[100];
   double Cmfa_CmArray[100];
   int Cmfa_nAlpha;
@@ -1568,7 +1567,7 @@ struct AIRCRAFT
 #define Cmfa_CmArray       aircraft_->Cmfa_CmArray
 #define Cmfa_nAlpha        aircraft_->Cmfa_nAlpha
 #define CmfaI              aircraft_->CmfaI
-  string Cmfade;
+  std::string Cmfade;
   double Cmfade_aArray[100][100];
   double Cmfade_deArray[100];
   double Cmfade_CmArray[100][100];
@@ -1588,7 +1587,7 @@ struct AIRCRAFT
 #define w_induced          aircraft_->w_induced
   
   
-  string Cmfdf;
+  std::string Cmfdf;
   double Cmfdf_dfArray[100];
   double Cmfdf_CmArray[100];
   int Cmfdf_ndf;
@@ -1598,7 +1597,7 @@ struct AIRCRAFT
 #define Cmfdf_CmArray      aircraft_->Cmfdf_CmArray
 #define Cmfdf_ndf          aircraft_->Cmfdf_ndf
 #define CmfdfI             aircraft_->CmfdfI
-  string Cmfadf;
+  std::string Cmfadf;
   double Cmfadf_aArray[100][100];
   double Cmfadf_dfArray[100];
   double Cmfadf_CmArray[100][100];
@@ -1704,7 +1703,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* CY ============ Aerodynamic y-force quantities (lateral) =====*/
   
-  std::map <string,int> CY_map;
+  std::map <std::string,int> CY_map;
 #define      CY_map              aircraft_->CY_map            
   
   double CYo, CY_beta, CY_p, CY_r, CY_da, CY_dr, CY_dra, CY_bdot;
@@ -1716,7 +1715,7 @@ struct AIRCRAFT
 #define CY_dr    aircraft_->CY_dr
 #define CY_dra   aircraft_->CY_dra
 #define CY_bdot  aircraft_->CY_bdot
-  string CYfada;
+  std::string CYfada;
   double CYfada_aArray[100][100];
   double CYfada_daArray[100];
   double CYfada_CYArray[100][100];
@@ -1730,7 +1729,7 @@ struct AIRCRAFT
 #define CYfada_nAlphaArray aircraft_->CYfada_nAlphaArray
 #define CYfada_nda         aircraft_->CYfada_nda
 #define CYfadaI            aircraft_->CYfadaI
-  string CYfbetadr;
+  std::string CYfbetadr;
   double CYfbetadr_betaArray[100][100];
   double CYfbetadr_drArray[100];
   double CYfbetadr_CYArray[100][100];
@@ -1879,7 +1878,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* Cl ============ Aerodynamic l-moment quantities (lateral) ====*/
   
-  std::map <string,int> Cl_map;
+  std::map <std::string,int> Cl_map;
 #define      Cl_map              aircraft_->Cl_map            
   
   double Clo, Cl_beta, Cl_p, Cl_r, Cl_da, Cl_dr, Cl_daa;
@@ -1890,7 +1889,7 @@ struct AIRCRAFT
 #define Cl_da    aircraft_->Cl_da
 #define Cl_dr    aircraft_->Cl_dr
 #define Cl_daa   aircraft_->Cl_daa
-  string Clfada;
+  std::string Clfada;
   double Clfada_aArray[100][100];
   double Clfada_daArray[100];
   double Clfada_ClArray[100][100];
@@ -1904,7 +1903,7 @@ struct AIRCRAFT
 #define Clfada_nAlphaArray aircraft_->Clfada_nAlphaArray
 #define Clfada_nda         aircraft_->Clfada_nda
 #define ClfadaI            aircraft_->ClfadaI
-  string Clfbetadr;
+  std::string Clfbetadr;
   double Clfbetadr_betaArray[100][100];
   double Clfbetadr_drArray[100];
   double Clfbetadr_ClArray[100][100];
@@ -2052,7 +2051,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* Cn ============ Aerodynamic n-moment quantities (lateral) ====*/
   
-  std::map <string,int> Cn_map;
+  std::map <std::string,int> Cn_map;
 #define      Cn_map              aircraft_->Cn_map
 
   double Cno, Cn_beta, Cn_p, Cn_r, Cn_da, Cn_dr, Cn_q, Cn_b3;
@@ -2064,7 +2063,7 @@ struct AIRCRAFT
 #define Cn_dr    aircraft_->Cn_dr
 #define Cn_q     aircraft_->Cn_q
 #define Cn_b3    aircraft_->Cn_b3
-  string Cnfada;
+  std::string Cnfada;
   double Cnfada_aArray[100][100];
   double Cnfada_daArray[100];
   double Cnfada_CnArray[100][100];
@@ -2078,7 +2077,7 @@ struct AIRCRAFT
 #define Cnfada_nAlphaArray aircraft_->Cnfada_nAlphaArray
 #define Cnfada_nda         aircraft_->Cnfada_nda
 #define CnfadaI            aircraft_->CnfadaI
-  string Cnfbetadr;
+  std::string Cnfbetadr;
   double Cnfbetadr_betaArray[100][100];
   double Cnfbetadr_drArray[100];
   double Cnfbetadr_CnArray[100][100];
@@ -2227,7 +2226,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* gear ========== Landing gear model quantities ================*/
   
-  std::map <string,int> gear_map;
+  std::map <std::string,int> gear_map;
   
 #define      gear_map              aircraft_->gear_map
 #define MAX_GEAR 16
@@ -2253,7 +2252,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* ice =========== Ice model quantities ======================== */
   
-  std::map <string,int> ice_map;
+  std::map <std::string,int> ice_map;
 #define      ice_map              aircraft_->ice_map            
 
   bool ice_model, ice_on, beta_model;
@@ -2432,7 +2431,7 @@ struct AIRCRAFT
   bool eta_from_file;
 #define eta_from_file             aircraft_->eta_from_file
   bool eta_wing_left_input;
-  string eta_wing_left_input_file;
+  std::string eta_wing_left_input_file;
   double eta_wing_left_input_timeArray[100];
   double eta_wing_left_input_daArray[100];
   int eta_wing_left_input_ntime;
@@ -2444,7 +2443,7 @@ struct AIRCRAFT
 #define eta_wing_left_input_ntime     aircraft_->eta_wing_left_input_ntime
 #define eta_wing_left_input_startTime aircraft_->eta_wing_left_input_startTime
   bool eta_wing_right_input;
-  string eta_wing_right_input_file;
+  std::string eta_wing_right_input_file;
   double eta_wing_right_input_timeArray[100];
   double eta_wing_right_input_daArray[100];
   int eta_wing_right_input_ntime;
@@ -2456,7 +2455,7 @@ struct AIRCRAFT
 #define eta_wing_right_input_ntime     aircraft_->eta_wing_right_input_ntime
 #define eta_wing_right_input_startTime aircraft_->eta_wing_right_input_startTime
   bool eta_tail_input;
-  string eta_tail_input_file;
+  std::string eta_tail_input_file;
   double eta_tail_input_timeArray[100];
   double eta_tail_input_daArray[100];
   int eta_tail_input_ntime;
@@ -2468,7 +2467,7 @@ struct AIRCRAFT
 #define eta_tail_input_ntime     aircraft_->eta_tail_input_ntime
 #define eta_tail_input_startTime aircraft_->eta_tail_input_startTime
   bool demo_eps_alpha_max;
-  string demo_eps_alpha_max_file;
+  std::string demo_eps_alpha_max_file;
   double demo_eps_alpha_max_timeArray[100];
   double demo_eps_alpha_max_daArray[100];
   int demo_eps_alpha_max_ntime;
@@ -2480,7 +2479,7 @@ struct AIRCRAFT
 #define demo_eps_alpha_max_ntime     aircraft_->demo_eps_alpha_max_ntime
 #define demo_eps_alpha_max_startTime aircraft_->demo_eps_alpha_max_startTime
   bool demo_eps_pitch_max;
-  string demo_eps_pitch_max_file;
+  std::string demo_eps_pitch_max_file;
   double demo_eps_pitch_max_timeArray[100];
   double demo_eps_pitch_max_daArray[100];
   int demo_eps_pitch_max_ntime;
@@ -2492,7 +2491,7 @@ struct AIRCRAFT
 #define demo_eps_pitch_max_ntime     aircraft_->demo_eps_pitch_max_ntime
 #define demo_eps_pitch_max_startTime aircraft_->demo_eps_pitch_max_startTime
   bool demo_eps_pitch_min;
-  string demo_eps_pitch_min_file;
+  std::string demo_eps_pitch_min_file;
   double demo_eps_pitch_min_timeArray[100];
   double demo_eps_pitch_min_daArray[100];
   int demo_eps_pitch_min_ntime;
@@ -2504,7 +2503,7 @@ struct AIRCRAFT
 #define demo_eps_pitch_min_ntime     aircraft_->demo_eps_pitch_min_ntime
 #define demo_eps_pitch_min_startTime aircraft_->demo_eps_pitch_min_startTime
   bool demo_eps_roll_max;
-  string demo_eps_roll_max_file;
+  std::string demo_eps_roll_max_file;
   double demo_eps_roll_max_timeArray[10];
   double demo_eps_roll_max_daArray[10];
   int demo_eps_roll_max_ntime;
@@ -2516,7 +2515,7 @@ struct AIRCRAFT
 #define demo_eps_roll_max_ntime     aircraft_->demo_eps_roll_max_ntime
 #define demo_eps_roll_max_startTime aircraft_->demo_eps_roll_max_startTime
   bool demo_eps_thrust_min;
-  string demo_eps_thrust_min_file;
+  std::string demo_eps_thrust_min_file;
   double demo_eps_thrust_min_timeArray[100];
   double demo_eps_thrust_min_daArray[100];
   int demo_eps_thrust_min_ntime;
@@ -2528,7 +2527,7 @@ struct AIRCRAFT
 #define demo_eps_thrust_min_ntime     aircraft_->demo_eps_thrust_min_ntime
 #define demo_eps_thrust_min_startTime aircraft_->demo_eps_thrust_min_startTime
   bool demo_eps_airspeed_max;
-  string demo_eps_airspeed_max_file;
+  std::string demo_eps_airspeed_max_file;
   double demo_eps_airspeed_max_timeArray[10];
   double demo_eps_airspeed_max_daArray[10];
   int demo_eps_airspeed_max_ntime;
@@ -2540,7 +2539,7 @@ struct AIRCRAFT
 #define demo_eps_airspeed_max_ntime     aircraft_->demo_eps_airspeed_max_ntime
 #define demo_eps_airspeed_max_startTime aircraft_->demo_eps_airspeed_max_startTime
   bool demo_eps_airspeed_min;
-  string demo_eps_airspeed_min_file;
+  std::string demo_eps_airspeed_min_file;
   double demo_eps_airspeed_min_timeArray[100];
   double demo_eps_airspeed_min_daArray[100];
   int demo_eps_airspeed_min_ntime;
@@ -2552,7 +2551,7 @@ struct AIRCRAFT
 #define demo_eps_airspeed_min_ntime     aircraft_->demo_eps_airspeed_min_ntime
 #define demo_eps_airspeed_min_startTime aircraft_->demo_eps_airspeed_min_startTime
   bool demo_eps_flap_max;
-  string demo_eps_flap_max_file;
+  std::string demo_eps_flap_max_file;
   double demo_eps_flap_max_timeArray[10];
   double demo_eps_flap_max_daArray[10];
   int demo_eps_flap_max_ntime;
@@ -2564,7 +2563,7 @@ struct AIRCRAFT
 #define demo_eps_flap_max_ntime     aircraft_->demo_eps_flap_max_ntime
 #define demo_eps_flap_max_startTime aircraft_->demo_eps_flap_max_startTime
   bool demo_boot_cycle_tail;
-  string demo_boot_cycle_tail_file;
+  std::string demo_boot_cycle_tail_file;
   double demo_boot_cycle_tail_timeArray[100];
   int demo_boot_cycle_tail_daArray[100];
   int demo_boot_cycle_tail_ntime;
@@ -2576,7 +2575,7 @@ struct AIRCRAFT
 #define demo_boot_cycle_tail_ntime     aircraft_->demo_boot_cycle_tail_ntime
 #define demo_boot_cycle_tail_startTime aircraft_->demo_boot_cycle_tail_startTime
   bool demo_boot_cycle_wing_left;
-  string demo_boot_cycle_wing_left_file;
+  std::string demo_boot_cycle_wing_left_file;
   double demo_boot_cycle_wing_left_timeArray[100];
   int demo_boot_cycle_wing_left_daArray[100];
   int demo_boot_cycle_wing_left_ntime;
@@ -2588,7 +2587,7 @@ struct AIRCRAFT
 #define demo_boot_cycle_wing_left_ntime     aircraft_->demo_boot_cycle_wing_left_ntime
 #define demo_boot_cycle_wing_left_startTime aircraft_->demo_boot_cycle_wing_left_startTime
   bool demo_boot_cycle_wing_right;
-  string demo_boot_cycle_wing_right_file;
+  std::string demo_boot_cycle_wing_right_file;
   double demo_boot_cycle_wing_right_timeArray[100];
   int demo_boot_cycle_wing_right_daArray[100];
   int demo_boot_cycle_wing_right_ntime;
@@ -2600,7 +2599,7 @@ struct AIRCRAFT
 #define demo_boot_cycle_wing_right_ntime     aircraft_->demo_boot_cycle_wing_right_ntime
 #define demo_boot_cycle_wing_right_startTime aircraft_->demo_boot_cycle_wing_right_startTime
   bool demo_eps_pitch_input;
-  string demo_eps_pitch_input_file;
+  std::string demo_eps_pitch_input_file;
   double demo_eps_pitch_input_timeArray[100];
   int demo_eps_pitch_input_daArray[100];
   int demo_eps_pitch_input_ntime;
@@ -2640,7 +2639,7 @@ struct AIRCRAFT
   int tactile_pitch;
 #define tactile_pitch              aircraft_->tactile_pitch
   bool demo_ap_pah_on;
-  string demo_ap_pah_on_file;
+  std::string demo_ap_pah_on_file;
   double demo_ap_pah_on_timeArray[10];
   int demo_ap_pah_on_daArray[10];
   int demo_ap_pah_on_ntime;
@@ -2652,7 +2651,7 @@ struct AIRCRAFT
 #define demo_ap_pah_on_ntime     aircraft_->demo_ap_pah_on_ntime
 #define demo_ap_pah_on_startTime aircraft_->demo_ap_pah_on_startTime
   bool demo_ap_alh_on;
-  string demo_ap_alh_on_file;
+  std::string demo_ap_alh_on_file;
   double demo_ap_alh_on_timeArray[10];
   int demo_ap_alh_on_daArray[10];
   int demo_ap_alh_on_ntime;
@@ -2664,7 +2663,7 @@ struct AIRCRAFT
 #define demo_ap_alh_on_ntime     aircraft_->demo_ap_alh_on_ntime
 #define demo_ap_alh_on_startTime aircraft_->demo_ap_alh_on_startTime
   bool demo_ap_rah_on;
-  string demo_ap_rah_on_file;
+  std::string demo_ap_rah_on_file;
   double demo_ap_rah_on_timeArray[10];
   int demo_ap_rah_on_daArray[10];
   int demo_ap_rah_on_ntime;
@@ -2676,7 +2675,7 @@ struct AIRCRAFT
 #define demo_ap_rah_on_ntime     aircraft_->demo_ap_rah_on_ntime
 #define demo_ap_rah_on_startTime aircraft_->demo_ap_rah_on_startTime
   bool demo_ap_hh_on;
-  string demo_ap_hh_on_file;
+  std::string demo_ap_hh_on_file;
   double demo_ap_hh_on_timeArray[10];
   int demo_ap_hh_on_daArray[10];
   int demo_ap_hh_on_ntime;
@@ -2688,7 +2687,7 @@ struct AIRCRAFT
 #define demo_ap_hh_on_ntime     aircraft_->demo_ap_hh_on_ntime
 #define demo_ap_hh_on_startTime aircraft_->demo_ap_hh_on_startTime
   bool demo_ap_Theta_ref;
-  string demo_ap_Theta_ref_file;
+  std::string demo_ap_Theta_ref_file;
   double demo_ap_Theta_ref_timeArray[10];
   double demo_ap_Theta_ref_daArray[10];
   int demo_ap_Theta_ref_ntime;
@@ -2700,7 +2699,7 @@ struct AIRCRAFT
 #define demo_ap_Theta_ref_ntime     aircraft_->demo_ap_Theta_ref_ntime
 #define demo_ap_Theta_ref_startTime aircraft_->demo_ap_Theta_ref_startTime
   bool demo_ap_alt_ref;
-  string demo_ap_alt_ref_file;
+  std::string demo_ap_alt_ref_file;
   double demo_ap_alt_ref_timeArray[10];
   double demo_ap_alt_ref_daArray[10];
   int demo_ap_alt_ref_ntime;
@@ -2712,7 +2711,7 @@ struct AIRCRAFT
 #define demo_ap_alt_ref_ntime     aircraft_->demo_ap_alt_ref_ntime
 #define demo_ap_alt_ref_startTime aircraft_->demo_ap_alt_ref_startTime
   bool demo_ap_Phi_ref;
-  string demo_ap_Phi_ref_file;
+  std::string demo_ap_Phi_ref_file;
   double demo_ap_Phi_ref_timeArray[10];
   double demo_ap_Phi_ref_daArray[10];
   int demo_ap_Phi_ref_ntime;
@@ -2724,7 +2723,7 @@ struct AIRCRAFT
 #define demo_ap_Phi_ref_ntime     aircraft_->demo_ap_Phi_ref_ntime
 #define demo_ap_Phi_ref_startTime aircraft_->demo_ap_Phi_ref_startTime
   bool demo_ap_Psi_ref;
-  string demo_ap_Psi_ref_file;
+  std::string demo_ap_Psi_ref_file;
   double demo_ap_Psi_ref_timeArray[10];
   double demo_ap_Psi_ref_daArray[10];
   int demo_ap_Psi_ref_ntime;
@@ -2736,7 +2735,7 @@ struct AIRCRAFT
 #define demo_ap_Psi_ref_ntime     aircraft_->demo_ap_Psi_ref_ntime
 #define demo_ap_Psi_ref_startTime aircraft_->demo_ap_Psi_ref_startTime
   bool demo_tactile;
-  string demo_tactile_file;
+  std::string demo_tactile_file;
   double demo_tactile_timeArray[1500];
   double demo_tactile_daArray[1500];
   int demo_tactile_ntime;
@@ -2748,7 +2747,7 @@ struct AIRCRAFT
 #define demo_tactile_ntime     aircraft_->demo_tactile_ntime
 #define demo_tactile_startTime aircraft_->demo_tactile_startTime
   bool demo_ice_tail;
-  string demo_ice_tail_file;
+  std::string demo_ice_tail_file;
   double demo_ice_tail_timeArray[10];
   int demo_ice_tail_daArray[10];
   int demo_ice_tail_ntime;
@@ -2760,7 +2759,7 @@ struct AIRCRAFT
 #define demo_ice_tail_ntime     aircraft_->demo_ice_tail_ntime
 #define demo_ice_tail_startTime aircraft_->demo_ice_tail_startTime
   bool demo_ice_left;
-  string demo_ice_left_file;
+  std::string demo_ice_left_file;
   double demo_ice_left_timeArray[10];
   int demo_ice_left_daArray[10];
   int demo_ice_left_ntime;
@@ -2772,7 +2771,7 @@ struct AIRCRAFT
 #define demo_ice_left_ntime     aircraft_->demo_ice_left_ntime
 #define demo_ice_left_startTime aircraft_->demo_ice_left_startTime
   bool demo_ice_right;
-  string demo_ice_right_file;
+  std::string demo_ice_right_file;
   double demo_ice_right_timeArray[10];
   int demo_ice_right_daArray[10];
   int demo_ice_right_ntime;
@@ -2788,7 +2787,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* fog =========== Fog field quantities ======================== */
 
-  std::map <string,int> fog_map;
+  std::map <std::string,int> fog_map;
 #define fog_map         aircraft_->fog_map
 
   bool fog_field;
@@ -2816,7 +2815,7 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* record ======== Record desired quantites to file =============*/
   
-  std::map <string,int> record_map;
+  std::map <std::string,int> record_map;
 #define      record_map              aircraft_->record_map
 
   /***** Angles ******/
@@ -2894,12 +2893,12 @@ struct AIRCRAFT
   /* Variables (token2) ===========================================*/
   /* misc ========== Miscellaneous input commands =================*/
 
-  std::map <string,int> misc_map;
+  std::map <std::string,int> misc_map;
 #define      misc_map        aircraft_->misc_map       
 
   double simpleHingeMomentCoef;
 #define simpleHingeMomentCoef    aircraft_->simpleHingeMomentCoef
-  //string dfTimefdf;
+  //std::string dfTimefdf;
   //double dfTimefdf_dfArray[100];
   //double dfTimefdf_TimeArray[100];
   //int dfTimefdf_ndf;
@@ -3096,5 +3095,3 @@ struct AIRCRAFT
 };
 
 extern AIRCRAFT *aircraft_;    // usually defined in the first program that includes uiuc_aircraft.h
-
-#endif  // endif _AIRCRAFT_H

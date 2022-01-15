@@ -21,17 +21,13 @@
 // $Id$
 
 
-#ifndef _FG_PVE_HXX
-#define _FG_PVE_HXX
-
+#pragma once
 
 #include <simgear/compiler.h>
 
 #include <string>
 
 #include "protocol.hxx"
-
-using std::string;
 
 
 class FGPVE : public FGProtocol {
@@ -50,8 +46,3 @@ public:
     // process work for this port
     bool process();
 };
-
-
-#endif // _FG_PVE_HXX
-
-

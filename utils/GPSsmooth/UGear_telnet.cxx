@@ -126,7 +126,7 @@ PropsChannel::foundTerminator()
     const char* cmd = buffer.getData();
     SG_LOG( SG_IO, SG_INFO, "processing command = \"" << cmd << "\"" );
 
-    vector<string> tokens = simgear::strutils::split( cmd );
+    std::vector<std::string> tokens = simgear::strutils::split( cmd );
 
     if (!tokens.empty()) {
 	string command = tokens[0];

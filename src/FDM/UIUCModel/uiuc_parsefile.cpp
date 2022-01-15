@@ -67,6 +67,8 @@
 
 #include "uiuc_parsefile.h"
 
+using std::string;
+
 
 ParseFile :: ParseFile (const string fileName)
 {

@@ -1,10 +1,4 @@
-#ifndef _FG_UGEAR_II_HXX
-#define _FG_UGEAR_II_HXX
-
-
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#pragma once
 
 #include <simgear/compiler.h>
 
@@ -15,11 +9,6 @@
 #include <simgear/misc/stdint.hxx>
 #include <simgear/io/iochannel.hxx>
 #include <simgear/serial/serial.hxx>
-
-using std::cout;
-using std::endl;
-using std::string;
-using std::vector;
 
 
 enum ugPacketType {
@@ -82,11 +71,11 @@ class UGTrack {
 
 private:
 
-    vector <gps> gps_data;
-    vector <imu> imu_data;
-    vector <nav> nav_data;
-    vector <servo> servo_data;
-    vector <health> health_data;
+    std::vector <gps> gps_data;
+    std::vector <imu> imu_data;
+    std::vector <nav> nav_data;
+    std::vector <servo> servo_data;
+    std::vector <health> health_data;
 
     // parse message and put current data into vector if message has a
     // newer time stamp than existing data.
@@ -115,10 +104,10 @@ public:
 		      bool ignore_checksum );
 
     // load the named stream log file into internal buffers
-    bool load_stream( const string &file, bool ignore_checksum );
+    bool load_stream( const std::string &file, bool ignore_checksum );
 
     // load the named flight files into internal buffers
-    bool load_flight( const string &path );
+    bool load_flight( const std::string &path );
 
     inline int gps_size() const { return gps_data.size(); }
     inline int imu_size() const { return imu_data.size(); }
@@ -182,6 +171,3 @@ nav UGEARInterpNAV( const nav A, const nav B, const double percent );
 servo UGEARInterpSERVO( const servo A, const servo B, const double percent );
 health UGEARInterpHEALTH( const health A, const health B,
 			  const double percent );
-
-
-#endif // _FG_UGEAR_II_HXX
