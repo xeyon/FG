@@ -80,8 +80,6 @@ _impact_report_node(fgGetNode("/ai/models/model-impact", true))
     no_roll = false;
 }
 
-FGAIBallistic::~FGAIBallistic() {
-}
 
 void FGAIBallistic::readFromScenario(SGPropertyNode* scFileNode) {
     if (!scFileNode){
@@ -738,56 +736,53 @@ void FGAIBallistic::Run(double dt) {
     }
 
     // Calculate velocity due to external force
-    double force_speed_north_deg_sec = 0;
-    double force_speed_east_deg_sec = 0;
-    double hs_force_fps = 0;
-    double v_force_acc_fpss = 0;
-    double force_speed_north_fps = 0;
-    double force_speed_east_fps = 0;
-    double h_force_lbs = 0;
-    double normal_force_lbs = 0;
-    double normal_force_fpss = 0;
-    double static_friction_force_lbs = 0;
-    double dynamic_friction_force_lbs = 0;
-    double friction_force_speed_north_fps = 0;
-    double friction_force_speed_east_fps = 0;
-    double friction_force_speed_north_deg_sec = 0;
-    double friction_force_speed_east_deg_sec = 0;
-    double force_elevation_deg = 0;
-    double force_azimuth_deg  = 0;
-    double force_lbs = 0;
+    double force_speed_north_deg_sec = 0.0;
+    double force_speed_east_deg_sec = 0.0;
+    double v_force_acc_fpss = 0.0;
+    double force_speed_north_fps = 0.0;
+    double force_speed_east_fps = 0.0;
+    double h_force_lbs = 0.0;
+    double normal_force_fpss = 0.0;
+    double friction_force_speed_north_fps = 0.0;
+    double friction_force_speed_east_fps = 0.0;
+    double friction_force_speed_north_deg_sec = 0.0;
+    double friction_force_speed_east_deg_sec = 0.0;
+    double force_elevation_deg = 0.0;
 
     if (_external_force) {
         //cout << _name << " external force " <<  hdg << " az " << _azimuth << endl;
 
         SGPropertyNode *n = fgGetNode(_force_path.c_str(), true);
-        force_lbs            = n->getChild("force-lb", 0, true)->getDoubleValue();
+        double force_lbs = n->getChild("force-lb", 0, true)->getDoubleValue();
         force_elevation_deg  = n->getChild("force-elevation-deg", 0, true)->getDoubleValue();
-        force_azimuth_deg    = n->getChild("force-azimuth-deg", 0, true)->getDoubleValue();
+        double force_azimuth_deg = n->getChild("force-azimuth-deg", 0, true)->getDoubleValue();
         
         // Resolve force into vertical and horizontal components:
         double v_force_lbs = force_lbs * sin( force_elevation_deg * SG_DEGREES_TO_RADIANS );
         h_force_lbs = force_lbs * cos( force_elevation_deg * SG_DEGREES_TO_RADIANS );
 
+        double normal_force_lbs = 0.0;
+        double dynamic_friction_force_lbs = 0.0;
+
         // Perform ground interaction if impacts are not calculated
         if (!_report_impact && getHtAGL(10000)) {
             double deadzone = 0.1;
 
-            if (_ht_agl_ft <= (0 + _ground_offset + deadzone) && _solid) {
+            if (_ht_agl_ft <= (_ground_offset + deadzone) && _solid) {
                 normal_force_lbs = (_mass * slugs_to_lbs) - v_force_lbs;
 
-                if (normal_force_lbs < 0)
-                    normal_force_lbs = 0;
+                if (normal_force_lbs < 0.0)
+                    normal_force_lbs = 0.0;
 
                 pos.setElevationFt(0 + _ground_offset);
-                if (vs_fps < 0)
+                if (vs_fps < 0.0)
                     vs_fps *= -0.5;
 
                 // Calculate friction. We assume a static coefficient of
                 // friction (mu) of 0.62 (wood on concrete)
                 double mu = 0.62;
 
-                static_friction_force_lbs = mu * normal_force_lbs * _frictionFactor;
+                double static_friction_force_lbs = mu * normal_force_lbs * _frictionFactor;
 
                 // Adjust horizontal force. We assume that a speed of <= 5 fps is static
                 if (h_force_lbs <= static_friction_force_lbs && hs <= 5) {
@@ -795,7 +790,7 @@ void FGAIBallistic::Run(double dt) {
                     _speed_north_fps = _speed_east_fps = 0;
                 }
                 else
-                    dynamic_friction_force_lbs = (static_friction_force_lbs * 0.95);
+                    dynamic_friction_force_lbs = static_friction_force_lbs * 0.95;
 
                 // Ignore wind when on the ground for now
                 //TODO fix this
@@ -811,7 +806,7 @@ void FGAIBallistic::Run(double dt) {
         double dynamic_friction_acc_fpss = dynamic_friction_force_lbs / _mass;
 
         // velocity = acceleration * dt
-        hs_force_fps = h_force_acc_fpss * dt;
+        double hs_force_fps = h_force_acc_fpss * dt;
         double friction_force_fps = dynamic_friction_acc_fpss * dt;
 
         //resolve horizontal speeds into north and east components:
@@ -854,13 +849,12 @@ void FGAIBallistic::Run(double dt) {
         setOffsetPos(pos, 
             manager->get_user_heading(),
             manager->get_user_pitch(), 
-            manager->get_user_roll()
-            );
+            manager->get_user_roll());
         pos.setLatitudeDeg(_offsetpos.getLatitudeDeg());
         pos.setLongitudeDeg(_offsetpos.getLongitudeDeg());
         pos.setElevationFt(_offsetpos.getElevationFt());
 
-        if (getHtAGL(10000)) {
+        if (getHtAGL(10000.0)) {
             double deadzone = 0.1;
 
             if (_ht_agl_ft <= (0 + _ground_offset + deadzone) && _solid) {

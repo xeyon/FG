@@ -19,14 +19,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIBALLISTIC_HXX
-#define _FG_AIBALLISTIC_HXX
+#pragma once
 
 #include <cmath>
 #include <vector>
+
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/scene/material/mat.hxx>
-
 
 #include "AIManager.hxx"
 #include "AIBase.hxx"
@@ -36,16 +35,15 @@ class FGAIBallistic : public FGAIBase {
 public:
 
     FGAIBallistic(object_type ot = otBallistic);
-    ~FGAIBallistic();
+    virtual ~FGAIBallistic() = default;
 
+    const char* getTypeString(void) const override { return "ballistic"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
     void bind() override;
     void reinit() override;
     void update(double dt) override;
-
-    const char* getTypeString(void) const override { return "ballistic"; }
 
     void Run(double dt);
 
@@ -111,7 +109,7 @@ public:
     bool getSlaved() const;
     bool getSlavedLoad() const;
 
-    FGAIBallistic *ballistic;
+    FGAIBallistic *ballistic = nullptr;
 
     static const double slugs_to_kgs; //conversion factor
     static const double slugs_to_lbs; //conversion factor
@@ -142,10 +140,10 @@ public:
     double _azimuth;         // degrees true
     double _elevation;       // degrees
     double _rotation;        // degrees
-    double _speed_north_fps;
-    double _speed_east_fps;
-    double _wind_from_east;  // fps
-    double _wind_from_north; // fps
+    double _speed_north_fps = 0.0;
+    double _speed_east_fps = 0.0;
+    double _wind_from_east = 0.0;  // fps
+    double _wind_from_north = 0.0; // fps
 
     double hs;
 
@@ -159,9 +157,9 @@ public:
     double getTgtYOffset() const;
     double getTgtZOffset() const;
 
-    double _tgt_x_offset;
-    double _tgt_y_offset;
-    double _tgt_z_offset;
+    double _tgt_x_offset = 0.0;
+    double _tgt_y_offset = 0.0;
+    double _tgt_z_offset = 0.0;
     double _elapsed_time;
 
     SGGeod _parentpos;
@@ -185,14 +183,14 @@ private:
     bool   _random;          // modifier for Cd, life, az
     double _life_randomness; // dimension for _random, only applies to life at present
     double _load_resistance; // ground load resistanc N/m^2
-    double _frictionFactor;  // dimensionless modifier for Coefficient of Friction
+    double _frictionFactor = 0.0;  // dimensionless modifier for Coefficient of Friction
     bool   _solid;           // if true ground is solid for FDMs
-    double _elevation_m;     // ground elevation in meters
+//    double _elevation_m = 0.0;     // ground elevation in meters
     bool   _force_stabilised;// if true, object will align to external force
     bool   _slave_to_ac;     // if true, object will be slaved to the parent ac pos and orientation
     bool   _slave_load_to_ac;// if true, object will be slaved to the parent ac pos
     double _contents_lb;     // contents of the object
-    double _weight_lb;       // weight of the object (no contents if appropriate) (lbs)
+    double _weight_lb = 0.0;       // weight of the object (no contents if appropriate) (lbs)
     std::string _mat_name;
 
     bool   _report_collision;       // if true a collision point with AI Objects is calculated
@@ -203,9 +201,8 @@ private:
     SGPropertyNode_ptr _impact_report_node;  // report node for impact and collision
     SGPropertyNode_ptr _contents_node;  // node for droptank etc. contents
 
-    double _fuse_range;
+    double _fuse_range = 0.0;
 
-    std::string _submodel;
     std::string _force_path;
     std::string _contents_path;
 
@@ -224,11 +221,9 @@ private:
     double getRecip(double az);
     double getMass() const;
 
-    double _ground_offset;
-    double _load_offset;
+    double _ground_offset = 0.0;
+    double _load_offset = 0.0;
 
     SGVec3d _oldcartoffsetPos;
     SGVec3d _oldcartPos;
 };
-
-#endif  // _FG_AIBALLISTIC_HXX
