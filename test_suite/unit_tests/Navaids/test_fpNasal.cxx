@@ -444,9 +444,18 @@ void FPNasalTests::testAirwaysAPI()
     
         var v4 = createViaFromTo(cln, "L620", "REDFA");
         unitTest.assert_equal(v4.airway.level_code, Airway.LOW);
+    
+        # test direct API (no Vias)
+        var wps = airwayStore.viaWaypoints(cln, "TULIP");
+        unitTest.assert_equal(size(wps), 3);
+
+        unitTest.assert_equal(wps[1].wp_ident, 'REDFA');
+        unitTest.assert_equal(wps[1].airway.ident, 'L620');
+
     )");
 
     CPPUNIT_ASSERT(ok);
+    
 }
 
 void FPNasalTests::testTotalDistanceAPI()
