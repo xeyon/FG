@@ -18,11 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIESCORT_HXX
-#define _FG_AIESCORT_HXX
+#pragma once
 
-#include <string>
 #include <list>
+#include <string>
 
 #include <simgear/compiler.h>
 
@@ -30,22 +29,22 @@
 
 #include "AIShip.hxx"
 
-#include "AIManager.hxx"
 #include "AIBase.hxx"
+#include "AIManager.hxx"
 
-class FGAIEscort : public FGAIShip {
+class FGAIEscort : public FGAIShip
+{
 public:
     FGAIEscort();
-    virtual ~FGAIEscort();
+    virtual ~FGAIEscort() = default;
 
+    const char* getTypeString(void) const override { return "escort"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
     void bind() override;
     void reinit() override;
     void update(double dt) override;
-
-    const char* getTypeString(void) const override { return "escort"; }
 
 private:
     void setStnRange(double r);
@@ -75,22 +74,26 @@ private:
     SGGeod _selectedpos;
     SGGeod _tgtpos;
 
-    bool   _solid;           // if true ground is solid for FDMs
-    double _tgtrange, _tgtbrg;
-    double _ht_agl_ft;
-    double _relbrg;
-    double _parent_speed, _parent_hdg;
-    double _interval;
+    bool _solid = true; // if true ground is solid for FDMs
+    double _tgtrange = 0.0;
+    double _tgtbrg = 0.0;
+    double _ht_agl_ft = 0.0;
+    double _relbrg = 0.0;
+    double _parent_speed = 0.0;
+    double _parent_hdg = 0.0;
+    double _interval = 0.0;
 
-    double _stn_relbrg, _stn_truebrg, _stn_brg, _stn_range, _stn_height;
-    double _stn_speed, _stn_angle_limit, _stn_limit;
+    double _stn_relbrg = 0.0;
+    double _stn_truebrg = 0.0;
+    double _stn_brg = 0.0;
+    double _stn_range = 0.0;
+    double _stn_height = 0.0;
+    double _stn_speed = 0.0;
+    double _stn_angle_limit = 0.0;
+    double _stn_limit = 0.0;
 
-    double _max_speed;
-
-    bool _MPControl, _patrol, _stn_deg_true;
-
-//    std::string _parent;
-
+    bool _MPControl = false;
+    bool _patrol = false;
+    bool _stn_deg_true = false;
 };
 
-#endif  // FG_AIGROUNDVEHICLE_HXX

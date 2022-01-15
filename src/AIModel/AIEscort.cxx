@@ -41,27 +41,10 @@
 
 using std::string;
 
-FGAIEscort::FGAIEscort() :
-FGAIShip(otEscort),
-
-_relbrg (0),
-_parent_speed(0),
-_interval(0),
-_stn_truebrg(0),
-_stn_height(0),
-_stn_speed(0),
-_stn_angle_limit(0),
-_stn_limit(0),
-_max_speed(0),
-_MPControl(false),
-_patrol(false),
-_stn_deg_true(false)
-
+FGAIEscort::FGAIEscort() : FGAIShip(object_type::otEscort)
 {
     invisible = false;
 }
-
-FGAIEscort::~FGAIEscort() {}
 
 void FGAIEscort::readFromScenario(SGPropertyNode* scFileNode) {
     if (!scFileNode)
@@ -306,35 +289,35 @@ void FGAIEscort::setStationSpeed(){
 
     // these are the AI rules for the manoeuvring of escorts
 
-    if (_MPControl && _tgtrange > 4 * _stn_limit) {
+    if (_MPControl && _tgtrange > 4.0 * _stn_limit) {
         SG_LOG(SG_AI, SG_ALERT, "AIEscort: " << _name
             << " re-aligning to MP pos");
         pos = _tgtpos;
-        speed = 0;
-        angle = 0;
-    } else if ((_relbrg < -90 || _relbrg > 90) && _tgtrange > _stn_limit) {
+        speed = 0.0;
+        angle = 0.0;
+    } else if ((_relbrg < -90.0 || _relbrg > 90.0) && _tgtrange > _stn_limit) {
         angle =_relbrg;
 
-        if(_tgtrange > 4 * _stn_limit)
-            speed = 4 * -_stn_speed;
+        if(_tgtrange > 4.0 * _stn_limit)
+            speed = 4.0 * -_stn_speed;
         else
             speed = -_stn_speed;
 
-    } else if ((_relbrg >= -90 && _relbrg <= 90) && _tgtrange > _stn_limit) {
+    } else if ((_relbrg >= -90.0 && _relbrg <= 90.0) && _tgtrange > _stn_limit) {
         angle = _relbrg;
 
-        if(_tgtrange > 4 * _stn_limit)
-            speed = 4 * _stn_speed;
+        if(_tgtrange > 4.0 * _stn_limit)
+            speed = 4.0 * _stn_speed;
         else
             speed = _stn_speed;
 
     } else {
         if (_patrol){
-            angle = 15 * sg_random();
-            speed =  5 * sg_random();
+            angle = 15.0 * sg_random();
+            speed =  5.0 * sg_random();
         } else {
-            angle = 0;
-            speed = 0;
+            angle = 0.0;
+            speed = 0.0;
         }
     }
 
