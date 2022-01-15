@@ -32,11 +32,12 @@ class FGAIThermal : public FGAIBase {
 
 public:
 	FGAIThermal();
-	~FGAIThermal();
+	virtual ~FGAIThermal() = default;
 
+	const char* getTypeString(void) const override { return "thermal"; }
 	void readFromScenario(SGPropertyNode* scFileNode) override;
 
-    bool init(ModelSearchOrder searchOrder) override;
+        bool init(ModelSearchOrder searchOrder) override;
 	void bind() override;
 	void update(double dt) override;
 
@@ -54,36 +55,36 @@ public:
 	inline double getV_up_min() const { return v_up_min; };
 	inline double getR_up_frac() const { return r_up_frac; };
 
-	const char* getTypeString(void) const override { return "thermal"; }
 	void getGroundElev(double dt);
 
 private:
 	void Run(double dt);
+
 	double get_strength_fac(double alt_frac);
 	double max_strength;
 	double strength;
 	double diameter;
-	double height;
+	double height = 0.0;
 	double factor;
-	double alt_rel;
+	double alt_rel = 0.0;
 	double alt;
-	double v_up_max;
-	double v_up_min;
-	double r_up_frac;
+	double v_up_max = 0.0;
+	double v_up_min = 0.0;
+	double r_up_frac = 0.0;
 	double cycle_timer;
 	double dt_count;
-	double time;
-	double xx;
+	double time = 0.0;
+	double xx = 0.0;
 	double ground_elev_ft; // ground level in ft
-	double altitude_agl_ft; // altitude above ground in feet
-	bool do_agl_calc;
-	bool is_forming;
-	bool is_formed;
-	bool is_dying;
-	bool is_dead;
+
+	bool do_agl_calc = false;
+	bool is_forming = false;
+	bool is_formed = false;
+	bool is_dying = false;
+	bool is_dead = false;
+
 	SGPropertyNode_ptr _surface_wind_from_deg_node;
 	SGPropertyNode_ptr _surface_wind_speed_node;
 	SGPropertyNode_ptr _aloft_wind_from_deg_node;
 	SGPropertyNode_ptr _aloft_wind_speed_node;
-
 };

@@ -20,22 +20,22 @@
 
 #pragma once
 
+#include <string>
+
 #include "AIManager.hxx"
 #include "AIBase.hxx"
-
-#include <string>
 
 
 class FGAIStorm : public FGAIBase {
 
 public:
-
         FGAIStorm();
-        ~FGAIStorm();
+        virtual ~FGAIStorm() = default;
 
+        const char* getTypeString(void) const override { return "thunderstorm"; }
         void readFromScenario(SGPropertyNode* scFileNode) override;
-
         void update(double dt) override;
+
         inline void setStrengthNorm( double s ) { strength_norm = s; };
         inline void setDiameter( double d ) { diameter = d; };
         inline void setHeight( double h ) { height = h; };
@@ -43,12 +43,11 @@ public:
         inline double getDiameter() const { return diameter; };
         inline double getHeight() const { return height; };
 
-        const char* getTypeString(void) const override { return "thunderstorm"; }
-
 private:
-        double diameter;      // diameter of turbulence zone, in nm
-        double height;        // top of turbulence zone, in feet MSL
-        double strength_norm; // strength of turbulence
+        double diameter = 0.0;          // diameter of turbulence zone, in nm
+        double height = 0.0;            // top of turbulence zone, in feet MSL
+        double strength_norm = 0.0;     // strength of turbulence
+
         void Run(double dt);
 
         // lightning stuff
@@ -65,5 +64,4 @@ private:
         // turbulence stuff
         SGPropertyNode_ptr turb_mag_node;
         SGPropertyNode_ptr turb_rate_node;
-
 };

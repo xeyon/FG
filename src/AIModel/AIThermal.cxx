@@ -20,35 +20,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <cmath>
+#include <string>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include <string>
-#include <cmath>
 
 using std::string;
 
 #include "AIThermal.hxx"
 
 
-FGAIThermal::FGAIThermal() :
-   FGAIBase(otThermal, false)
+FGAIThermal::FGAIThermal() : FGAIBase(otThermal, false)
 {
-   max_strength = 6.0;
-   diameter = 0.5;
-   strength = factor = 0.0;
-   cycle_timer = 60*(rand()%31); // some random in the birth time
-   ground_elev_ft = 0.0;
-   dt_count=0.9;
-   alt=0.0;
+    altitude_agl_ft = 0.0;
+    max_strength = 6.0;
+    diameter = 0.5;
+    strength = factor = 0.0;
+    cycle_timer = 60*(rand()%31); // some random in the birth time
+    ground_elev_ft = 0.0;
+    dt_count=0.9;
+    alt=0.0;
 }
 
-FGAIThermal::~FGAIThermal() {
-}
 
 void FGAIThermal::readFromScenario(SGPropertyNode* scFileNode) {
   if (!scFileNode)
@@ -72,28 +67,20 @@ bool FGAIThermal::init(ModelSearchOrder searchOrder) {
    	    fgGetNode("/environment/config/aloft/entry[2]/wind-from-heading-deg", true);
    _aloft_wind_speed_node =
             fgGetNode("/environment/config/aloft/entry[2]/wind-speed-kt", true);
-    do_agl_calc = 1;
+    do_agl_calc = true;
    return FGAIBase::init(searchOrder);
 }
 
 void FGAIThermal::bind() {
     FGAIBase::bind();
-    tie("position/altitude-agl-ft", // for debug and tweak
-                SGRawValuePointer<double>(&altitude_agl_ft));
-    tie("alt-rel", // for debug and tweak
-                SGRawValuePointer<double>(&alt_rel));
-    tie("time", // for debug and tweak
-                SGRawValuePointer<double>(&time));
-    tie("xx", // for debug and tweak
-                SGRawValuePointer<double>(&xx));
-    tie("is-forming", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_forming));
-    tie("is-formed", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_formed));
-    tie("is-dying", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_dying));
-    tie("is-dead", // for debug abd tweak
-                SGRawValuePointer<bool>(&is_dead));
+    tie("position/altitude-agl-ft", SGRawValuePointer<double>(&altitude_agl_ft));
+    tie("alt-rel",                  SGRawValuePointer<double>(&alt_rel));
+    tie("time",                     SGRawValuePointer<double>(&time));
+    tie("xx",                       SGRawValuePointer<double>(&xx));
+    tie("is-forming",               SGRawValuePointer<bool>(&is_forming));
+    tie("is-formed",                SGRawValuePointer<bool>(&is_formed));
+    tie("is-dying",                 SGRawValuePointer<bool>(&is_dying));
+    tie("is-dead",                  SGRawValuePointer<bool>(&is_dead));
 }
 
 void FGAIThermal::update(double dt) {
@@ -103,29 +90,25 @@ void FGAIThermal::update(double dt) {
 }
 
 
-
 //the formula to get the available portion of VUpMax depending on altitude
 //returns a double between 0 and 1
 double FGAIThermal::get_strength_fac(double alt_frac) {
+    double PI = 4.0 * atan(1.0);
+    double fac = 0.0;
 
-double PI = 4.0 * atan(1.0);
-double fac = 0.0;
-if ( alt_frac <=0.0 ) { // do submarines get thermals ?
-	fac = 0.0;
-	}
-else if ( ( alt_frac>0.0 ) && (alt_frac<=0.1) ) { // ground layer
-	fac = ( 0.1*( pow( (10.0*alt_frac),10.0) ) );
-	}
-else if ( ( alt_frac>0.1 ) && (alt_frac<=1.0) ) {   // main body of the thermal
-	fac = 0.4175 - 0.5825* ( cos ( PI*  (1.0-sqrt(alt_frac) ) +PI) ) ;
-	}
-else if ( ( alt_frac >1.0 ) && (alt_frac < 1.1 ) ) {  //above the ceiling, but not above the cloud
-	fac = (0.5 * ( 1.0 + cos ( PI*( (-2.0*alt_frac)*5.0 ) ) ) );
-	}
-else if ( alt_frac >= 1.1 ) {  //above the cloud
-	fac = 0.0;
-	}
-return fac;
+    if ( alt_frac <=0.0 ) { // do submarines get thermals ?
+        fac = 0.0;
+    } else if ((alt_frac > 0.0) && (alt_frac <= 0.1)) { // ground layer
+        fac = ( 0.1*( pow( (10.0*alt_frac),10.0) ) );
+    } else if ((alt_frac > 0.1) && (alt_frac <= 1.0)) { // main body of the thermal
+        fac = 0.4175 - 0.5825* ( cos ( PI*  (1.0-sqrt(alt_frac) ) +PI) ) ;
+    } else if ((alt_frac > 1.0) && (alt_frac < 1.1)) { //above the ceiling, but not above the cloud
+        fac = (0.5 * ( 1.0 + cos ( PI*( (-2.0*alt_frac)*5.0 ) ) ) );
+    } else if (alt_frac >= 1.1) { //above the cloud
+        fac = 0.0;
+    }
+
+    return fac;
 }
 
 
@@ -156,14 +139,12 @@ double t4 = tmin4/tmin3;
 // the time elapsed since the thermal was born, in a 0-1 fraction of tmin3
 
 time = cycle_timer/alive_cycle_time;
-//comment above and
-//uncomment below to freeze the time cycle
- time=0.5;
+// comment above and uncomment below to freeze the time cycle
+// time=0.5;
 
 if ( time >= t4) { 
-	cycle_timer = 60*(rand()%31);
-	}
-
+    cycle_timer = 60*(rand()%31);
+}
 
 //the position of the thermal 'top'
 double thermal_foot_lat = (pos.getLatitudeDeg());
@@ -199,33 +180,27 @@ double dist_center;
 double slice_center_lon;
 double slice_center_lat;
 
-
-
 //we need to know the thermal foot AGL altitude
-
 
 //we could do this only once, as thermal don't move
 //but then agl info is lost on user reset
 //so we only do this every 10 seconds to save cpu
 dt_count += dt;
 if (dt_count >= 10.0 ) {
-	//double alt;
 	if (getGroundElevationM(SGGeod::fromGeodM(pos, 20000), alt, 0)) {
 	ground_elev_ft =  alt * SG_METER_TO_FEET;
-	do_agl_calc = 0;
+	do_agl_calc = false;
 	altitude_agl_ft = height - ground_elev_ft ;
 	dt_count = 0.0;
 	}
 }
 
 //user altitude relative to the thermal height, seen AGL from the thermal foot
-    
 
 double user_altitude = globals->get_aircraft_position().getElevationFt();
 if ( user_altitude < 1.0 ) { user_altitude = 1.0 ;}; // an ugly way to avoid NaNs for users at alt 0
 double user_altitude_agl= ( user_altitude - ground_elev_ft ) ;
 alt_rel = user_altitude_agl / altitude_agl_ft;
-
 
 
 //the updraft user feels !
@@ -255,43 +230,49 @@ double PI = 4.0 * atan(1.0);
 //we get the max strenght proportion we can expect at the time and altitude, formuled between 0 and 1
 //double xx;
 if (time <= t1) {
-	xx= ( time / t1 );
-	maxstrengthavail = xx* get_strength_fac ( alt_rel / xx );
+    xx = ( time / t1 );
+    maxstrengthavail = xx* get_strength_fac ( alt_rel / xx );
 
-	is_forming=1;is_formed=0;is_dying=0;is_dead=0;
+    is_forming = true;
+    is_formed = false;
+    is_dying = false;
+    is_dead = false;
 
-	}
-else if ( (time > t1) && (time <= t2) ) {
-	maxstrengthavail = get_strength_fac ( (alt_rel) );
+} else if ((time > t1) && (time <= t2)) {
+    maxstrengthavail = get_strength_fac ( (alt_rel) );
 
-	is_forming=0;is_formed=1;is_dying=0;is_dead=0;
+    is_forming = false;
+    is_formed = true;
+    is_dying = false;
+    is_dead = false;
 
-	}
-else if ( (time > t2) && (time <= t3) ) {
-	xx= ( ( time - t2) / (1.0 - t2) ) ;
-	maxstrengthavail = get_strength_fac ( alt_rel - xx );
+} else if ((time > t2) && (time <= t3)) {
+    xx= ( ( time - t2) / (1.0 - t2) ) ;
+    maxstrengthavail = get_strength_fac ( alt_rel - xx );
 
-	is_forming=0;is_formed=0;is_dying=1;is_dead=0;
+    is_forming = false;
+    is_formed = false;
+    is_dying = true;
+    is_dead = false;
 
-	}
-else {
-	maxstrengthavail = 0.0;
-	is_forming=0;is_formed=0;is_dying=0;is_dead=1;
-
-	}
+} else {
+    maxstrengthavail = 0.0;
+    is_forming = false;
+    is_formed = false;
+    is_dying = false;
+    is_dead = true;
+}
 
 //we get the diameter of the thermal slice at the user altitude
 //the thermal has a slight conic shape
 
-if ( (alt_rel >= 0.0) && (alt_rel < 1.0 ) ) {
-	Rsink = ( shaping*Rmax ) + ( (  (1.0-shaping)*Rmax*alt_rel ) / altitude_agl_ft );  // in the main thermal body
-	}
-else if ( (alt_rel >=1.0) && (alt_rel < 1.1) ) {
-	Rsink = (Rmax/2.0) * ( 1.0+ cos ( (10.0*PI*alt_rel)-(2.0*PI) ) ); // above the ceiling
-	}
-else {
-	Rsink = 0.0; // above the cloud
-	}
+if ((alt_rel >= 0.0) && (alt_rel < 1.0)) {
+    Rsink = (shaping * Rmax) + (((1.0 - shaping) * Rmax * alt_rel) / altitude_agl_ft); // in the main thermal body
+} else if ((alt_rel >= 1.0) && (alt_rel < 1.1)) {
+    Rsink = (Rmax / 2.0) * (1.0 + cos((10.0 * PI * alt_rel) - (2.0 * PI))); // above the ceiling
+} else {
+    Rsink = 0.0; // above the cloud
+}
 
 //we get the portion of the diameter that produces lift
 Rup = r_up_frac * Rsink ;
@@ -343,42 +324,39 @@ dist_center = SGGeodesy::distanceNm(SGGeod::fromDeg(slice_center_lon, slice_cent
     
 // Now we can calculate Vup
 
-if ( max_strength >=0.0 ) { // this is a thermal
+if (max_strength >= 0.0) { // this is a thermal
 
-	if ( ( dist_center >= 0.0 ) && ( dist_center < Rup ) ) {  //user is in the updraft area
-		Vup = v_up_max * cos ( dist_center* PI/(2.0*Rup) );
-		}
-	else if ( ( dist_center > Rup ) && ( dist_center <= ((Rup+Rsink)/2.0) ) ) { //user in the 1st half of the sink area
-		Vup = v_up_min * cos (( dist_center - ( Rup+Rsink)/2.0 ) * PI / ( 2.0* (  ( Rup+Rsink)/2.0 -Rup )));
-		}
-	else if ( ( dist_center > ((Rup+Rsink)/2.0) ) && dist_center <= Rsink ) {   // user in the 2nd half of the sink area
-		Vup = ( global_sink + v_up_min )/2.0 + ( global_sink - v_up_min )/2.0 *cos ( (dist_center-Rsink) *PI/ ( (Rsink-Rup )/2.0) );
-		}
-	else {  // outside the thermal
-		Vup = global_sink;
-		} 
-	}
+    if ((dist_center >= 0.0) && (dist_center < Rup)) { //user is in the updraft area
+        Vup = v_up_max * cos(dist_center * PI / (2.0 * Rup));
+    } else if ((dist_center > Rup) && (dist_center <= ((Rup + Rsink) / 2.0))) { //user in the 1st half of the sink area
+        Vup = v_up_min * cos((dist_center - (Rup + Rsink) / 2.0) * PI / (2.0 * ((Rup + Rsink) / 2.0 - Rup)));
+    } else if ((dist_center > ((Rup + Rsink) / 2.0)) && dist_center <= Rsink) { // user in the 2nd half of the sink area
+        Vup = (global_sink + v_up_min) / 2.0 + (global_sink - v_up_min) / 2.0 * cos((dist_center - Rsink) * PI / ((Rsink - Rup) / 2.0));
+    } else { // outside the thermal
+        Vup = global_sink;
+    }
+}
 
 else { // this is a sink, we don't want updraft on the sides, nor do we want to feel sink near or above ceiling and ground
-	if ( alt_rel <=1.1 ) {
-		double fac =  ( 1.0 - ( 1.0 - 1.815*alt_rel)*( 1.0 - 1.815*alt_rel) );
-		Vup = fac * (global_sink + ( ( v_up_max - global_sink )/2.0 ) * ( 1.0+cos ( dist_center* PI / Rmax ) )) ;
-		}
-	else { Vup = global_sink; }
+    if (alt_rel <= 1.1) {
+        double fac = (1.0 - (1.0 - 1.815 * alt_rel) * (1.0 - 1.815 * alt_rel));
+        Vup = fac * (global_sink + ((v_up_max - global_sink) / 2.0) * (1.0 + cos(dist_center * PI / Rmax)));
+    } else {
+        Vup = global_sink;
+    }
 }
 
 //correct for no global sink above clouds and outside thermals
 if ( ( (alt_rel > 1.0) && (alt_rel <1.1)) && ( dist_center > Rsink ) ) {
-	Vup = global_sink * ( 11.0 -10.0 * alt_rel );
-	}
+    Vup = global_sink * ( 11.0 -10.0 * alt_rel );
+}
+
 if ( alt_rel >= 1.1 ) { 
-	Vup = 0.0;
-	}
+    Vup = 0.0;
+}
 
 strength = Vup;
 range = dist_center;
 
 }
-
-
 

@@ -18,25 +18,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <cmath>
+#include <cstdlib>
+#include <string>
+#include <time.h>
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
-#include <string>
-#include <cmath>
-#include <cstdlib>
-#include <time.h>
 
 using std::string;
 
 #include "AIStorm.hxx"
 
 
-FGAIStorm::FGAIStorm() :
-   FGAIBase(otStorm, false)
+FGAIStorm::FGAIStorm() : FGAIBase(otStorm, false)
 {
    delay = 3.6;
    subflashes = 1;
@@ -61,9 +57,6 @@ FGAIStorm::FGAIStorm() :
 }
 
 
-FGAIStorm::~FGAIStorm() {
-}
-
 void FGAIStorm::readFromScenario(SGPropertyNode* scFileNode) {
   if (!scFileNode)
     return;
@@ -83,15 +76,12 @@ void FGAIStorm::update(double dt) {
 
 
 void FGAIStorm::Run(double dt) {
-
    double speed_north_deg_sec;
    double speed_east_deg_sec;
 
    // convert speed to degrees per second
-   speed_north_deg_sec = cos( hdg / SG_RADIANS_TO_DEGREES )
-                          * speed * 1.686 / ft_per_deg_lat;
-   speed_east_deg_sec  = sin( hdg / SG_RADIANS_TO_DEGREES )
-                          * speed * 1.686 / ft_per_deg_lon;
+    speed_north_deg_sec = cos(hdg / SG_RADIANS_TO_DEGREES) * speed * 1.686 / ft_per_deg_lat;
+    speed_east_deg_sec = sin(hdg / SG_RADIANS_TO_DEGREES) * speed * 1.686 / ft_per_deg_lon;
 
    // set new position
    pos.setLatitudeDeg( pos.getLatitudeDeg() + speed_north_deg_sec * dt);
@@ -132,8 +122,7 @@ void FGAIStorm::Run(double dt) {
        timer = 0.0;
        flashed = 0;
      }
-   }
-   else {
+    } else {
      timer += dt;
    }  
 
@@ -151,7 +140,6 @@ void FGAIStorm::Run(double dt) {
        user_altitude < height) {
               turb_mag_node->setDoubleValue(strength_norm);
               turb_rate_node->setDoubleValue(0.5);
-   } 
-     
+   }
 }
 
