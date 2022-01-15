@@ -15,14 +15,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIBaseAircraft_HXX
-#define _FG_AIBaseAircraft_HXX
+#pragma once
 
 #include "AIBase.hxx"
 
-#include <string>
 
-class FGAIBaseAircraft : public FGAIBase {
+class FGAIBaseAircraft : public FGAIBase
+{
 
 public:
     FGAIBaseAircraft(object_type otype = FGAIBase::otAircraft);
@@ -30,27 +29,27 @@ public:
     void bind() override;
 
     // Note that this is mapped to all 6 gear indices gear/gear[0..5]
-    void setGearPos(double pos)      { m_gearPos = pos; };
-    void setFlapsPos(double pos)      { m_flapsPos = pos; };
-    void setSpoilerPos(double pos)    { m_spoilerPos = pos; };
-    void setSpeedBrakePos(double pos) { m_speedbrakePos = pos; };
-    void setBeaconLight(bool light)   { m_beaconLight = light; };
-    void setLandingLight(bool light)  { m_landingLight = light; };
-    void setNavLight(bool light)      { m_navLight = light; };
-    void setStrobeLight(bool light)   { m_strobeLight = light; };
-    void setTaxiLight(bool light)     { m_taxiLight = light; };
-    void setCabinLight(bool light)    { m_cabinLight = light; };
+    void GearPos(double pos)      { m_gearPos = pos; };
+    void FlapsPos(double pos)      { m_flapsPos = pos; };
+    void SpoilerPos(double pos)    { m_spoilerPos = pos; };
+    void SpeedBrakePos(double pos) { m_speedbrakePos = pos; };
+    void BeaconLight(bool light)   { m_beaconLight = light; };
+    void LandingLight(bool light)  { m_landingLight = light; };
+    void NavLight(bool light)      { m_navLight = light; };
+    void StrobeLight(bool light)   { m_strobeLight = light; };
+    void TaxiLight(bool light)     { m_taxiLight = light; };
+    void CabinLight(bool light)    { m_cabinLight = light; };
 
-    double getGearPos()       const { return m_gearPos; };
-    double getFlapsPos()      const { return m_flapsPos; };
-    double getSpoilerPos()    const { return m_spoilerPos; };
-    double getSpeedBrakePos() const { return m_speedbrakePos; };
-    bool   getBeaconLight()   const { return m_beaconLight; };
-    bool   getLandingLight()  const { return m_landingLight; };
-    bool   getNavLight()      const { return m_navLight; };
-    bool   getStrobeLight()   const { return m_strobeLight; };
-    bool   getTaxiLight()     const { return m_taxiLight; };
-    bool   getCabinLight()    const { return m_cabinLight; };
+    double GearPos()       const { return m_gearPos; };
+    double FlapsPos()      const { return m_flapsPos; };
+    double SpoilerPos()    const { return m_spoilerPos; };
+    double SpeedBrakePos() const { return m_speedbrakePos; };
+    bool   BeaconLight()   const { return m_beaconLight; };
+    bool   LandingLight()  const { return m_landingLight; };
+    bool   NavLight()      const { return m_navLight; };
+    bool   StrobeLight()   const { return m_strobeLight; };
+    bool   TaxiLight()     const { return m_taxiLight; };
+    bool   CabinLight()    const { return m_cabinLight; };
 
 protected:
 
@@ -68,6 +67,4 @@ protected:
     bool m_strobeLight;
     bool m_taxiLight;
 };
-
-#endif
 

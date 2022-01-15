@@ -18,13 +18,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIAircraft_HXX
-#define _FG_AIAircraft_HXX
-
-#include "AIBaseAircraft.hxx"
+#pragma once
 
 #include <string>
 #include <iostream>
+
+#include "AIBaseAircraft.hxx"
 
 class PerformanceData;
 class FGAISchedule;
@@ -37,8 +36,9 @@ class FGAIAircraft : public FGAIBaseAircraft {
 
 public:
     FGAIAircraft(FGAISchedule *ref=0);
-    ~FGAIAircraft();
+    virtual ~FGAIAircraft();
 
+    const char* getTypeString(void) const override { return "aircraft"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     void bind() override;
@@ -48,8 +48,11 @@ public:
     void setPerformance(const std::string& acType, const std::string& perfString);
 
     void setFlightPlan(const std::string& fp, bool repat = false);
-        
+
+#if 0
     void initializeFlightPlan();
+#endif
+
     FGAIFlightPlan* GetFlightPlan() const { return fp.get(); };
     void ProcessFlightPlan( double dt, time_t now );
     time_t checkForArrivalTime(const std::string& wptName);
@@ -57,7 +60,11 @@ public:
     void AccelTo(double speed);
     void PitchTo(double angle);
     void RollTo(double angle);
+
+#if 0
     void YawTo(double angle);
+#endif
+
     void ClimbTo(double altitude);
     void TurnTo(double heading);
     
@@ -82,8 +89,6 @@ public:
     void resetTakeOffStatus() { takeOffStatus = 0;};
     void setTakeOffStatus(int status) { takeOffStatus = status; };
     void scheduleForATCTowerDepartureControl(int state);
-
-    const char* getTypeString(void) const override { return "aircraft"; }
 
     const std::string& GetTransponderCode() { return transponderCode; };
     void SetTransponderCode(const std::string& tc) { transponderCode = tc;};
@@ -111,6 +116,7 @@ public:
     void clearATCController();
     void dumpCSVHeader(std::ofstream& o);
     void dumpCSV(std::ofstream& o, int lineIndex);
+
 protected:
     void Run(double dt);
 
@@ -128,6 +134,7 @@ private:
     double headingError;
     double minBearing;
     double speedFraction;
+
     /**Zero if FP is not active*/
     double groundTargetSpeed;
     double groundOffset;
@@ -147,11 +154,9 @@ private:
     bool reachedEndOfCruise(double&);
     bool aiTrafficVisible(void);
     void controlHeading(FGAIWaypoint* curr);
-    void controlSpeed(FGAIWaypoint* curr,
-                      FGAIWaypoint* next);
+    void controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next);
     
     void updatePrimaryTargetValues(double dt, bool& flightplanActive, bool& aiOutOfSight);
-    
     void updateSecondaryTargetValues(double dt);
     void updateHeading(double dt);
     void updateBankAngleTarget();
@@ -159,12 +164,24 @@ private:
     void updatePitchAngleTarget();
     void updateActualState(double dt);
     void updateModelProperties(double dt);
+
     void handleATCRequests(double dt);
-    inline bool isStationary() { return ((fabs(speed)<=0.0001)&&(fabs(tgt_speed)<=0.0001));}
-    inline bool needGroundElevation() { if (!isStationary()) _needsGroundElevation=true;return _needsGroundElevation;}
+
+    inline bool isStationary() {
+        return ((fabs(speed) <= 0.0001) && (fabs(tgt_speed) <= 0.0001));
+    }
+    
+    inline bool needGroundElevation() {
+        if (!isStationary())
+            _needsGroundElevation = true;
+        return _needsGroundElevation;
+    }
 
     double sign(double x);
+
+#if 0
     std::string getTimeString(int timeOffset);
+#endif
 
     void lazyInitControlsNodes();
 
@@ -173,9 +190,11 @@ private:
     std::string transponderCode;
 
     int spinCounter;
+
     /**Kills a flight when it's stuck */
     const int AI_STUCK_LIMIT = 100;
     int stuckCounter = 0;
+
     /**
      * Signals a reset to leg 1 at a different airport. 
      * The leg loading happens at a different place than the parking loading.
@@ -194,24 +213,24 @@ private:
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
-    
-   void assertSpeed(double speed);
 
-   struct
-   {
+#if 0
+   void assertSpeed(double speed);
+#endif
+
+    struct
+    {
        double remainingLength;
        std::string startWptName;
        std::string finalWptName;
-   } trackCache;
+    } trackCache;
 
-   // these are init-ed on first se by lazyInitControlsNodes()
-   SGPropertyNode_ptr _controlsLateralModeNode,
-       _controlsVerticalModeNode,
-       _controlsTargetHeadingNode,
-       _controlsTargetRollNode,
-       _controlsTargetAltitude,
-       _controlsTargetPitch,
-       _controlsTargetSpeed;
+    // these are init-ed on first use by lazyInitControlsNodes()
+    SGPropertyNode_ptr _controlsLateralModeNode,
+        _controlsVerticalModeNode,
+        _controlsTargetHeadingNode,
+        _controlsTargetRollNode,
+        _controlsTargetAltitude,
+        _controlsTargetPitch,
+        _controlsTargetSpeed;
 };
-
-#endif  // _FG_AIAircraft_HXX

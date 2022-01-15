@@ -18,10 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
@@ -238,9 +234,11 @@ void FGAIAircraft::RollTo(double angle) {
 }
 
 
+#if 0
 void FGAIAircraft::YawTo(double angle) {
     tgt_yaw = angle;
 }
+#endif
 
 
 void FGAIAircraft::ClimbTo(double alt_ft ) {
@@ -475,6 +473,7 @@ void FGAIAircraft::clearATCController()
     towerController = 0;
 }
 
+#if 0
 void FGAIAircraft::assertSpeed(double speed)
 {
     if ((speed < -50) || (speed > 1000)) {
@@ -488,8 +487,7 @@ void FGAIAircraft::assertSpeed(double speed)
             << endl;
     }
 }
-
-
+#endif
 
 void FGAIAircraft::checkTcas(void)
 {
@@ -516,8 +514,10 @@ void FGAIAircraft::checkTcas(void)
     }
 }
 
+#if 0
 void FGAIAircraft::initializeFlightPlan() {
 }
+#endif
 
 const char * FGAIAircraft::_getTransponderCode() const {
   return transponderCode.c_str();
@@ -1508,7 +1508,7 @@ void FGAIAircraft::updateModelProperties(double dt)
   }
   
   double targetGearPos = fp->getPreviousWaypoint()->getGear_down() ? 1.0 : 0.0;
-  double gearPos = getGearPos();
+  double gearPos = GearPos();
   
   if (gearPos != targetGearPos) {
     gearPos = gearPos + limitRateOfChange(gearPos, targetGearPos, 0.1, dt);
@@ -1517,11 +1517,11 @@ void FGAIAircraft::updateModelProperties(double dt)
     } else if (gearPos > 0.999) {
       gearPos = 1.0;    
     }
-    setGearPos(gearPos);
+    GearPos(gearPos);
   } 
 
   double targetFlapsPos = fp->getPreviousWaypoint()->getFlaps();
-  double flapsPos = getFlapsPos();
+  double flapsPos = FlapsPos();
 
   if (flapsPos != targetFlapsPos) {
     flapsPos = flapsPos + limitRateOfChange(flapsPos, targetFlapsPos, 0.05, dt);
@@ -1530,17 +1530,17 @@ void FGAIAircraft::updateModelProperties(double dt)
     } else if (flapsPos > 0.999) {
       flapsPos = 1.0;
     }
-    setFlapsPos(flapsPos);
+    FlapsPos(flapsPos);
   }
 
-  setSpeedBrakePos(fp->getPreviousWaypoint()->getSpeedBrakes());
-  setSpoilerPos(fp->getPreviousWaypoint()->getSpoilers());
-  setCabinLight(fp->getPreviousWaypoint()->getCabinLight());
-  setBeaconLight(fp->getPreviousWaypoint()->getBeaconLight());
-  setLandingLight(fp->getPreviousWaypoint()->getLandingLight());
-  setNavLight(fp->getPreviousWaypoint()->getNavLight());
-  setStrobeLight(fp->getPreviousWaypoint()->getStrobeLight());
-  setTaxiLight(fp->getPreviousWaypoint()->getTaxiLight());
+  SpeedBrakePos(fp->getPreviousWaypoint()->getSpeedBrakes());
+  SpoilerPos(fp->getPreviousWaypoint()->getSpoilers());
+  CabinLight(fp->getPreviousWaypoint()->getCabinLight());
+  BeaconLight(fp->getPreviousWaypoint()->getBeaconLight());
+  LandingLight(fp->getPreviousWaypoint()->getLandingLight());
+  NavLight(fp->getPreviousWaypoint()->getNavLight());
+  StrobeLight(fp->getPreviousWaypoint()->getStrobeLight());
+  TaxiLight(fp->getPreviousWaypoint()->getTaxiLight());
 }
 
 void FGAIAircraft::dumpCSVHeader(std::ofstream& o) {
@@ -1642,6 +1642,7 @@ void FGAIAircraft::dumpCSV(std::ofstream& o, int lineIndex) {
     o << endl;
 }
 
+#if 0
 std::string FGAIAircraft::getTimeString(int timeOffset)
 {
     char ret[11];
@@ -1652,3 +1653,4 @@ std::string FGAIAircraft::getTimeString(int timeOffset)
     strftime(ret, 11, "%w/%H:%M:%S", timeinfo);
     return ret;
 }
+#endif

@@ -17,13 +17,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef FLIGHTGEAR_AISWIFTAIRCRAFT_H
-#define FLIGHTGEAR_AISWIFTAIRCRAFT_H
+#pragma once
 
-
-#include "AIBaseAircraft.hxx"
 #include <string>
 #include <utility>
+
+#include "AIBaseAircraft.hxx"
 
 using charPtr = const char*;
 
@@ -71,15 +70,16 @@ class FGAISwiftAircraft : public FGAIBaseAircraft
 {
 public:
     FGAISwiftAircraft(const std::string& callsign, const std::string& modelString);
-    ~FGAISwiftAircraft() override;
+    virtual ~FGAISwiftAircraft() = default;
+
+    const char* getTypeString() const override { return "swift"; }
+
     void updatePosition(SGGeod& position, SGVec3<double>& orientation, double groundspeed, bool initPos);
     void update(double dt) override;
     double getGroundElevation(const SGGeod& pos) const;
     void initProps();
     void setPlaneSurface(const AircraftSurfaces& surfaces);
     void setPlaneTransponder(const AircraftTransponder& transponder);
-
-    const char* getTypeString() const override { return "swift"; }
 
 private:
     bool m_initPos = false;
@@ -89,5 +89,3 @@ private:
     SGPropertyNode_ptr m_transponderIdentNode;
 };
 
-
-#endif //FLIGHTGEAR_AISWIFTAIRCRAFT_H

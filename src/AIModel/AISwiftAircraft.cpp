@@ -67,15 +67,15 @@ double FGAISwiftAircraft::getGroundElevation(const SGGeod& pos) const
 
 void FGAISwiftAircraft::setPlaneSurface(const AircraftSurfaces& surfaces)
 {
-    setGearPos(surfaces.gear);
-    setFlapsPos(surfaces.flaps);
-    setSpoilerPos(surfaces.spoilers);
-    setSpeedBrakePos(surfaces.spoilers);
-    setBeaconLight(surfaces.beaconLight);
-    setLandingLight(surfaces.landingLight);
-    setNavLight(surfaces.navLight);
-    setStrobeLight(surfaces.strobeLight);
-    setTaxiLight(surfaces.taxiLight);
+    GearPos(surfaces.gear);
+    FlapsPos(surfaces.flaps);
+    SpoilerPos(surfaces.spoilers);
+    SpeedBrakePos(surfaces.spoilers);
+    BeaconLight(surfaces.beaconLight);
+    LandingLight(surfaces.landingLight);
+    NavLight(surfaces.navLight);
+    StrobeLight(surfaces.strobeLight);
+    TaxiLight(surfaces.taxiLight);
 }
 
 void FGAISwiftAircraft::setPlaneTransponder(const AircraftTransponder& transponder)
@@ -93,4 +93,3 @@ void FGAISwiftAircraft::initProps()
     m_transponderIdentNode = _getProps()->getNode("swift/transponder/ident", true);
 }
 
-FGAISwiftAircraft::~FGAISwiftAircraft() = default;

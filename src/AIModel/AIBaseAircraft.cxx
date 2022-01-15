@@ -20,21 +20,18 @@
 #include <Main/globals.hxx>
 
 FGAIBaseAircraft::FGAIBaseAircraft(object_type ot) :
-    FGAIBase(ot, false)
-{
-    m_gearPos = 0.0f;
-    m_flapsPos = 0.0f;
-    m_spoilerPos = 0.0f;
-    m_speedbrakePos = 0.0f;
-
-    // Light properties.
-    m_beaconLight = false;
-    m_cabinLight = false;
-    m_landingLight = false;
-    m_navLight = false;
-    m_strobeLight = false;
-    m_taxiLight = false;
-}
+    FGAIBase(ot, false),
+    m_gearPos(0.0),
+    m_flapsPos(0.0),
+    m_spoilerPos(0.0),
+    m_speedbrakePos(0.0),
+    m_beaconLight(false),
+    m_cabinLight(false),
+    m_landingLight(false),
+    m_navLight(false),
+    m_strobeLight(false),
+    m_taxiLight(false)
+{}
 
 void FGAIBaseAircraft::bind() {
     FGAIBase::bind();
@@ -49,47 +46,47 @@ void FGAIBaseAircraft::bind() {
 
     tie("surface-positions/flap-pos-norm",
         SGRawValueMethods<FGAIBaseAircraft,double>(*this,
-        &FGAIBaseAircraft::getFlapsPos,
-        &FGAIBaseAircraft::setFlapsPos));
+        &FGAIBaseAircraft::FlapsPos,
+        &FGAIBaseAircraft::FlapsPos));
 
     tie("surface-positions/spoiler-pos-norm",
         SGRawValueMethods<FGAIBaseAircraft,double>(*this,
-        &FGAIBaseAircraft::getSpoilerPos,
-        &FGAIBaseAircraft::setSpoilerPos));
+        &FGAIBaseAircraft::SpoilerPos,
+        &FGAIBaseAircraft::SpoilerPos));
 
     tie("surface-positions/speedbrake-pos-norm",
         SGRawValueMethods<FGAIBaseAircraft,double>(*this,
-        &FGAIBaseAircraft::getSpeedBrakePos,
-        &FGAIBaseAircraft::setSpeedBrakePos));
+        &FGAIBaseAircraft::SpeedBrakePos,
+        &FGAIBaseAircraft::SpeedBrakePos));
 
     tie("controls/lighting/beacon",
         SGRawValueMethods<FGAIBaseAircraft,bool>(*this,
-        &FGAIBaseAircraft::getBeaconLight,
-        &FGAIBaseAircraft::setBeaconLight));
+        &FGAIBaseAircraft::BeaconLight,
+        &FGAIBaseAircraft::BeaconLight));
 
     tie("controls/lighting/cabin-lights",
         SGRawValueMethods<FGAIBaseAircraft,bool>(*this,
-        &FGAIBaseAircraft::getCabinLight,
-        &FGAIBaseAircraft::setCabinLight));
+        &FGAIBaseAircraft::CabinLight,
+        &FGAIBaseAircraft::CabinLight));
 
     tie("controls/lighting/landing-lights",
         SGRawValueMethods<FGAIBaseAircraft,bool>(*this,
-        &FGAIBaseAircraft::getLandingLight,
-        &FGAIBaseAircraft::setLandingLight));
+        &FGAIBaseAircraft::LandingLight,
+        &FGAIBaseAircraft::LandingLight));
 
     tie("controls/lighting/nav-lights",
         SGRawValueMethods<FGAIBaseAircraft,bool>(*this,
-        &FGAIBaseAircraft::getNavLight,
-        &FGAIBaseAircraft::setNavLight));
+        &FGAIBaseAircraft::NavLight,
+        &FGAIBaseAircraft::NavLight));
 
     tie("controls/lighting/strobe",
         SGRawValueMethods<FGAIBaseAircraft,bool>(*this,
-        &FGAIBaseAircraft::getStrobeLight,
-        &FGAIBaseAircraft::setStrobeLight));
+        &FGAIBaseAircraft::StrobeLight,
+        &FGAIBaseAircraft::StrobeLight));
 
     tie("controls/lighting/taxi-lights",
         SGRawValueMethods<FGAIBaseAircraft,bool>(*this,
-        &FGAIBaseAircraft::getTaxiLight,
-        &FGAIBaseAircraft::setTaxiLight));
-
+        &FGAIBaseAircraft::TaxiLight,
+        &FGAIBaseAircraft::TaxiLight));
 }
+
