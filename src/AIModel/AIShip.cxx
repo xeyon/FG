@@ -17,10 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <cmath>
 
 #ifdef _MSC_VER
@@ -43,47 +39,40 @@
 
 using std::string;
 
-FGAIShip::FGAIShip(object_type ot) :
-// allow HOT to be enabled
-FGAIBase(ot, true),
-
-
-_waiting(false),
-_new_waypoint(true),
-_tunnel(false),
-_initial_tunnel(false),
-_restart(false),
-_hdg_constant(0.01),
-_limit(100),
-_elevation_m(0),
-_elevation_ft(0),
-_tow_angle(0),
-_missed_count(0),
-_wp_range(0),
-_dt_count(0),
-_next_run(0),
-_roll_constant(0.001),
-_roll_factor(-0.0083335),
-_old_range(0),
-_range_rate(0),
-_missed_time_sec(30),
-_day(86400),
-_lead_angle(0),
-_xtrack_error(0),
-_curr_alt(0),
-_prev_alt(0),
-_until_time(""),
-_fp_init(false),
-_missed(false)
+FGAIShip::FGAIShip(object_type ot) : // allow HOT to be enabled
+                                     FGAIBase(ot, true),
+                                     _waiting(false),
+                                     _new_waypoint(true),
+                                     _tunnel(false),
+                                     _initial_tunnel(false),
+                                     _restart(false),
+                                     _hdg_constant(0.01),
+                                     _limit(100),
+                                     _elevation_ft(0),
+                                     _tow_angle(0),
+                                     _missed_count(0),
+                                     _wp_range(0),
+                                     _dt_count(0),
+                                     _next_run(0),
+                                     _roll_constant(0.001),
+                                     _roll_factor(-0.0083335),
+                                     _old_range(0),
+                                     _range_rate(0),
+                                     _missed_time_sec(30),
+                                     _day(86400),
+                                     _lead_angle(0),
+                                     _xtrack_error(0),
+                                     _curr_alt(0),
+                                     _prev_alt(0),
+                                     _until_time(""),
+                                     _fp_init(false),
+                                     _missed(false)
 {
-        invisible = false;
-}
-
-FGAIShip::~FGAIShip() {
+    _elevation_m = 0.0;
+    invisible = false;
 }
 
 void FGAIShip::readFromScenario(SGPropertyNode* scFileNode) {
-
     if (!scFileNode)
         return;
 
@@ -283,9 +272,8 @@ void FGAIShip::Run(double dt) {
     if (_fp_init)
         ProcessFlightPlan(dt);
 
-    const string& type = getTypeString();
+    auto type = getTypeString();
 
-    double alpha;
     double rudder_limit;
     double raw_roll;
 
@@ -346,9 +334,8 @@ void FGAIShip::Run(double dt) {
         _rudder = -45;
 
 
-    //we assume that at slow speed ships will manoeuvre using engines/bow thruster
-	if(type == "ship" || type == "carrier" || type == "escort"){
-
+    // we assume that at slow speed ships will manoeuvre using engines/bow thruster
+	if (type == "ship" || type == "carrier" || type == "escort") {  // TODO: fragile code... should this be an enum???
 		if (fabs(speed)<=5)
 			_sp_turn_radius_ft = _fixed_turn_radius;
 		else {
@@ -356,7 +343,6 @@ void FGAIShip::Run(double dt) {
 			// we need to allow for negative speeds
 			_sp_turn_radius_ft = 10 * pow ((fabs(speed) - 15), 2) + turn_radius_ft;
 		}
-
 	} else {
 
 		if (fabs(speed) <= 40)
@@ -367,7 +353,6 @@ void FGAIShip::Run(double dt) {
 		}
 	}
 
-
     if (_rudder <= -0.25 || _rudder >= 0.25) {
         // adjust turn radius for _rudder angle. The equation is even more approximate.
         float a = 19;
@@ -377,7 +362,7 @@ void FGAIShip::Run(double dt) {
         _rd_turn_radius_ft = (a * exp(b * fabs(_rudder)) + c) * _sp_turn_radius_ft;
 
         // calculate the angle, alpha, subtended by the arc traversed in time dt
-        alpha = ((speed * 1.686 * dt) / _rd_turn_radius_ft) * SG_RADIANS_TO_DEGREES;
+        double alpha = ((speed * 1.686 * dt) / _rd_turn_radius_ft) * SG_RADIANS_TO_DEGREES;
         //cout << _name << " alpha " << alpha << endl;
         // make sure that alpha is applied in the right direction
         hdg += alpha * sign(_rudder);
@@ -428,13 +413,11 @@ void FGAIShip::Run(double dt) {
     }
 
     // set the _rudder limit by speed
-    if (type == "ship" || type == "carrier" || type == "escort"){
-
+    if (type == "ship" || type == "carrier" || type == "escort") {  // TODO: fragile code... should this be an enum???
         if (speed <= 40)
             rudder_limit = (-0.825 * speed) + 35;
         else
             rudder_limit = 2;
-
     } else
         rudder_limit = 20;
 
@@ -471,8 +454,10 @@ void FGAIShip::RollTo(double angle) {
     tgt_roll = angle;
 }
 
+#if 0
 void FGAIShip::YawTo(double angle) {
 }
+#endif
 
 void FGAIShip::ClimbTo(double altitude) {
     tgt_altitude_ft = altitude;
@@ -646,7 +631,6 @@ void FGAIShip::ProcessFlightPlan(double dt) {
 
     _next_run = 0.05 + (0.025 * sg_random());
 
-    double until_time_sec = 0;
     _missed = false;
 
     // check to see if we've reached the point for our next turn
@@ -701,7 +685,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
             curr = fp->getCurrentWaypoint();
             next = fp->getNextWaypoint();
 
-        }else if(_next_name == "END" || fp->getNextWaypoint() == 0) {
+        } else if(_next_name == "END" || fp->getNextWaypoint() == 0) {
 
             if (_repeat) {
                 SG_LOG(SG_AI, SG_INFO, "AIShip: "<< _name << " Flightplan repeating ");
@@ -717,7 +701,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
                 _missed_count = 0;
                 _lead_angle = 0;
                 AccelTo(prev->getSpeed());
-            } else if (_restart){
+            } else if (_restart) {
                 SG_LOG(SG_AI, SG_INFO, "AIShip: " << _name << " Flightplan restarting ");
                 _missed_count = 0;
                 initFlightPlan();
@@ -758,7 +742,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
 
         } else if (_next_name == "WAITUNTIL") {
             time_sec = getDaySeconds();
-            until_time_sec = processTimeString(next->getTime());
+            double until_time_sec = processTimeString(next->getTime());
             _until_time = next->getTime();
             setUntilTime(next->getTime());
             if (until_time_sec > time_sec) {
@@ -809,7 +793,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         setWPPos();
         object_type type = getType();
 
-        if (type != 10)
+        if (type != 10) // TODO: magic number
             AccelTo(prev->getSpeed());
 
         _curr_alt = curr->getAltitude();
@@ -845,12 +829,12 @@ bool FGAIShip::initFlightPlan() {
     curr = fp->getCurrentWaypoint();  //second waypoint
     next = fp->getNextWaypoint();     //third waypoint (might not exist!)
 
-    while (curr->getName() == "WAIT" || curr->getName() == "WAITUNTIL") {  // don't wait when initialising
+    while (curr && (curr->getName() == "WAIT" || curr->getName() == "WAITUNTIL")) {  // don't wait when initialising
         SG_LOG(SG_AI, SG_DEBUG, "AIShip: " << _name << " re-initializing waypoints ");
         fp->IncrementWaypoint(false);
         curr = fp->getCurrentWaypoint();
         next = fp->getNextWaypoint();
-    } // end while loop
+    }
 
     if (!_start_time.empty()){
         _start_sec = processTimeString(_start_time);
@@ -878,16 +862,20 @@ bool FGAIShip::initFlightPlan() {
             return false;
         }
 
-    } else {
+    } else if (prev) {
         setLatitude(prev->getLatitude());
         setLongitude(prev->getLongitude());
         setSpeed(prev->getSpeed());
     }
 
     setWPNames();
+
+    if (prev && curr) {
     setHeading(getCourse(prev->getLatitude(), prev->getLongitude(), curr->getLatitude(), curr->getLongitude()));
     _wp_range = getRange(prev->getLatitude(), prev->getLongitude(), curr->getLatitude(), curr->getLongitude());
     _old_range = _wp_range;
+    }
+
     _range_rate = 0;
     _hdg_lock = true;
     _missed = false;
@@ -895,6 +883,7 @@ bool FGAIShip::initFlightPlan() {
     _new_waypoint = true;
 
     SG_LOG(SG_AI, SG_ALERT, "AIShip: " << _name << " done initialising waypoints " << _tunnel);
+
     if (prev)
         init = true;
 
@@ -902,7 +891,6 @@ bool FGAIShip::initFlightPlan() {
         return true;
     else
         return false;
-
 } // end of initialization
 
 
@@ -1073,23 +1061,18 @@ void FGAIShip::setWPPos() {
             return;
     }
 
-    double elevation_m = 0;
     wppos.setLatitudeDeg(curr->getLatitude());
     wppos.setLongitudeDeg(curr->getLongitude());
     wppos.setElevationM(0);
 
     if (curr->getOn_ground()){
-
-        if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(wppos, 3000),
-            elevation_m, NULL, 0)){
-                wppos.setElevationM(elevation_m);
+        double elevation_m = 0;
+        if (globals->get_scenery()->get_elevation_m(
+                SGGeod::fromGeodM(wppos, 3000), elevation_m, NULL, 0)) {
+            wppos.setElevationM(elevation_m);
         }
-
-        //cout << curr->name << " setting measured  elev " << elevation_m << endl;
-
     } else {
         wppos.setElevationM(curr->getAltitude());
-        //cout << curr->name << " setting FP elev " << elevation_m << endl;
     }
 
     curr->setAltitude(wppos.getElevationM());

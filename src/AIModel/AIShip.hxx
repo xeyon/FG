@@ -19,21 +19,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AISHIP_HXX
-#define _FG_AISHIP_HXX
+#pragma once
+
+#include <simgear/scene/material/mat.hxx>
 
 #include "AIBase.hxx"
 #include "AIFlightPlan.hxx"
-#include <simgear/scene/material/mat.hxx>
 
 class FGAIManager;
 
 class FGAIShip : public FGAIBase {
 
 public:
-    FGAIShip(object_type ot = otShip);
-    virtual ~FGAIShip();
+    FGAIShip(object_type ot = object_type::otShip);
+    virtual ~FGAIShip() = default;
 
+    const char* getTypeString(void) const override { return "ship"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
@@ -48,7 +49,11 @@ public:
     void AccelTo(double speed);
     void PitchTo(double angle);
     void RollTo(double angle);
+
+#if 0
     void YawTo(double angle);
+#endif
+
     void ClimbTo(double altitude);
     void TurnTo(double heading);
     void setCurrName(const std::string&);
@@ -70,22 +75,26 @@ public:
 
     double sign(double x);
 
-    bool _hdg_lock;
-    bool _serviceable;
+    bool _hdg_lock = false;
+    bool _serviceable = false;
     bool _waiting;
     bool _new_waypoint;
     bool _tunnel, _initial_tunnel;
     bool _restart;
 
-    const char* getTypeString(void) const override { return "ship"; }
-    double _rudder_constant, _speed_constant, _hdg_constant, _limit ;
-    double _elevation_m, _elevation_ft;
-    double _missed_range, _tow_angle, _wait_count, _missed_count,_wp_range;
+    double _rudder_constant = 0.0;
+    double _speed_constant = 0.0;
+    double _hdg_constant, _limit;
+    double _elevation_ft;
+    double _missed_range = 0.0;
+    double _tow_angle;
+    double _wait_count = 0.0;
+    double _missed_count,_wp_range;
     double _dt_count, _next_run;
 
-    FGAIWaypoint* prev; // the one behind you
-    FGAIWaypoint* curr; // the one ahead
-    FGAIWaypoint* next; // the next plus 1
+    FGAIWaypoint* prev = nullptr; // the one behind you
+    FGAIWaypoint* curr = nullptr; // the one ahead
+    FGAIWaypoint* next = nullptr; // the next plus 1
 
 protected:
 
@@ -112,28 +121,30 @@ private:
     bool initFlightPlan();
     bool advanceFlightPlan (double elapsed_sec, double day_sec);
 
-    float _rudder, _tgt_rudder;
+    float _rudder = 0.0f;
+    float _tgt_rudder = 0.0f;
 
     double _roll_constant, _roll_factor;
-    double _sp_turn_radius_ft, _rd_turn_radius_ft, _fixed_turn_radius;
+    double _sp_turn_radius_ft = 0.0;
+    double _rd_turn_radius_ft = 0.0;
+    double _fixed_turn_radius = 0.0;
     double _old_range, _range_rate;
     double _missed_time_sec;
-    double _start_sec;
+    double _start_sec = 0.0;
     double _day;
     double _lead_angle;
-    double _lead_angle_gain, _lead_angle_limit, _proportion;
-    double _course;
+    double _lead_angle_gain = 0.0;
+    double _lead_angle_limit = 0.0;
+    double _proportion = 0.0;
+    double _course = 0.0;
     double _xtrack_error;
     double _curr_alt, _prev_alt;
 
     std::string _prev_name, _curr_name, _next_name;
-    std::string _path;
     std::string _start_time, _until_time;
 
-    bool _repeat;
+    bool _repeat = false;
     bool _fp_init;
     bool _missed;
-
 };
 
-#endif  // _FG_AISHIP_HXX
