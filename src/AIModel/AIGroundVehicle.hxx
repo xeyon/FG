@@ -18,11 +18,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIGROUNDVEHICLE_HXX
-#define _FG_AIGROUNDVEHICLE_HXX
+#pragma once
 
 #include <cmath>
 #include <vector>
+
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/scene/material/mat.hxx>
 
@@ -34,16 +34,15 @@
 class FGAIGroundVehicle : public FGAIShip {
 public:
     FGAIGroundVehicle();
-    virtual ~FGAIGroundVehicle();
+    virtual ~FGAIGroundVehicle() = default;
 
+    const char* getTypeString(void) const override { return "groundvehicle"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
     void bind() override;
     void reinit() override;
     void update(double dt) override;
-
-    const char* getTypeString(void) const override { return "groundvehicle"; }
 
 private:
     void setNoRoll(bool nr);
@@ -76,22 +75,38 @@ private:
 
     SGGeod _selectedpos;
 
-    bool   _solid;           // if true ground is solid for FDMs
-    double _load_resistance; // ground load resistanc N/m^2
-    double _frictionFactor;  // dimensionless modifier for Coefficient of Friction
-    double _elevation, _elevation_coeff;
-    double _tow_angle_gain, _tow_angle_limit;
-    double _ht_agl_ft;
-    double _contact_x1_offset, _contact_x2_offset, _contact_z_offset;
-    double _pitch, _pitch_coeff, _pitch_deg;
-    double _speed_coeff, _speed_kt;
-    double _x_offset, _y_offset;
-    double _range_ft;
-    double _relbrg;
-    double _parent_speed, _parent_x_offset, _parent_y_offset, _parent_z_offset;
-    double _hitch_x_offset_m, _hitch_y_offset_m, _hitch_z_offset_m;
-    double _dt_count, _next_run, _break_count;
+    bool   _solid = true;           // if true ground is solid for FDMs
+    double _load_resistance = 0.0;  // ground load resistanc N/m^2
+    double _frictionFactor = 0.0;   // dimensionless modifier for Coefficient of Friction
 
+    double _elevation = 0.0;
+    double _elevation_coeff = 0.0;
+    double _ht_agl_ft = 0.0;
+
+    double _tow_angle_gain = 0.0;
+    double _tow_angle_limit = 0.0;
+
+    double _contact_x1_offset = 0.0;
+    double _contact_x2_offset = 0.0;
+    double _contact_z_offset = 0.0;
+
+    double _pitch = 0.0;
+    double _pitch_coeff = 0.0;
+    double _pitch_deg = 0.0;
+
+    double _speed_coeff = 0.0;
+    double _speed_kt = 0.0;
+
+    double _range_ft = 0.0;
+    double _relbrg = 0.0;
+
+    double _parent_speed = 0.0;
+    double _parent_x_offset = 0.0;
+    double _parent_y_offset = 0.0;
+    double _parent_z_offset = 0.0;
+
+    double _hitch_x_offset_m = 0.0;
+    double _hitch_y_offset_m = 0.0;
+    double _hitch_z_offset_m = 0.0;
+    double _break_count = 0.0;
 };
-
-#endif  // FG_AIGROUNDVEHICLE_HXX

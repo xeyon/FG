@@ -18,10 +18,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include <simgear/sg_inlines.h>
 
 #include <Viewer/view.hxx>
@@ -33,28 +29,16 @@
 
 using std::string;
 
-FGAIGroundVehicle::FGAIGroundVehicle() :
-FGAIShip(otGroundVehicle),
-
-_pitch(0),
-_pitch_deg(0),
-_speed_kt(0),
-_range_ft(0),
-_relbrg (0),
-_parent_speed(0),
-_parent_x_offset(0),
-_parent_y_offset(0),
-_parent_z_offset(0),
-_dt_count(0),
-_next_run(0),
-_break_count(0)
-
+FGAIGroundVehicle::FGAIGroundVehicle() : FGAIShip(object_type::otGroundVehicle)
 {
+    _dt_count = 0.0;
+    _next_run = 0.0;
+    _x_offset = 0.0;
+    _y_offset = 0.0;
+
     invisible = false;
     _parent = "";
 }
-
-FGAIGroundVehicle::~FGAIGroundVehicle() {}
 
 void FGAIGroundVehicle::readFromScenario(SGPropertyNode* scFileNode) {
     if (!scFileNode)
@@ -78,6 +62,7 @@ void FGAIGroundVehicle::readFromScenario(SGPropertyNode* scFileNode) {
     setTowAngleGain(scFileNode->getDoubleValue("tow-angle-gain", 1.0));
     setTowAngleLimit(scFileNode->getDoubleValue("tow-angle-limit-deg", 2.0));
     setInitialTunnel(scFileNode->getBoolValue("tunnel", false));
+
     //we may need these later for towed vehicles
     //    setSubID(scFileNode->getIntValue("SubID", 0));
     //    setGroundOffset(scFileNode->getDoubleValue("ground-offset", 0.0));
@@ -218,7 +203,6 @@ void FGAIGroundVehicle::setTowAngle(double ta, double dt, double coeff){
 }
 
 bool FGAIGroundVehicle::getPitch() {
-
     if (!_tunnel){
         double vel = props->getDoubleValue("velocities/true-airspeed-kt", 0);
         double contact_offset_x1_m = _contact_x1_offset * SG_FEET_TO_METER;
@@ -237,7 +221,6 @@ bool FGAIGroundVehicle::getPitch() {
         double rear_elev_m = 0;
         double elev_front = 0;
         double elev_rear = 0;
-        //double max_alt = 10000;
 
         if (globals->get_scenery()->get_elevation_m(SGGeod::fromGeodM(geodFront, 3000),
             elev_front, NULL, 0)){
@@ -265,42 +248,30 @@ bool FGAIGroundVehicle::getPitch() {
         }
 
     } else {
-
-        if (prev->getAltitude() == 0 || curr->getAltitude() == 0) return false;
+        if (prev->getAltitude() == 0 || curr->getAltitude() == 0)
+            return false;
 
         static double distance;
-        static double d_alt;
         static double curr_alt;
         static double prev_alt;
 
         if (_new_waypoint){
-            //cout << "new waypoint, calculating pitch " << endl;
             curr_alt = curr->getAltitude();
             prev_alt = prev->getAltitude();
-            //cout << "prev_alt" <<prev_alt << endl;
-            d_alt = (curr_alt - prev_alt) * SG_METER_TO_FEET;
-            //_elevation = prev->altitude;
+
+            static double d_alt = (curr_alt - prev_alt) * SG_METER_TO_FEET;
             distance = SGGeodesy::distanceM(SGGeod::fromDeg(prev->getLongitude(), prev->getLatitude()),
             SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
             _pitch = atan2(d_alt, distance * SG_METER_TO_FEET) * SG_RADIANS_TO_DEGREES;
-            //cout << "new waypoint, calculating pitch " <<  _pitch << 
-            //    " " << _pitch_offset << " " << _elevation <<endl;
         }
 
         double distance_to_go = SGGeodesy::distanceM(SGGeod::fromDeg(pos.getLongitudeDeg(), pos.getLatitudeDeg()),
             SGGeod::fromDeg(curr->getLongitude(), curr->getLatitude()));
 
-        /*cout << "tunnel " << _tunnel
-             << " distance prev & curr " << prev->name << " " << curr->name << " " << distance * SG_METER_TO_FEET
-             << " distance to go " << distance_to_go * SG_METER_TO_FEET
-             << " d_alt ft " << d_alt
-             << endl;*/
-
         if (distance_to_go > distance)
             _elevation = prev_alt;
         else
             _elevation = curr_alt - (tan(_pitch * SG_DEGREES_TO_RADIANS) * distance_to_go * SG_METER_TO_FEET);
-
     }
 
     return true;
