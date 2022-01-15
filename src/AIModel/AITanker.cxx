@@ -19,18 +19,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
-
 #include "AITanker.hxx"
 
 using std::string;
 
 FGAITanker::FGAITanker(FGAISchedule* ref): FGAIAircraft(ref){
 }
-
-FGAITanker::~FGAITanker() {}
 
 void FGAITanker::readFromScenario(SGPropertyNode* scFileNode) {
     if (!scFileNode)
@@ -39,7 +33,6 @@ void FGAITanker::readFromScenario(SGPropertyNode* scFileNode) {
     FGAIAircraft::readFromScenario(scFileNode);
     setTACANChannelID(scFileNode->getStringValue("TACAN-channel-ID",""));
     setName(scFileNode->getStringValue("name", "Tanker"));
-
 }
 
 void FGAITanker::bind() {
@@ -58,9 +51,7 @@ void FGAITanker::setTACANChannelID(const string& id) {
 }
 
 void FGAITanker::Run(double dt) {
-    //FGAIAircraft::Run(dt);
-
-    double start = pos.getElevationFt() + 1000;
+    double start = pos.getElevationFt() + 1000.0;
     altitude_agl_ft = _getAltitudeAGL(pos, start);
 
     //###########################//
@@ -69,16 +60,12 @@ void FGAITanker::Run(double dt) {
     double range_ft2 = UpdateRadar(manager);
 
     // check if radar contact
-    if ( (range_ft2 < 250.0 * 250.0) && (y_shift > 0.0)
-              && (elevation > 0.0) ) {
-        //refuel_node->setBoolValue(true);
+    if ( (range_ft2 < 250.0 * 250.0) && (y_shift > 0.0) && (elevation > 0.0) ) {
         contact = true;
     } else {
-        //refuel_node->setBoolValue(false);
         contact = false;
     }
 }
-
 
 void FGAITanker::update(double dt) {
      FGAIAircraft::update(dt);

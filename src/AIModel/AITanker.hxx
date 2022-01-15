@@ -19,8 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef FGAITANKER_HXX
-#define FGAITANKER_HXX
+#pragma once
 
 #include "AIAircraft.hxx"
 
@@ -37,21 +36,18 @@
 class FGAITanker : public FGAIAircraft {
 public:
     FGAITanker(FGAISchedule* ref = 0);
-    ~FGAITanker();
-
-    void readFromScenario(SGPropertyNode* scFileNode) override;
-    void bind() override;
+    virtual ~FGAITanker() = default;
 
     const char* getTypeString(void) const override { return "tanker"; }
+    void readFromScenario(SGPropertyNode* scFileNode) override;
+    void bind() override;
 
     void setTACANChannelID(const std::string& id);
     
 private:
     std::string TACAN_channel_id;     // The TACAN channel of this tanker
-    bool contact;                // set if this tanker is within fuelling range
+    bool contact = false;             // set if this tanker is within fuelling range
 
     virtual void Run(double dt);
     void update(double dt) override;
 };
-
-#endif
