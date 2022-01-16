@@ -534,7 +534,6 @@ void FGAIFlightPlan::addWaypoint(FGAIWaypoint* wpt)
     pushBackWaypoint(wpt);
 }
 
-
 void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
 {
   size_t pos = wpt_iterator - waypoints.begin();

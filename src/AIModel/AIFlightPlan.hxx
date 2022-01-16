@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIFLIGHTPLAN_HXX
-#define _FG_AIFLIGHTPLAN_HXX
+#pragma once
 
 #include <vector>
 #include <string>
@@ -41,23 +40,25 @@ private:
    bool finished;
    bool gear_down;
    double flaps;
-   double spoilers;
-   double speedbrakes;
+    double spoilers = 0.0;
+    double speedbrakes = 0.0;
    bool on_ground;
     int routeIndex;  // For AI/ATC purposes;
    double time_sec;
    double trackLength; // distance from previous FGAIWaypoint (for AI purposes);
    std::string time;
-   bool beacon_light;
-   bool landing_light;
-   bool nav_light;
-   bool strobe_light;
-   bool taxi_light;
-   bool cabin_light;
+
+    bool beacon_light = false;
+    bool landing_light = false;
+    bool nav_light = false;
+    bool strobe_light = false;
+    bool taxi_light = false;
+    bool cabin_light = false;
 
 public:
     FGAIWaypoint();
-    ~FGAIWaypoint() {};
+    virtual ~FGAIWaypoint() {};
+
     void setName        (const std::string& nam) { name        = nam; };
     void setLatitude    (double lat);
     void setLongitude   (double lon);
@@ -82,6 +83,7 @@ public:
       nav_light = nav; 
       strobe_light = strobe; 
       taxi_light = taxi; };
+
     //                                      beacon cabin  ldg    nav    strobe taxi
     void setPowerDownLights()   { setLights(false, true,  false, false, false, false); };
     void setGroundLights()      { setLights(true,  true,  false, true,  false, true ); };
@@ -122,7 +124,6 @@ public:
     bool   getNavLight()    { return nav_light;   };
     bool   getStrobeLight() { return strobe_light;};
     bool   getTaxiLight() { return taxi_light; };
-
   };
 
 
@@ -147,7 +148,7 @@ public:
 		 const std::string& fltType,
 		 const std::string& acType,
 		 const std::string& airline);
-   ~FGAIFlightPlan();
+  virtual ~FGAIFlightPlan();
 
    /**
         @brief create a neatrly empty FlightPlan for the user aircraft, based
@@ -193,7 +194,6 @@ public:
     leg = val;
   }
   void setTime(time_t st) { start_time = st; }
-
 
   double getLeadInAngle() const { return leadInAngle; }
   const std::string& getRunway() const;
@@ -316,4 +316,3 @@ private:
   bool isValidPlan() { return isValid; };
 };
 
-#endif  // _FG_AIFLIGHTPLAN_HXX

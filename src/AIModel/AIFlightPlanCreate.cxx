@@ -220,7 +220,6 @@ FGAIWaypoint * FGAIFlightPlan::cloneWithPos(FGAIAircraft * ac, FGAIWaypoint * aW
 }
 
 
-
 void FGAIFlightPlan::createDefaultTakeoffTaxi(FGAIAircraft * ac,
                                               FGAirport * aAirport,
                                               FGRunway * aRunway)
@@ -634,8 +633,6 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
                                  double speed, double alt,
                                  const string & fltType)
 {
-    FGAIWaypoint *wpt;
-  //  string fPLName;
     double vClimb = ac->getPerformance()->vClimb();
   
     if (firstFlight) {
@@ -644,11 +641,10 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
         apt->getDynamics()->getActiveRunway(rwyClass, 1, activeRunway,
                                             heading);
     }
+
     if (sid) {
-        for (wpt_vector_iterator i = sid->getFirstWayPoint();
-             i != sid->getLastWayPoint(); i++) {
+        for (wpt_vector_iterator i = sid->getFirstWayPoint(); i != sid->getLastWayPoint(); ++i) {
             pushBackWaypoint(clone(*(i)));
-            //cerr << " Cloning waypoint " << endl;
         }
     } else {
         if (!apt->hasRunwayWithIdent(activeRunway))
@@ -664,13 +660,14 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
         double course = SGGeodesy::courseDeg(cur, arrival->geod());
       
         SGGeod climb1 = SGGeodesy::direct(cur, course, 10 * SG_NM_TO_METER);
-        wpt = createInAir(ac, "10000ft climb", climb1, 10000, vClimb);
+        FGAIWaypoint *wpt = createInAir(ac, "10000ft climb", climb1, 10000, vClimb);
         pushBackWaypoint(wpt);
 
         SGGeod climb2 = SGGeodesy::direct(cur, course, 20 * SG_NM_TO_METER);
         wpt = createInAir(ac, "18000ft climb", climb2, 18000, vClimb);
         pushBackWaypoint(wpt);
     }
+
     return true;
 }
 
@@ -769,6 +766,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
 //    lon = initialTarget.getLongitudeDeg();
     //cerr << "Initial Target point (" << lat << ", " << lon << ")." << endl;
 
+#if 0
     double ratio = initialTurnRadius / distance;
     if (ratio > 1.0)
         ratio = 1.0;
@@ -779,13 +777,17 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     double newDistance =
         cos(newHeading * SG_DEGREES_TO_RADIANS) * distance;
     //cerr << "new distance " << newDistance << ". additional Heading " << newHeading << endl;
+#endif
+
     double side = azimuth - rwy->headingDeg();
+    if (side < 0.0)
+        side += 360.0;
+
     double lateralOffset = initialTurnRadius;
-    if (side < 0)
-        side += 360;
-    if (side < 180) {
-        lateralOffset *= -1;
+    if (side < 180.0) {
+        lateralOffset *= -1.0;
     }
+
     // Calculate the ETA at final, based on remaining distance, and approach speed.
     // distance should really consist of flying time to terniary target, plus circle 
     // but the distance to secondary target should work as a reasonable approximation
@@ -809,25 +811,16 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
 
     if (reposition == false) {
         newEta =
-            apt->getDynamics()->getApproachController()->getRunway(rwy->
-                                                                   name
-                                                                   ())->
-            requestTimeSlot(eta);
+            apt->getDynamics()->getApproachController()->getRunway(rwy->name())->requestTimeSlot(eta);
     } else {
         newEta = eta;
     }
-    //if ((eta < (previousArrivalTime+60)) && (reposition == false)) {
+
     arrivalTime = newEta;
     time_t additionalTimeNeeded = newEta - eta;
     double distanceCovered =
         ((vApproach * SG_NM_TO_METER) / 3600.0) * additionalTimeNeeded;
     distanceOut += distanceCovered;
-    //apt->getDynamics()->getApproachController()->getRunway(rwy->name())->setEstApproachTime(eta+additionalTimeNeeded);
-    //cerr << "Adding additional distance: " << distanceCovered << " to allow " << additionalTimeNeeded << " seconds of flying time" << endl << endl;
-    //} else {
-    //apt->getDynamics()->getApproachController()->getRunway(rwy->name())->setEstApproachTime(eta);
-    //}
-    //cerr << "Timing information : Previous eta: " << previousArrivalTime << ". Current ETA : " << eta << endl;
 
     SGGeod secondaryTarget =
         rwy->pointOffCenterline(-distanceOut, lateralOffset);
@@ -835,22 +828,16 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     distance = SGGeodesy::distanceM(origin, secondaryTarget);
     azimuth = SGGeodesy::courseDeg(origin, secondaryTarget);
 
-
-//    lat = secondaryTarget.getLatitudeDeg();
-//    lon = secondaryTarget.getLongitudeDeg();
-    //cerr << "Secondary Target point (" << lat << ", " << lon << ")." << endl;
-    //cerr << "Distance       : " << distance      << endl;
-    //cerr << "Azimuth        : " << azimuth       << endl;
-
-
-    ratio = initialTurnRadius / distance;
+    double ratio = initialTurnRadius / distance;
     if (ratio > 1.0)
         ratio = 1.0;
     if (ratio < -1.0)
         ratio = -1.0;
-    newHeading = asin(ratio) * SG_RADIANS_TO_DEGREES;
-    newDistance = cos(newHeading * SG_DEGREES_TO_RADIANS) * distance;
+
+    double newHeading = asin(ratio) * SG_RADIANS_TO_DEGREES;
+    double newDistance = cos(newHeading * SG_DEGREES_TO_RADIANS) * distance;
     //cerr << "new distance realative to secondary target: " << newDistance << ". additional Heading " << newHeading << endl;
+
     if (side < 180) {
         azimuth += newHeading;
     } else {
@@ -858,13 +845,11 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     }
 
     SGGeod tertiaryTarget;
-    SGGeodesy::direct(origin, azimuth,
-                      newDistance, tertiaryTarget, dummyAz2);
+    SGGeodesy::direct(origin, azimuth, newDistance, tertiaryTarget, dummyAz2);
 
 //    lat = tertiaryTarget.getLatitudeDeg();
 //    lon = tertiaryTarget.getLongitudeDeg();
     //cerr << "tertiary Target point (" << lat << ", " << lon << ")." << endl;
-
 
     for (int i = 1; i < nPoints; i++) {
         SGGeod result;
@@ -904,7 +889,6 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         if (endval < startval) {
             endval += 360;
         }
-
     }
 
     //cerr << "creating circle between " << startval << " and " << endval << " using " << increment << endl;
@@ -943,30 +927,27 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     IncrementWaypoint(true);
 
     if (reposition) {
-        double tempDistance;
-        //double minDistance = HUGE_VAL;
-        //string wptName;
-        tempDistance = SGGeodesy::distanceM(current, initialTarget);
-        time_t eta =
+        double tempDistance = SGGeodesy::distanceM(current, initialTarget);
+        time_t eta2 =
             tempDistance / ((vDescent * SG_NM_TO_METER) / 3600.0) + now;
-        time_t newEta =
-            apt->getDynamics()->getApproachController()->getRunway(rwy->
-                                                                   name
-                                                                   ())->
-            requestTimeSlot(eta);
-        arrivalTime = newEta;
-        double newDistance =
-            ((vDescent * SG_NM_TO_METER) / 3600.0) * (newEta - now);
-        //cerr << "Repositioning information : eta" << eta << ". New ETA " << newEta << ". Diff = " << (newEta - eta) << ". Distance = " << tempDistance << ". New distance = " << newDistance << endl;
+        time_t newEta2 =
+            apt->getDynamics()->getApproachController()->getRunway(rwy->name())->requestTimeSlot(eta2);
+        arrivalTime = newEta2;
+        double newDistance2 =
+            ((vDescent * SG_NM_TO_METER) / 3600.0) * (newEta2 - now);
+
         IncrementWaypoint(true);        // remove waypoint BOD2
-        while (checkTrackLength("final001") > newDistance) {
+
+        while (checkTrackLength("final001") > newDistance2) {
             IncrementWaypoint(true);
         }
-        //cerr << "Repositioning to waypoint " << (*waypoints.begin())->name << endl;
+
         ac->resetPositionFromFlightPlan();
     }
+
     SG_LOG(SG_AI, SG_BULK, "Setting Node " << waypoints[1]->getName() << " to a leg end");
     waypoints[1]->setName( (waypoints[1]->getName() + string("legend"))); 
+
     return true;
 }
 
