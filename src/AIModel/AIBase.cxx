@@ -144,18 +144,18 @@ private:
     ErrorContext _errorContext;
 };
 
-FGAIBase::FGAIBase(object_type ot, bool enableHot) :
-    replay_time(fgGetNode("sim/replay/time", true)),
-    model_removed( fgGetNode("/ai/models/model-removed", true) ),
-    _impact_lat(0),
-    _impact_lon(0),
-    _impact_elev(0),
-    _impact_hdg(0),
-    _impact_pitch(0),
-    _impact_roll(0),
-    _impact_speed(0),
-    _refID( _newAIModelID() ),
-    _otype(ot)
+FGAIBase::FGAIBase(object_type ot, bool enableHot) : replay_time(fgGetNode("sim/replay/time", true)),
+                                                     model_removed(fgGetNode("/ai/models/model-removed", true)),
+                                                     pos(SGGeod::fromDeg(0.0, 0.0)),
+                                                     _impact_lat(0),
+                                                     _impact_lon(0),
+                                                     _impact_elev(0),
+                                                     _impact_hdg(0),
+                                                     _impact_pitch(0),
+                                                     _impact_roll(0),
+                                                     _impact_speed(0),
+                                                     _refID(_newAIModelID()),
+                                                     _otype(ot)
 {
     tgt_heading = hdg = tgt_altitude_ft = tgt_speed = 0.0;
     tgt_roll = roll = tgt_pitch = tgt_yaw = tgt_vs = vs_fps = pitch = 0.0;
@@ -178,7 +178,6 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) :
     _roll_offset = 0;
     _yaw_offset = 0;
 
-    pos = SGGeod::fromDeg(0, 0);
     speed = 0;
     altitude_ft = 0;
     speed_north_deg_sec = 0;
@@ -285,14 +284,13 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     string searchOrder = scFileNode->getStringValue("search-order", "");
     if (!searchOrder.empty()) {
         if (searchOrder == "DATA_ONLY") {
-            _searchOrder = DATA_ONLY;
+            _searchOrder = ModelSearchOrder::DATA_ONLY;
         } else if (searchOrder == "PREFER_AI") {
-            _searchOrder = PREFER_AI;
+            _searchOrder = ModelSearchOrder::PREFER_AI;
         } else if (searchOrder == "PREFER_DATA") {
-            _searchOrder = PREFER_DATA;
+            _searchOrder = ModelSearchOrder::PREFER_DATA;
         } else
             SG_LOG(SG_AI, SG_WARN, "invalid model search order " << searchOrder << ". Use either DATA_ONLY, PREFER_AI or PREFER_DATA");
-
     }
 
     const string modelLowres = scFileNode->getStringValue("model-lowres", "");
@@ -306,10 +304,10 @@ void FGAIBase::update(double dt) {
     SG_UNUSED(dt);
     if (replay_time->getDoubleValue() > 0)
         return;
-    if (_otype == otStatic)
+    if (_otype == object_type::otStatic)
         return;
 
-    if (_otype == otBallistic)
+    if (_otype == object_type::otBallistic)
         CalculateMach();
 
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
@@ -558,7 +556,7 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
 {
     string_list path_list;
 
-    if (searchOrder == DATA_ONLY) {
+    if (searchOrder == ModelSearchOrder::DATA_ONLY) {
         SG_LOG(SG_AI, SG_DEBUG, "Resolving model path:  DATA only");
         auto p = simgear::SGModelLib::findDataFile(model_path);
         if (!p.empty()) {
@@ -614,7 +612,7 @@ std::vector<std::string> FGAIBase::resolveModelPath(ModelSearchOrder searchOrder
             }
         }
 
-        if ((searchOrder == PREFER_AI) && !path_list.empty()) {
+        if ((searchOrder == ModelSearchOrder::PREFER_AI) && !path_list.empty()) {
             // if we prefer AI, and we've got a valid AI path from above, then use it, we're done
             _installed = true;
             return path_list;
@@ -657,7 +655,7 @@ bool FGAIBase::init(ModelSearchOrder searchOrder)
     // set by FGAISchedule::createAIAircraft
     _modeldata->captureErrorContext("traffic-aircraft-callsign");
 
-    if (_otype == otMultiplayer) {
+    if (_otype == object_type::otMultiplayer) {
         _modeldata->addErrorContext("multiplayer", getCallSign());
     }
 
@@ -995,10 +993,8 @@ void FGAIBase::_setSubID( int s ) {
 }
 
 bool FGAIBase::setParentNode() {
-
     if (_parent == ""){
-       SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
-            << " parent not set ");
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name << " parent not set ");
        return false;
     }
 
@@ -1011,33 +1007,30 @@ bool FGAIBase::setParentNode() {
             model = _selected_ac;
         } else {
             model = ai->getChild(i);
-            //const string& path = ai->getPath();
             const string name = model->getStringValue("name");
 
             if (!model->nChildren()){
                 continue;
             }
+
             if (name == _parent) {
                 _selected_ac = model;  // save selected model for last iteration
                 break;
             }
-
         }
+
         if (!model)
             continue;
-
     }// end for loop
 
     if (_selected_ac != 0){
-        const string name = _selected_ac->getStringValue("name");
+        // DEADCODE: const string name = _selected_ac->getStringValue("name");
         return true;
     } else {
-        SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name
-            << " parent not found: dying ");
+        SG_LOG(SG_AI, SG_ALERT, "AIBase: " << _name << " parent not found: dying ");
         setDie(true);
         return false;
     }
-
 }
 
 double FGAIBase::_getLongitude() const {

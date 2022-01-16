@@ -18,26 +18,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIMultiplayer_HXX
-#define _FG_AIMultiplayer_HXX
+#pragma once
 
 #include <map>
 #include <string>
+#include <string_view>
 
 #include <MultiPlayer/mpmessages.hxx>
+
 #include "AIBase.hxx"
 
 class FGAIMultiplayer : public FGAIBase {
 public:
   FGAIMultiplayer();
-  virtual ~FGAIMultiplayer();
+  virtual ~FGAIMultiplayer() = default;
 
+  string_view getTypeString(void) const override { return "multiplayer"; }
   bool init(ModelSearchOrder searchOrder) override;
   void bind() override;
   void update(double dt) override;
 
   void addMotionInfo(FGExternalMotionData& motionInfo, long stamp);
+
+#if 0
   void setDoubleProperty(const std::string& prop, double val);
+#endif
 
   long getLastTimestamp(void) const
   {
@@ -98,11 +103,6 @@ public:
   
   void clearMotionInfo();
 
-  const char* getTypeString(void) const override
-  {
-    return "multiplayer";
-  }
-
 private:
 
   // Automatic sorting of motion data according to its timestamp
@@ -141,26 +141,28 @@ private:
         SGVec3f& ecLinearVel
         );
 
-  bool mTimeOffsetSet;
-  bool realTime;
-  int compensateLag;
-  double playerLag;
-  double mTimeOffset;
-  double lastUpdateTime;
-  double lastTime;
-  double lagPpsAveraged;
-  double rawLag, rawLagMod, lagModAveraged;
+  bool mTimeOffsetSet = false;
+  bool realTime = false;
+  int compensateLag = 1;
+  double playerLag = 0.03;
+  double mTimeOffset = 0.0;
+  double lastUpdateTime = 0.0;
+  double lastTime = 0.0;
+  double lagPpsAveraged = 1.0;
+  double rawLag = 0.0;
+  double rawLagMod = 0.0;
+  double lagModAveraged = 0.0;
 
   /// Properties which are for now exposed for testing
-  bool mAllowExtrapolation;
-  double mLagAdjustSystemSpeed;
+  bool mAllowExtrapolation = true;
+  double mLagAdjustSystemSpeed = 10.0;
 
-  long mLastTimestamp;
+  long mLastTimestamp = 0;
 
   // Properties for tankers
   SGPropertyNode_ptr refuel_node;
-  bool isTanker;
-  bool contact;          // set if this tanker is within fuelling range
+  bool isTanker = false;
+  bool contact = false;     // set if this tanker is within fuelling range
   
   // velocities/u,v,wbody-fps 
   SGPropertyNode_ptr _uBodyNode;
@@ -174,11 +176,11 @@ private:
   SGPropertyNode_ptr m_sim_replay_replay_state;
   SGPropertyNode_ptr m_sim_replay_time;
   
-  bool      m_simple_time_first_time;
-  double    m_simple_time_offset;
-  double    m_simple_time_offset_smoothed;
-  double    m_simple_time_compensation;
-  double    m_simple_time_recent_packet_time;
+  bool      m_simple_time_first_time = true;
+  double    m_simple_time_offset = 0.0;
+  double    m_simple_time_offset_smoothed = 0.0;
+  double    m_simple_time_compensation = 0.0;
+  double    m_simple_time_recent_packet_time = 0.0;
   
   SGPropertyNode_ptr    m_node_simple_time_latest;
   SGPropertyNode_ptr    m_node_simple_time_offset;
@@ -203,5 +205,3 @@ private:
   
   SGPropertyNode_ptr    m_node_log_multiplayer;
 };
-
-#endif  // _FG_AIMultiplayer_HXX

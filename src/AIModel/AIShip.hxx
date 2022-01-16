@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include <simgear/scene/material/mat.hxx>
 
 #include "AIBase.hxx"
@@ -34,7 +36,7 @@ public:
     FGAIShip(object_type ot = object_type::otShip);
     virtual ~FGAIShip() = default;
 
-    const char* getTypeString(void) const override { return "ship"; }
+    string_view getTypeString(void) const override { return "ship"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;

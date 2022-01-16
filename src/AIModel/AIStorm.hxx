@@ -21,6 +21,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include "AIManager.hxx"
 #include "AIBase.hxx"
@@ -32,7 +33,7 @@ public:
         FGAIStorm();
         virtual ~FGAIStorm() = default;
 
-        const char* getTypeString(void) const override { return "thunderstorm"; }
+        string_view getTypeString(void) const override { return "thunderstorm"; }
         void readFromScenario(SGPropertyNode* scFileNode) override;
         void update(double dt) override;
 

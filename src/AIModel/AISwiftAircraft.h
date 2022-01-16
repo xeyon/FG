@@ -20,6 +20,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "AIBaseAircraft.hxx"
@@ -72,10 +73,10 @@ public:
     FGAISwiftAircraft(const std::string& callsign, const std::string& modelString);
     virtual ~FGAISwiftAircraft() = default;
 
-    const char* getTypeString() const override { return "swift"; }
+    string_view getTypeString() const override { return "swift"; }
+    void update(double dt) override;
 
     void updatePosition(SGGeod& position, SGVec3<double>& orientation, double groundspeed, bool initPos);
-    void update(double dt) override;
     double getGroundElevation(const SGGeod& pos) const;
     void initProps();
     void setPlaneSurface(const AircraftSurfaces& surfaces);
@@ -88,4 +89,3 @@ private:
     SGPropertyNode_ptr m_transponderCModeNode;
     SGPropertyNode_ptr m_transponderIdentNode;
 };
-

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cmath>
+#include <string_view>
 #include <vector>
 
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -34,10 +35,10 @@ class FGAIBallistic : public FGAIBase {
 
 public:
 
-    FGAIBallistic(object_type ot = otBallistic);
+    FGAIBallistic(object_type ot = object_type::otBallistic);
     virtual ~FGAIBallistic() = default;
 
-    const char* getTypeString(void) const override { return "ballistic"; }
+    string_view getTypeString(void) const override { return "ballistic"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;

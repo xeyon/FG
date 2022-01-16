@@ -37,7 +37,7 @@
 #include "AICarrier.hxx"
 #include "AINotifications.hxx"
 
-FGAICarrier::FGAICarrier() : FGAIShip(otCarrier)
+FGAICarrier::FGAICarrier() : FGAIShip(object_type::otCarrier)
 {
     simgear::Emesary::GlobalTransmitter::instance()->Register(this);
 }
@@ -807,7 +807,7 @@ SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::stri
     }
 
     for (const auto& aiObject : aiManager->get_ai_list()) {
-        if (aiObject->isa(FGAIBase::otCarrier)) {
+        if (aiObject->isa(object_type::otCarrier)) {
             SGSharedPtr<FGAICarrier> c = static_cast<FGAICarrier*>(aiObject.get());
             if ((c->_sign == namePennant) || (c->_getName() == namePennant)) {
                 return c;

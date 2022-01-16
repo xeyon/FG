@@ -27,12 +27,10 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 
-using std::string;
-
 #include "AIThermal.hxx"
 
 
-FGAIThermal::FGAIThermal() : FGAIBase(otThermal, false)
+FGAIThermal::FGAIThermal() : FGAIBase(object_type::otThermal, false)
 {
     altitude_agl_ft = 0.0;
     max_strength = 6.0;
@@ -359,4 +357,3 @@ strength = Vup;
 range = dist_center;
 
 }
-

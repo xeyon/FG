@@ -996,7 +996,7 @@ void FGAIBallistic::report_impact(double elevation, const FGAIBase *object)
     SGPropertyNode *n = props->getNode("impact", true);
 
     if (object)
-        n->setStringValue("type", object->getTypeString());
+        n->setStringValue("type", static_cast<std::string>(object->getTypeString()));
     else
         n->setStringValue("type", "terrain");
 

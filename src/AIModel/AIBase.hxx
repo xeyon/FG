@@ -17,40 +17,50 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef FG_AIBASE_HXX
-#define FG_AIBASE_HXX
+#pragma once
 
 #include <string>
+#include <string_view>
+
 #include <osg/ref_ptr>
 
 #include <simgear/constants.h>
-#include <simgear/scene/model/placement.hxx>
-#include <simgear/misc/sg_path.hxx>
-#include <simgear/structure/SGSharedPtr.hxx>
-#include <simgear/structure/SGReferenced.hxx>
-#include <simgear/props/tiedpropertylist.hxx>
-#include <simgear/sg_inlines.h>
-
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/props/tiedpropertylist.hxx>
+#include <simgear/scene/model/placement.hxx>
+#include <simgear/sg_inlines.h>
+#include <simgear/structure/SGReferenced.hxx>
+#include <simgear/structure/SGSharedPtr.hxx>
 
 namespace osg { class PagedLOD; }
+namespace simgear { class BVHMaterial; }
 
-namespace simgear {
-class BVHMaterial;
-}
 class FGAIManager;
 class FGAIFlightPlan;
 class FGFX;
 class FGAIModelData;    // defined below
 
 
-class FGAIBase : public SGReferenced {
-
+class FGAIBase : public SGReferenced
+{
 public:
-    enum object_type { otNull = 0, otAircraft, otShip, otCarrier, otBallistic,
-        otRocket, otStorm, otThermal, otStatic, otWingman, otGroundVehicle,
-        otEscort, otMultiplayer,
-        MAX_OBJECTS };  // Needs to be last!!!
+    enum class object_type {
+        otNull = 0,
+        otAircraft,
+        otShip,
+        otCarrier,
+        otBallistic,
+        otRocket,
+        otStorm,
+        otThermal,
+        otStatic,
+        otWingman,
+        otGroundVehicle,
+        otEscort,
+        otMultiplayer,
+        MAX_OBJECTS     // Needs to be last!!!
+    };
 
     FGAIBase(object_type ot, bool enableHot);
     virtual ~FGAIBase();
@@ -63,7 +73,7 @@ public:
 
     virtual void readFromScenario(SGPropertyNode* scFileNode);
 
-    enum ModelSearchOrder {
+    enum class ModelSearchOrder {
         DATA_ONLY,  // don't search AI/ prefix at all
         PREFER_AI,  // search AI first, override other paths
         PREFER_DATA // search data first but fall back to AI
@@ -75,41 +85,58 @@ public:
     virtual void bind();
     virtual void unbind();
     virtual void reinit() {}
+
     // default model radius for LOD. 
     virtual double getDefaultModelRadius() { return 20.0; }
+
     void updateLOD();
     void updateInterior();
+
     void setManager(FGAIManager* mgr, SGPropertyNode* p);
+
     void setPath( const char* model );
     void setPathLowres( std::string model );
+
     void setFallbackModelIndex(const int i );
     void setSMPath( const std::string& p );
     void setCallSign(const std::string& );
+
     void setSpeed( double speed_KTAS );
+    void setMaxSpeed(double kts);
+
     void setAltitude( double altitude_ft );
     void setAltitudeAGL( double altitude_agl_ft );
     void setHeading( double heading );
     void setLatitude( double latitude );
     void setLongitude( double longitude );
+
     void setBank( double bank );
     void setPitch( double newpitch );
     void setRadius ( double radius );
+
     void setXoffset( double x_offset );
     void setYoffset( double y_offset );
     void setZoffset( double z_offset );
+
     void setPitchoffset( double x_offset );
     void setRolloffset( double y_offset );
     void setYawoffset( double z_offset );
+
     void setServiceable ( bool serviceable );
+
+    bool getDie();
     void setDie( bool die );
+    bool isValid() const;
+
     void setCollisionData( bool i, double lat, double lon, double elev );
     void setImpactData( bool d );
     void setImpactLat( double lat );
     void setImpactLon( double lon );
     void setImpactElev( double e );
-    void setParentName(const std::string& p);
+
     void setName(const std::string& n);
-    void setMaxSpeed(double kts);
+    bool setParentNode();
+    void setParentName(const std::string& p);
 
     void calcRangeBearing(double lat, double lon, double lat2, double lon2,
         double &range, double &bearing) const;
@@ -117,19 +144,13 @@ public:
     double calcTrueBearingDeg(double bearing, double heading);
     double calcRecipBearingDeg(double bearing);
 
-    bool setParentNode();
-
     int getID() const;
     int _getSubID() const;
-
-    bool getDie();
-    bool isValid() const;
 
     void setFlightPlan(std::unique_ptr<FGAIFlightPlan> f);
 
     SGGeod getGeodPos() const;
     void setGeodPos(const SGGeod& pos);
-
     SGVec3d getCartPosAt(const SGVec3d& off) const;
     SGVec3d getCartPos() const;
 
@@ -138,10 +159,7 @@ public:
 
     SGPropertyNode* getPositionFromNode(SGPropertyNode* scFileNode, const std::string& key, SGVec3d& position);
 
-    double getTrueHeadingDeg() const
-    {
-        return hdg;
-    }
+    double getTrueHeadingDeg() const { return hdg; }
 
     double _getCartPosX() const;
     double _getCartPosY() const;
@@ -158,9 +176,9 @@ public:
     void setScenarioPath(const std::string& scenarioPath);
 
 protected:
-    double _elevation_m;
+    double _elevation_m = 0.0;
 
-    double _maxRangeInterior;
+    double _maxRangeInterior = 50.0;
 
     double _x_offset;
     double _y_offset;
@@ -202,13 +220,13 @@ protected:
     double roll;        // degrees, left is negative
     double pitch;       // degrees, nose-down is negative
     double speed;       // knots true airspeed
-    double speed_fps;   // fps true airspeed
+    double speed_fps = 0.0;   // fps true airspeed
     double altitude_ft; // feet above sea level
     double vs_fps;      // vertical speed
     double speed_north_deg_sec;
     double speed_east_deg_sec;
     double turn_radius_ft; // turn radius ft at 15 kts rudder angle 15 degrees
-    double altitude_agl_ft;
+    double altitude_agl_ft = 0.0;
 
     double ft_per_deg_lon;
     double ft_per_deg_lat;
@@ -235,13 +253,13 @@ protected:
     double rotation;     // value used by radar display instrument
     double ht_diff;      // value used by radar display instrument
 
-    std::string model_path;    // Path to the 3D model
-    std::string model_path_lowres;    // Path to optional low res 3D model
-    int _fallback_model_index; // Index into /sim/multiplay/fallback-models[]
+    std::string model_path;        // Path to the 3D model
+    std::string model_path_lowres; // Path to optional low res 3D model
+    int _fallback_model_index = 0; // Index into /sim/multiplay/fallback-models[]
     SGModelPlacement aip;
 
     bool delete_me;
-    bool invisible;
+    bool invisible = false;
     bool no_roll;
     bool serviceable;
     bool _installed = false;
@@ -263,7 +281,7 @@ protected:
     double _impact_roll;
     double _impact_speed;
 
-    ModelSearchOrder _searchOrder = DATA_ONLY;
+    ModelSearchOrder _searchOrder = ModelSearchOrder::DATA_ONLY;
     void Transform();
     void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
@@ -292,7 +310,7 @@ private:
 public:
     object_type getType();
 
-    virtual const char* getTypeString(void) const { return "null"; }
+    virtual string_view getTypeString(void) const { return "null"; }
 
     bool isa( object_type otype );
 
@@ -332,7 +350,6 @@ public:
     double _getXOffset() const;
     double _getYOffset() const;
     double _getZOffset() const;
-    //unsigned int _getCount() const;
 
     bool   _getServiceable() const;
     bool   _getFirstTime() const;
@@ -366,8 +383,7 @@ public:
 
     static bool _isNight();
 
-    const std::string& getCallSign() const
-    { return _callsign; }
+    const std::string& getCallSign() const { return _callsign; }
     ModelSearchOrder getSearchOrder() const {return _searchOrder;}
 };
 
@@ -509,5 +525,3 @@ inline void FGAIBase::setMaxSpeed(double m) {
     _max_speed = m;
 }
 
-
-#endif // _FG_AIBASE_HXX

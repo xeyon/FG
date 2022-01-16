@@ -115,7 +115,7 @@ void AIManagerTests::testAircraftWaypoints()
 
     auto ai = aim->addObject(aircraftDefinition);
     CPPUNIT_ASSERT(ai);
-    CPPUNIT_ASSERT_EQUAL(FGAIBase::otAircraft, ai->getType());
+    CPPUNIT_ASSERT_EQUAL(FGAIBase::object_type::otAircraft, ai->getType());
     CPPUNIT_ASSERT_EQUAL(std::string{"aircraft"}, std::string{ai->getTypeString()});
 
     auto aiAircraft = static_cast<FGAIAircraft*>(ai.get());

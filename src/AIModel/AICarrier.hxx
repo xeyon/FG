@@ -22,6 +22,7 @@
 
 #include <list>
 #include <string>
+#include <string_view>
 
 #include <simgear/compiler.h>
 #include <simgear/emesary/Emesary.hxx>
@@ -40,6 +41,7 @@ public:
     FGAICarrier();
     virtual ~FGAICarrier();
 
+    string_view getTypeString(void) const override { return "carrier"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     void setSign(const std::string&);
@@ -64,8 +66,6 @@ public:
     bool OutsideBox();
 
     bool init(ModelSearchOrder searchOrder) override;
-
-    const char* getTypeString(void) const override { return "carrier"; }
 
     bool getParkPosition(const std::string& id, SGGeod& geodPos, double& hdng, SGVec3d& uvw);
 
@@ -102,6 +102,7 @@ private:
             : name(n), offset(off), heading_deg(heading)
         {
         }
+
         std::string name;
         SGVec3d offset;
         double heading_deg;

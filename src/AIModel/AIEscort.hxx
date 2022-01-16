@@ -22,6 +22,7 @@
 
 #include <list>
 #include <string>
+#include <string_view>
 
 #include <simgear/compiler.h>
 
@@ -38,7 +39,7 @@ public:
     FGAIEscort();
     virtual ~FGAIEscort() = default;
 
-    const char* getTypeString(void) const override { return "escort"; }
+    string_view getTypeString(void) const override { return "escort"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
@@ -96,4 +97,3 @@ private:
     bool _patrol = false;
     bool _stn_deg_true = false;
 };
-

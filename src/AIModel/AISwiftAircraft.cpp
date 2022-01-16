@@ -21,7 +21,7 @@
 #include <Main/globals.hxx>
 
 
-FGAISwiftAircraft::FGAISwiftAircraft(const std::string& callsign, const std::string& modelString) : FGAIBaseAircraft(otStatic)
+FGAISwiftAircraft::FGAISwiftAircraft(const std::string& callsign, const std::string& modelString) : FGAIBaseAircraft(object_type::otStatic)
 {
     std::size_t  pos = modelString.find("/Aircraft/"); // Only supporting AI models from FGDATA/AI/Aircraft for now
     if(pos != std::string::npos)
@@ -30,7 +30,7 @@ FGAISwiftAircraft::FGAISwiftAircraft(const std::string& callsign, const std::str
         model_path.append("INVALID_PATH");
 
     setCallSign(callsign);
-    _searchOrder = PREFER_AI;
+    _searchOrder = ModelSearchOrder::PREFER_AI;
 }
 
 void FGAISwiftAircraft::updatePosition(SGGeod& position, SGVec3<double>& orientation, double groundspeed, bool initPos)
@@ -92,4 +92,3 @@ void FGAISwiftAircraft::initProps()
     m_transponderCModeNode = _getProps()->getNode("swift/transponder/c-mode", true);
     m_transponderIdentNode = _getProps()->getNode("swift/transponder/ident", true);
 }
-

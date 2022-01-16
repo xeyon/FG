@@ -39,37 +39,14 @@ using std::string;
 
 // #define SG_DEBUG SG_ALERT
 
-FGAIMultiplayer::FGAIMultiplayer() :
-   FGAIBase(otMultiplayer, fgGetBool("/sim/multiplay/hot", false))
+FGAIMultiplayer::FGAIMultiplayer() : FGAIBase(object_type::otMultiplayer, fgGetBool("/sim/multiplay/hot", false)),
+                                     m_simple_time_enabled(fgGetNode("/sim/time/simple-time/enabled", true)),
+                                     m_sim_replay_replay_state(fgGetNode("/sim/replay/replay-state", true)),
+                                     m_sim_replay_time(fgGetNode("/sim/replay/time", true)),
+                                     mLogRawSpeedMultiplayer(fgGetNode("/sim/replay/log-raw-speed-multiplayer", true))
 {
     no_roll = false;
-
-    mTimeOffsetSet = false;
-    mAllowExtrapolation = true;
-    mLagAdjustSystemSpeed = 10;
-    mLastTimestamp = 0;
-    lastUpdateTime = 0;
-    playerLag = 0.03;
-    compensateLag = 1;
-    realTime = false;
-    lastTime=0.0;
-    lagPpsAveraged = 1.0;
-    rawLag = 0.0;
-    rawLagMod = 0.0;
-    lagModAveraged = 0.0;
-    _searchOrder = PREFER_DATA;
-   
-    m_simple_time_enabled       = fgGetNode("/sim/time/simple-time/enabled", true);
-    m_sim_replay_replay_state   = fgGetNode("/sim/replay/replay-state", true);
-    m_sim_replay_time           = fgGetNode("/sim/replay/time", true);
-   
-    m_simple_time_first_time = true;
-    m_simple_time_compensation = 0.0;
-    m_simple_time_recent_packet_time = 0;
-    mLogRawSpeedMultiplayer = fgGetNode("/sim/replay/log-raw-speed-multiplayer", true);
-}
-
-FGAIMultiplayer::~FGAIMultiplayer() {
+    _searchOrder = ModelSearchOrder::PREFER_DATA;
 }
 
 bool FGAIMultiplayer::init(ModelSearchOrder searchOrder)
@@ -161,9 +138,7 @@ void FGAIMultiplayer::FGAIMultiplayerInterpolate(
     ecLinearVel = interpolate((float)tau, prevIt->second.linearVel, nextIt->second.linearVel);
     speed = norm(ecLinearVel) * SG_METER_TO_NM * 3600.0;
 
-    if (prevIt->second.properties.size()
-        == nextIt->second.properties.size())
-    {
+    if (prevIt->second.properties.size() == nextIt->second.properties.size()) {
         std::vector<FGPropertyData*>::const_iterator prevPropIt;
         std::vector<FGPropertyData*>::const_iterator prevPropItEnd;
         std::vector<FGPropertyData*>::const_iterator nextPropIt;
@@ -929,12 +904,14 @@ FGAIMultiplayer::addMotionInfo(FGExternalMotionData& motionInfo,
     
 }
 
+#if 0
 void
 FGAIMultiplayer::setDoubleProperty(const std::string& prop, double val)
 {
   SGPropertyNode* pNode = props->getChild(prop.c_str(), true);
   pNode->setDoubleValue(val);
 }
+#endif
 
 void FGAIMultiplayer::clearMotionInfo()
 {

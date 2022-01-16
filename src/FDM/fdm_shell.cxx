@@ -224,7 +224,7 @@ void FDMShell::update(double dt)
   if (_ai_wake_enabled->getBoolValue()) {
       for (FGAIBase* base : _ai_mgr->get_ai_list()) {
           try {
-              if (base->isa(FGAIBase::otAircraft) ) {
+              if (base->isa(FGAIBase::object_type::otAircraft) ) {
                   SGVec3d pos = _impl->getCartPosition();
                   const SGSharedPtr<FGAIAircraft> aircraft = dynamic_cast<FGAIAircraft*>(base);
                   double range = _ai_mgr->calcRangeFt(pos, aircraft)*SG_FEET_TO_METER;

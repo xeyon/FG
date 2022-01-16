@@ -104,7 +104,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI A
     
     tcasThreatNode = props->getNode("tcas/threat-level", true);
     tcasRANode = props->getNode("tcas/ra-sense", true);
-    _searchOrder = PREFER_AI;
+    _searchOrder = ModelSearchOrder::PREFER_AI;
 }
 
 void FGAIAircraft::lazyInitControlsNodes()

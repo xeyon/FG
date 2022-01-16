@@ -27,7 +27,7 @@
 
 #include "AIWingman.hxx"
 
-FGAIWingman::FGAIWingman() : FGAIBallistic(otWingman),
+FGAIWingman::FGAIWingman() : FGAIBallistic(object_type::otWingman),
 _formate_to_ac(true),
 _break(false),
 _join(false),

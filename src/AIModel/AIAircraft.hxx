@@ -21,6 +21,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <iostream>
 
 #include "AIBaseAircraft.hxx"
@@ -38,7 +39,7 @@ public:
     FGAIAircraft(FGAISchedule *ref=0);
     virtual ~FGAIAircraft();
 
-    const char* getTypeString(void) const override { return "aircraft"; }
+    string_view getTypeString(void) const override { return "aircraft"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     void bind() override;

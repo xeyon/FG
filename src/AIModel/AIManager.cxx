@@ -399,7 +399,7 @@ FGAIManager::update(double dt)
     // entire subsystem.
     for (FGAIBase* base : ai_list) {
         try {
-            if (base->isa(FGAIBase::otThermal)) {
+            if (base->isa(FGAIBase::object_type::otThermal)) {
                 processThermal(dt, static_cast<FGAIThermal*>(base));
             } else {
                 base->update(dt);
@@ -425,7 +425,7 @@ FGAIManager::updateLOD(SGPropertyNode* node)
 void
 FGAIManager::attach(const SGSharedPtr<FGAIBase> &model)
 {
-    const char* typeString = model->getTypeString();
+    string_view typeString = model->getTypeString();
     SGPropertyNode* root = globals->get_props()->getNode("ai/models", true);
     SGPropertyNode* p;
     int i;
@@ -433,7 +433,7 @@ FGAIManager::attach(const SGSharedPtr<FGAIBase> &model)
     // find free index in the property tree, if we have
     // more than 10000 mp-aircrafts in the property tree we should optimize the mp-server
     for (i = 0; i < 10000; i++) {
-        p = root->getNode(typeString, i, false);
+        p = root->getNode(static_cast<std::string>(typeString), i, false);
 
         if (!p || !p->getBoolValue("valid", false))
             break;
@@ -443,7 +443,7 @@ FGAIManager::attach(const SGSharedPtr<FGAIBase> &model)
         }
     }
 
-    p = root->getNode(typeString, i, true);
+    p = root->getNode(static_cast<std::string>(typeString), i, true);
     model->setManager(this, p);
     ai_list.push_back(model);
 
@@ -720,11 +720,11 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
 
     while (ai_list_itr != end) {
         double tgt_alt = (*ai_list_itr)->_getAltitude();
-        int type       = (*ai_list_itr)->getType();
-        tgt_ht[type] += fuse_range;
+        FGAIBase::object_type type = (*ai_list_itr)->getType();
+        tgt_ht[static_cast<int>(type)] += fuse_range;
 
-        if (fabs(tgt_alt - alt) > tgt_ht[type] || type == FGAIBase::otBallistic
-            || type == FGAIBase::otStorm || type == FGAIBase::otThermal ) {
+        if (fabs(tgt_alt - alt) > tgt_ht[static_cast<int>(type)] || type == FGAIBase::object_type::otBallistic
+            || type == FGAIBase::object_type::otStorm || type == FGAIBase::object_type::otThermal ) {
                 //SG_LOG(SG_AI, SG_DEBUG, "AIManager: skipping "
                 //    << fabs(tgt_alt - alt)
                 //    << " "
@@ -734,7 +734,7 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
                 continue;
         }
 
-        int id         = (*ai_list_itr)->getID();
+        int id = (*ai_list_itr)->getID();
 
         double range = calcRangeFt(cartPos, (*ai_list_itr));
 
@@ -747,11 +747,11 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
         //    << " alt " << tgt_alt
         //    );
 
-        tgt_length[type] += fuse_range;
+        tgt_length[static_cast<int>(type)] += fuse_range;
 
-        if (range < tgt_length[type]){
+        if (range < tgt_length[static_cast<int>(type)]){
             SG_LOG(SG_AI, SG_DEBUG, "AIManager: HIT! "
-                << " type " << type
+                << " type " << static_cast<int>(type)
                 << " ID " << id
                 << " range " << range
                 << " alt " << tgt_alt

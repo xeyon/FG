@@ -27,12 +27,10 @@
 #include <Main/globals.hxx>
 #include <Scenery/scenery.hxx>
 
-using std::string;
-
 #include "AIStorm.hxx"
 
 
-FGAIStorm::FGAIStorm() : FGAIBase(otStorm, false)
+FGAIStorm::FGAIStorm() : FGAIBase(object_type::otStorm, false)
 {
    delay = 3.6;
    subflashes = 1;
@@ -142,4 +140,3 @@ void FGAIStorm::Run(double dt) {
               turb_rate_node->setDoubleValue(0.5);
    }
 }
-

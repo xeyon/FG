@@ -27,8 +27,8 @@
 #include "AIStatic.hxx"
 
 
-FGAIStatic::FGAIStatic() : FGAIBase(otStatic, false) {
-    _searchOrder = DATA_ONLY;
+FGAIStatic::FGAIStatic() : FGAIBase(object_type::otStatic, false) {
+    _searchOrder = ModelSearchOrder::DATA_ONLY;
 }
 
 
@@ -36,4 +36,3 @@ void FGAIStatic::update(double dt) {
    FGAIBase::update(dt);
    Transform();
 }
-

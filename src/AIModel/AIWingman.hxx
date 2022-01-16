@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include <simgear/sg_inlines.h>
 
 #include "AIBallistic.hxx"
@@ -31,7 +33,7 @@ public:
     FGAIWingman();
     virtual ~FGAIWingman() = default;
 
-    const char* getTypeString(void) const override { return "wingman"; }
+    string_view getTypeString(void) const override { return "wingman"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;

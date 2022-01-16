@@ -134,7 +134,7 @@ void FGSubmodelMgr::update(double dt)
         FGAIBase::object_type object_type =(*sm_list_itr)->getType();
 
         // Continue if object is not ballistic
-        if (object_type != FGAIBase::otBallistic) {
+        if (object_type != FGAIBase::object_type::otBallistic) {
             continue;
         }
 

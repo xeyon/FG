@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
@@ -31,6 +33,6 @@ public:
     FGAIStatic();
     virtual ~FGAIStatic() = default;
 
-    const char* getTypeString(void) const override { return "static"; }
+    string_view getTypeString(void) const override { return "static"; }
     void update(double dt) override;
 };

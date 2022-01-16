@@ -22,8 +22,10 @@
 
 #pragma once
 
-#include "AIManager.hxx"
+#include <string_view>
+
 #include "AIBase.hxx"
+#include "AIManager.hxx"
 
 #include <string>
 
@@ -34,7 +36,7 @@ public:
 	FGAIThermal();
 	virtual ~FGAIThermal() = default;
 
-	const char* getTypeString(void) const override { return "thermal"; }
+	string_view getTypeString(void) const override { return "thermal"; }
 	void readFromScenario(SGPropertyNode* scFileNode) override;
 
         bool init(ModelSearchOrder searchOrder) override;

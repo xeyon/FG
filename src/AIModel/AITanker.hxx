@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <string_view>
+
 #include "AIAircraft.hxx"
 
 /**
@@ -38,7 +40,7 @@ public:
     FGAITanker(FGAISchedule* ref = 0);
     virtual ~FGAITanker() = default;
 
-    const char* getTypeString(void) const override { return "tanker"; }
+    string_view getTypeString(void) const override { return "tanker"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
     void bind() override;
 

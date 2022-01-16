@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cmath>
+#include <string_view>
 #include <vector>
 
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -36,7 +37,7 @@ public:
     FGAIGroundVehicle();
     virtual ~FGAIGroundVehicle() = default;
 
-    const char* getTypeString(void) const override { return "groundvehicle"; }
+    string_view getTypeString(void) const override { return "groundvehicle"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;

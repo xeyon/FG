@@ -793,7 +793,7 @@ void FGAIShip::ProcessFlightPlan(double dt) {
         setWPPos();
         object_type type = getType();
 
-        if (type != 10) // TODO: magic number
+        if (type != object_type::otGroundVehicle)   // is this correct???
             AccelTo(prev->getSpeed());
 
         _curr_alt = curr->getAltitude();
