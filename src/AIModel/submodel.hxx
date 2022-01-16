@@ -3,18 +3,16 @@
 //
 // This file is in the Public Domain and comes with no warranty.
 
+#pragma once
 
-#ifndef __SYSTEMS_SUBMODEL_HXX
-#define __SYSTEMS_SUBMODEL_HXX 1
+#include <string>
+#include <vector>
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/SGMath.hxx>
 
 #include <Autopilot/inputvalue.hxx>
-
-#include <vector>
-#include <string>
 
 class FGAIBase;
 class FGAIManager;
@@ -94,7 +92,7 @@ public:
     }   IC_struct;
 
     FGSubmodelMgr();
-    ~FGSubmodelMgr() override;
+    virtual ~FGSubmodelMgr() = default;
 
     // Subsystem API.
     void bind() override;
@@ -189,5 +187,3 @@ private:
     SGVec3d getCartOffsetPos(submodel* sm) const;
     void setOffsetPos(submodel* sm);
 };
-
-#endif // __SYSTEMS_SUBMODEL_HXX
