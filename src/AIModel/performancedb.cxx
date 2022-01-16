@@ -18,15 +18,6 @@
 
 using std::string;
 
-PerformanceDB::PerformanceDB()
-{
-}
-
-
-PerformanceDB::~PerformanceDB()
-{
-}
-
 void PerformanceDB::init()
 {
     SGPath dbpath( globals->get_fg_root() );

@@ -1,5 +1,4 @@
-#ifndef PERFORMANCEDB_HXX
-#define PERFORMANCEDB_HXX
+#pragma once
 
 #include <string>
 #include <map>
@@ -22,8 +21,8 @@ class SGPath;
 class PerformanceDB : public SGSubsystem
 {
 public:
-    PerformanceDB();
-    virtual ~PerformanceDB();
+    PerformanceDB() = default;
+    virtual ~PerformanceDB() = default;
 
     // Subsystem API.
     void init() override;
@@ -48,7 +47,6 @@ private:
 
     void registerPerformanceData(const std::string& id, PerformanceData* data);
 
-
     typedef std::map<std::string, PerformanceData*> PerformanceDataDict;
     PerformanceDataDict _db;
 
@@ -60,5 +58,3 @@ private:
     /// partial matches when merging - the first matching alias is used.
     std::vector<StringPair> _aliases;
 };
-
-#endif
