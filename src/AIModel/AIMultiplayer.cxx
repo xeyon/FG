@@ -168,10 +168,12 @@ void FGAIMultiplayer::FGAIMultiplayerInterpolate(
         std::vector<FGPropertyData*>::const_iterator prevPropItEnd;
         std::vector<FGPropertyData*>::const_iterator nextPropIt;
         std::vector<FGPropertyData*>::const_iterator nextPropItEnd;
+
         prevPropIt = prevIt->second.properties.begin();
         prevPropItEnd = prevIt->second.properties.end();
         nextPropIt = nextIt->second.properties.begin();
         nextPropItEnd = nextIt->second.properties.end();
+
         while (prevPropIt != prevPropItEnd)
         {
             PropertyMap::iterator pIt = mPropertyMap.find((*prevPropIt)->id);
@@ -181,7 +183,6 @@ void FGAIMultiplayer::FGAIMultiplayerInterpolate(
             {
                 //cout << "Found " << pIt->second->getPath() << ":";
 
-                float val;
                 /*
                  * RJH - 2017-01-25
                  * During multiplayer operations a series of crashes were encountered that affected all players
@@ -206,24 +207,29 @@ void FGAIMultiplayer::FGAIMultiplayerInterpolate(
                             // fixes: https://sourceforge.net/p/flightgear/codetickets/1885/
                             pIt->second->setIntValue((*nextPropIt)->int_value);
                             break;
+
                         case simgear::props::FLOAT:
                         case simgear::props::DOUBLE:
-                            val = (1 - tau)*(*prevPropIt)->float_value +
-                                tau*(*nextPropIt)->float_value;
-                            //cout << "Flo: " << val << "\n";
-                            pIt->second->setFloatValue(val);
+                            {
+                                float val = (1 - tau)*(*prevPropIt)->float_value +
+                                            tau*(*nextPropIt)->float_value;
+                                pIt->second->setFloatValue(val);
+                            }
                             break;
+                        
                         case simgear::props::STRING:
                         case simgear::props::UNSPECIFIED:
                             //cout << "Str: " << (*nextPropIt)->string_value << "\n";
                             pIt->second->setStringValue((*nextPropIt)->string_value);
                             break;
+
                         default:
                             // FIXME - currently defaults to float values
-                            val = (1 - tau)*(*prevPropIt)->float_value +
-                                tau*(*nextPropIt)->float_value;
-                            //cout << "Unk: " << val << "\n";
-                            pIt->second->setFloatValue(val);
+                            {
+                                float val = (1 - tau)*(*prevPropIt)->float_value +
+                                            tau*(*nextPropIt)->float_value;
+                                pIt->second->setFloatValue(val);
+                            }
                             break;
                     }
                 }
@@ -365,21 +371,24 @@ static void s_MotionLogging(const std::string& _callsign, double tInterp, SGVec3
         static SGVec3d s_pos_0;
         static SGVec3d s_pos_prev;
         static double s_t_prev = -1;
-        SGVec3d pos = ecPos;
+        SGVec3d pos2 = ecPos;
         double sim_replay_time = fgGetDouble("/sim/replay/time");
         double t = fgGetBool("/sim/replay/replay-state") ? sim_replay_time : tInterp;
+
         if (s_t_prev == -1)
         {
-            s_pos_0 = pos;
+            s_pos_0 = pos2;
         }
+
         double t_dt = t - s_t_prev;
         if (s_t_prev != -1 /*&& t_dt != 0*/)
         {
-            SGVec3d delta_pos = pos - s_pos_prev;
+            SGVec3d delta_pos = pos2 - s_pos_prev;
             SGVec3d delta_pos_norm = normalize(delta_pos);
-            double distance0 = length(pos - s_pos_0);
+            double distance0 = length(pos2 - s_pos_0);
             double distance = length(delta_pos);
             double speed = (t_dt) ? distance / t_dt : -999;
+
             if (t_dt)
             {
                 SGPropertyNode* n0 = fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-values", true /*create*/);
@@ -406,30 +415,24 @@ static void s_MotionLogging(const std::string& _callsign, double tInterp, SGVec3
             double user_to_mp_bearing = SGGeodesy::courseDeg(user_pos_geod, pos_geod);
             double user_distance0 = length(user_pos - s_pos_0);
 
-            if (1)
-            {
                 fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-distance", true /*create*/)
                         ->addChild("value")
-                        ->setDoubleValue(user_to_mp_distance)
-                        ;
+                        ->setDoubleValue(user_to_mp_distance);
                 fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-relative-bearing", true /*create*/)
                         ->addChild("value")
-                        ->setDoubleValue(user_to_mp_bearing)
-                        ;
+                        ->setDoubleValue(user_to_mp_bearing);
                 fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-absolute-distance", true /*create*/)
                         ->addChild("value")
-                        ->setDoubleValue(distance0)
-                        ;
+                        ->setDoubleValue(distance0);
                 fgGetNode("/sim/replay/log-raw-speed-multiplayer-post-user-absolute-distance", true /*create*/)
                         ->addChild("value")
-                        ->setDoubleValue(user_distance0)
-                        ;
-            }
+                        ->setDoubleValue(user_distance0);
         }
+
         if (t_dt)
         {
             s_t_prev = t;
-            s_pos_prev = pos;
+            s_pos_prev = pos2;
         }
     }
 }
@@ -633,17 +636,7 @@ void FGAIMultiplayer::update(double dt)
         // the case tInterp = curentPkgTime need to be in the interpolation, to avoid a bug zeroing the position
 
         double tau = 0;
-        if (nextIt == mMotionInfo.end())    // Not sure this can happen.
-        {
-            /*
-            * RJH: 2017-02-16 another exception thrown here when running under debug (and hence huge frame delays)
-            * the value of nextIt was already end(); which I think means that we cannot run the entire next section of code.
-            */
-            // Leave prevIt and nextIt pointing at same item.
-            --nextIt;
-            --prevIt;
-        }
-        else if (nextIt == mMotionInfo.begin())
+        if (nextIt == mMotionInfo.begin())
         {
             // Leave prevIt and nextIt pointing at same item.
             SG_LOG(SG_GENERAL, SG_DEBUG, "Only one frame for interpolation: " << _callsign);
@@ -881,11 +874,12 @@ FGAIMultiplayer::addMotionInfo(FGExternalMotionData& motionInfo,
             double dt = t_key - m_simple_time_recent_packet_time;
             if (dt != 0)
             {
-                double e = 0.05;
-                lagPpsAveraged = (1-e) * lagPpsAveraged + e * (1/dt);
+                double ep = 0.05;
+                lagPpsAveraged = (1-ep) * lagPpsAveraged + ep * (1/dt);
                 props->setDoubleValue("lag/pps-averaged", lagPpsAveraged);
             }
         }
+
         m_simple_time_recent_packet_time = t_key;
         
         // We use compensated time <t_key> as key in mMotionInfo.
