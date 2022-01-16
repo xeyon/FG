@@ -23,12 +23,6 @@
 #endif
 
 #include <Main/fg_props.hxx>
-#include <Main/globals.hxx>
-#include <Scenery/scenery.hxx>
-#include <string>
-#include <cmath>
-
-using std::string;
 
 #include "AIStatic.hxx"
 
@@ -37,9 +31,6 @@ FGAIStatic::FGAIStatic() : FGAIBase(otStatic, false) {
     _searchOrder = DATA_ONLY;
 }
 
-
-FGAIStatic::~FGAIStatic() {
-}
 
 void FGAIStatic::update(double dt) {
    FGAIBase::update(dt);

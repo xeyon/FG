@@ -23,17 +23,14 @@
 #include "AIManager.hxx"
 #include "AIBase.hxx"
 
-#include <string>
-
 
 class FGAIStatic : public FGAIBase {
 
 public:
 
     FGAIStatic();
-    ~FGAIStatic();
-
-    void update(double dt) override;
+    virtual ~FGAIStatic() = default;
 
     const char* getTypeString(void) const override { return "static"; }
+    void update(double dt) override;
 };
