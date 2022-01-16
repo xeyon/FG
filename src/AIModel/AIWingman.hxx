@@ -17,30 +17,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIWINGMAN_HXX
-#define _FG_AIWINGMAN_HXX
-
-#include "AIBallistic.hxx"
-
-#include "AIManager.hxx"
-#include "AIBase.hxx"
+#pragma once
 
 #include <simgear/sg_inlines.h>
+
+#include "AIBallistic.hxx"
+#include "AIBase.hxx"
+#include "AIManager.hxx"
 
 
 class FGAIWingman : public FGAIBallistic {
 public:
     FGAIWingman();
-    virtual ~FGAIWingman();
+    virtual ~FGAIWingman() = default;
 
+    const char* getTypeString(void) const override { return "wingman"; }
     void readFromScenario(SGPropertyNode* scFileNode) override;
 
     bool init(ModelSearchOrder searchOrder) override;
     void bind() override;
     void reinit() override;
     void update(double dt) override;
-
-    const char* getTypeString(void) const override { return "wingman"; }
 
 private:
     void formateToAC(double dt);
@@ -83,7 +80,6 @@ private:
     inline double getBrkAng() const { return _break_angle;}
 
     inline SGVec3d getCartInPos(SGGeod in_pos) const;
-
 };
 
 void FGAIWingman::setFormate(bool f) {
@@ -144,5 +140,3 @@ SGVec3d FGAIWingman::getCartInPos(SGGeod in_pos) const {
     SGVec3d cartPos = SGVec3d::fromGeod(in_pos);
     return cartPos;
 }
-
-#endif  // FG_AIWINGMAN_HXX

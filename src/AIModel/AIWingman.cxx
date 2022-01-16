@@ -44,8 +44,6 @@ _coeff_spd(2.0)
 
 }
 
-FGAIWingman::~FGAIWingman() {}
-
 void FGAIWingman::readFromScenario(SGPropertyNode* scFileNode) {
     if (!scFileNode)
         return;
