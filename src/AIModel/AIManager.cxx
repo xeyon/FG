@@ -18,8 +18,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#include <cstring>
 #include <algorithm>
+#include <cstring>
 
 #include <simgear/debug/ErrorReportingCallback.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -197,9 +197,16 @@ void FGAIManager::registerScenarios(SGPropertyNode_ptr root)
     // add-on scenario directories
     const auto& addonsManager = flightgear::addons::AddonManager::instance();
     if (addonsManager) {
+        auto coll = addonsManager->registeredAddons();
+        std::transform(coll.begin(), coll.end(), std::back_inserter(scenarioSearchPaths),
+                       [](flightgear::addons::AddonRef a) {
+                           return a->getBasePath() / "Scenarios";
+                       });
+#if 0
         for (auto a : addonsManager->registeredAddons()) {
             scenarioSearchPaths.push_back(a->getBasePath() / "Scenarios");
         }
+#endif
     }
 
     SGPropertyNode_ptr scenariosNode = root->getNode("/sim/ai/scenarios", true);
@@ -583,12 +590,21 @@ bool FGAIManager::removeObjectCommand(const SGPropertyNode* arg, const SGPropert
 bool FGAIManager::removeObject(const SGPropertyNode* args)
 {
     int id = args->getIntValue("id");
+    auto coll = get_ai_list();
+    auto it_ai = std::find_if(coll.begin(), coll.end(), [id](FGAIBasePtr ai) {
+        return ai->getID() == id;
+    });
+    if (it_ai != coll.end())
+        (*it_ai)->setDie(true);
+
+#if 0
     for (FGAIBase* ai : get_ai_list()) {
         if (ai->getID() == id) {
             ai->setDie(true);
             break;
         }
     }
+#endif
 
     return false;
 }

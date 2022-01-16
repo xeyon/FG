@@ -20,8 +20,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifndef _FG_AIMANAGER_HXX
-#define _FG_AIMANAGER_HXX
+#pragma once
 
 #include <list>
 #include <map>
@@ -145,19 +144,19 @@ private:
     
     ai_list_type ai_list;
 
-    double user_altitude_agl;
-    double user_heading;
-    double user_pitch;
-    double user_roll;
-    double user_speed;
-    double wind_from_east;
-    double wind_from_north;
+    double user_altitude_agl = 0.0;
+    double user_heading = 0.0;
+    double user_pitch = 0.0;
+    double user_roll = 0.0;
+    double user_speed = 0.0;
+    double wind_from_east = 0.0;
+    double wind_from_north = 0.0;
 
     void fetchUserState( double dt );
 
     // used by thermals
-    double range_nearest;
-    double strength;
+    double range_nearest = 0.0;
+    double strength = 0.0;
     void processThermal( double dt, FGAIThermal* thermal );
 
     SGPropertyChangeCallback<FGAIManager> cb_ai_bare;
@@ -176,5 +175,3 @@ private:
         _radarDebugMode = false;
     double _radarRangeM = 0.0;
 };
-
-#endif  // _FG_AIMANAGER_HXX
