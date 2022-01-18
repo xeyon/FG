@@ -76,6 +76,9 @@ public:
     void setFollowLegTrackToFixes(bool tf);
     bool followLegTrackToFixes() const;
 
+    void setMaxFlyByTurnAngle(double deg);
+    double maxFlyByTurnAngle() const;
+
     // aircraft approach category as per CFR 97.3, etc
     // http://www.flightsimaviation.com/data/FARS/part_97-3.html
     std::string icaoAircraftCategory() const;
@@ -482,22 +485,23 @@ private:
     int _cruiseFlightLevel = 0;
     int _cruiseAltitudeFt = 0;
     int _estimatedDuration = 0;
+    double _maxFlyByTurnAngle = 90.0;
 
-  FGAirportRef _departure, _destination;
-  FGAirportRef _alternate;
-  FGRunway* _departureRunway, *_destinationRunway;
-  SGSharedPtr<SID> _sid;
-  SGSharedPtr<STAR> _star;
-  SGSharedPtr<Approach> _approach;
-  std::string _sidTransition, _starTransition, _approachTransition;
+    FGAirportRef _departure, _destination;
+    FGAirportRef _alternate;
+    FGRunway *_departureRunway, *_destinationRunway;
+    SGSharedPtr<SID> _sid;
+    SGSharedPtr<STAR> _star;
+    SGSharedPtr<Approach> _approach;
+    std::string _sidTransition, _starTransition, _approachTransition;
 
-  double _totalDistance;
-  void rebuildLegData();
+    double _totalDistance;
+    void rebuildLegData();
 
-  using LegVec = std::vector<LegRef>;
-  LegVec _legs;
+    using LegVec = std::vector<LegRef>;
+    LegVec _legs;
 
-  std::vector<Delegate*> _delegates;
+    std::vector<Delegate*> _delegates;
 };
 
 } // of namespace flightgear

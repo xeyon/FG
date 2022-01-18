@@ -325,12 +325,12 @@ public:
     
     _flyByTurnAngle = nextLegTrack.value() - _finalLegCourse;
     SG_NORMALIZE_RANGE(_flyByTurnAngle, -180.0, 180.0);
-    
-    if (fabs(_flyByTurnAngle) > 120.0) {
-      // too sharp, don't anticipate
-      return;
+
+    if (fabs(_flyByTurnAngle) > _rnav->maxFlyByTurnAngleDeg()) {
+        // too sharp, don't anticipate
+        return;
     }
-    
+
     _flyByTurnRadius =  _rnav->turnRadiusNm() * SG_NM_TO_METER;
       _flyByTurnCenter = computeTurnCenter(_flyByTurnRadius, _waypt->position(), _finalLegCourse, _flyByTurnAngle);
     _doFlyBy = true;

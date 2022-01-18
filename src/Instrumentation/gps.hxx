@@ -86,7 +86,8 @@ public:
     double overflightArmDistanceM() override;
     double overflightArmAngleDeg() override;
     bool canFlyBy() const override;
-    
+    double maxFlyByTurnAngleDeg() const override;
+
     simgear::optional<LegData> previousLegData() override;
     
     simgear::optional<double> nextLegTrack() override;
@@ -94,6 +95,8 @@ public:
     double turnRadiusNm(double groundSpeedKnots) override;
 private:
     friend class SearchFilter;
+
+    void setFlyByMaxTurnAngle(double maxAngle);
 
     /**
      * Configuration manager, track data relating to aircraft installation
@@ -158,6 +161,14 @@ private:
 
         
         bool delegateDoesSequencing() const    { return _delegateSequencing; }
+
+        double maxFlyByTurnAngleDeg() const { return _maxFlyByTurnAngle; }
+
+        void setMaxFlyByTurnAngle(double deg)
+        {
+            _maxFlyByTurnAngle = deg;
+        }
+
     private:
         bool _enableTurnAnticipation;
 
@@ -194,6 +205,8 @@ private:
         // do we handle waypoint sequencing ourselves, or let the delegate do it?
         // default is we do it, for backwards compatability
         bool _delegateSequencing = false;
+
+        double _maxFlyByTurnAngle = 90.0;
     };
 
     class SearchFilter : public FGPositioned::Filter

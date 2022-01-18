@@ -91,6 +91,14 @@ void GPS::Config::bind(GPS* aOwner, SGPropertyNode* aCfg)
   aOwner->tie(aCfg, "over-flight-arm-distance-nm", SGRawValuePointer<double>(&_overflightArmDistance));
   aOwner->tie(aCfg, "over-flight-arm-angle-deg", SGRawValuePointer<double>(&_overflightArmAngle));
   aOwner->tie(aCfg, "delegate-sequencing", SGRawValuePointer<bool>(&_delegateSequencing));
+  aOwner->tie(aCfg, "max-fly-by-turn-angle-deg", SGRawValueMethods<GPS, double>(*aOwner, &GPS::maxFlyByTurnAngleDeg, &GPS::setFlyByMaxTurnAngle));
+}
+
+void GPS::setFlyByMaxTurnAngle(double maxAngle)
+{
+    _config.setMaxFlyByTurnAngle(maxAngle);
+    // keep the FlightPlan in sync, so RoutePath matches
+    _route->setMaxFlyByTurnAngle(maxAngle);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -479,6 +487,11 @@ double GPS::overflightArmAngleDeg()
 double GPS::selectedMagCourse()
 {
   return _selectedCourse;
+}
+
+double GPS::maxFlyByTurnAngleDeg() const
+{
+    return _config.maxFlyByTurnAngleDeg();
 }
 
 simgear::optional<double> GPS::nextLegTrack()

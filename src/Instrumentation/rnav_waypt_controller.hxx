@@ -64,7 +64,17 @@ public:
     {
         return false;
     }
-    
+
+    /**
+     * maximum angle in degrees where flyBy is permitted. Turns larger
+     * than this value will always be executed as fly-over to avoid
+     * a very large cut.
+     */
+    virtual double maxFlyByTurnAngleDeg() const
+    {
+        return 120.0;
+    }
+
   /**
    * minimum distance to switch next waypoint.
    */

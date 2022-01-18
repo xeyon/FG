@@ -1908,6 +1908,16 @@ bool FlightPlan::followLegTrackToFixes() const
     return _followLegTrackToFix;
 }
 
+void FlightPlan::setMaxFlyByTurnAngle(double deg)
+{
+    _maxFlyByTurnAngle = deg;
+}
+
+double FlightPlan::maxFlyByTurnAngle() const
+{
+    return _maxFlyByTurnAngle;
+}
+
 std::string FlightPlan::icaoAircraftCategory() const
 {
     std::string r;
