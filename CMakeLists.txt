@@ -7,9 +7,11 @@ include (CheckCXXSourceCompiles)
 include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
 
-# OpenGL VND policy : use the old definition for now, until we can audit this
+# OpenGL VND policy : we need to use NEW, so we will set
+# OpenGL_GL_PREFERENCE to LEGACY
 if(POLICY CMP0072)
-    cmake_policy(SET CMP0072 OLD)
+    cmake_policy(SET CMP0072 NEW)
+    set(OpenGL_GL_PREFERENCE "LEGACY") # using libGL.so
 endif()
 
 if(POLICY CMP0116)
