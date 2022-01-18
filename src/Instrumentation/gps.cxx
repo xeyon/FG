@@ -784,7 +784,7 @@ void GPS::wp1Changed()
     _wayptController.reset(new DirectToController(this, _currentWaypt, _wp0_position));
   }
 
-  const bool ok = _wayptController->init();
+  const bool ok = _wayptController && _wayptController->init();
   if (!ok) {
       SG_LOG(SG_AUTOPILOT, SG_WARN, "GPS failed to init RNAV controller for waypoint " << _currentWaypt->ident());
       _wayptController.reset();
