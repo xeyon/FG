@@ -72,7 +72,7 @@ public:
      */
     virtual double maxFlyByTurnAngleDeg() const
     {
-        return 120.0;
+        return 90.0;
     }
 
   /**

@@ -852,7 +852,7 @@ public:
         _flyByTurnAngle = inverseRadial - _targetTrack;
         SG_NORMALIZE_RANGE(_flyByTurnAngle, -180.0, 180.0);
         
-        if (fabs(_flyByTurnAngle) > 120.0) {
+        if (fabs(_flyByTurnAngle) > _rnav->maxFlyByTurnAngleDeg()) {
           // too sharp, no fly-by
           return;
         }
