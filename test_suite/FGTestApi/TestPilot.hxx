@@ -63,6 +63,7 @@ public:
 
     bool isOnHeading(double heading) const;
 
+    double trueCourseDeg() const;
 private:
     enum class LateralMode
     {

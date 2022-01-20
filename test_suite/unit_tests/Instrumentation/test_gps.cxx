@@ -1717,3 +1717,70 @@ void GPSTests::testCourseLegIntermediateWaypoint()
     });
     CPPUNIT_ASSERT(ok);
 }
+
+// Test to check the situation where you have two legs forming a straight line
+// with the current waypoint being the third waypoint
+void GPSTests::testFlyOverMaxInterceptAngle()
+{
+    //FGTestApi::setUp::logPositionToKML("gps_fly_over_max_intercept_angle");
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = FlightPlan::create();
+    rm->setFlightPlan(fp);
+
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "EGAA", "25", "EGPH", "06", "LISBO BLACA");
+
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+
+    FGTestApi::writeFlightPlanToKML(fp);
+    
+    SGGeod initPos = fp->pointAlongRouteNorm(1, -0.15);
+    FGTestApi::writePointToKML("Start pos", initPos);
+
+    auto gps = setupStandardGPS();
+    FGTestApi::setPositionAndStabilise(initPos);
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setStringValue("command", "leg");
+
+    auto gpsErrorNmNode = gpsNode->getNode("wp/wp[1]/course-error-nm");
+
+    fp->setCurrentIndex(1); // BLACA
+
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(initPos);
+    pilot->setCourseTrue(fp->legAtIndex(1)->courseDeg());
+    pilot->setSpeedKts(280);
+    pilot->flyGPSCourse(gps);
+
+    bool ok = FGTestApi::runForTimeWithCheck(1200.0, [&fp]() {
+        return fp->currentIndex() == 2;
+    });
+    CPPUNIT_ASSERT(ok);
+    
+    FGPositioned::TypeFilter fixFilter(FGPositioned::FIX);
+    auto lisbo = FGPositioned::findClosestWithIdent("LISBO", fp->departureAirport()->geod(), &fixFilter);
+    auto blaca = FGPositioned::findClosestWithIdent("BLACA", fp->departureAirport()->geod(), &fixFilter);
+
+    const double crsToBlaca = SGGeodesy::courseDeg(lisbo->geod(), blaca->geod());
+    
+    ok = FGTestApi::runForTimeWithCheck(1200.0, [pilot, crsToBlaca, gpsErrorNmNode]()
+                                        {
+        const double heading = pilot->trueCourseDeg();
+        if (heading < (crsToBlaca - 45.0)) {
+            CPPUNIT_FAIL("Turned too far on intercept");
+        }
+        
+        // check if we're near the leg
+        if (fabs(gpsErrorNmNode->getDoubleValue()) > 0.05) {
+            return false;
+        }
+        
+        return pilot->isOnHeading(crsToBlaca);
+    });
+    CPPUNIT_ASSERT(ok);
+}

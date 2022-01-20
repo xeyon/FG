@@ -57,7 +57,8 @@ class GPSTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testFinalLegCourse);
     CPPUNIT_TEST(testCourseLegIntermediateWaypoint);
     CPPUNIT_TEST(testExceedFlyByMaxAngleTurn);
-
+    CPPUNIT_TEST(testFlyOverMaxInterceptAngle);
+    
     CPPUNIT_TEST_SUITE_END();
 
     void setPositionAndStabilise(GPS* gps, const SGGeod& g);
@@ -94,6 +95,7 @@ public:
     void testFinalLegCourse();
     void testCourseLegIntermediateWaypoint();
     void testExceedFlyByMaxAngleTurn();
+    void testFlyOverMaxInterceptAngle();
 };
 
 #endif  // _FG_GPS_UNIT_TESTS_HXX

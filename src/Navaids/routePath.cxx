@@ -368,12 +368,20 @@ public:
       legCourseValid = true;
       return;
     }
+      
+      SGGeod previousPos = previous->pos;
+      // use correct location for runway, otherwise use threshold
+      // and get weird courses
+      if (previous->wpt->type() == "runway") {
+          FGRunway* rwy = static_cast<RunwayWaypt*>(previous->wpt.get())->runway();
+          previousPos = rwy->end();
+      }
     
     if (posValid) {
-      legCourseTrue = SGGeodesy::courseDeg(previous->pos, pos);
+      legCourseTrue = SGGeodesy::courseDeg(previousPos, pos);
       legCourseValid = true;
     } else if (isCourseConstrained()) {
-      double magVar = magVarFor(previous->pos);
+      double magVar = magVarFor(previousPos);
       legCourseTrue = wpt->headingRadialDeg() + magVar;
       legCourseValid = true;
     } // of pos not valid
@@ -418,6 +426,7 @@ public:
                 turnExitAngle = next.legCourseTrue - rwy->headingDeg();
                 legCourseTrue = rwy->headingDeg();
                 flyOver = true;
+                // fall through
             } else {
                 legCourseValid = true;
                 legCourseTrue = next.legCourseTrue;
@@ -463,9 +472,14 @@ public:
                     theta = copysign(theta, turnExitAngle);
                     turnExitAngle += theta;
 
-                    // move by the distance to compensate
-                    double d = turnRadius * 2.0 * sin(theta * SG_DEGREES_TO_RADIANS);
-                    turnExitPos = SGGeodesy::direct(turnExitPos, next.legCourseTrue, d);
+                    double p = copysign(90, turnExitAngle);
+                    const double offsetAngle = legCourseTrue + turnExitAngle - p;
+                    SGGeod tc2 = SGGeodesy::direct(turnExitCenter,
+                                                   offsetAngle,
+                                                   turnRadius * 2.0);
+                    
+       
+                    turnExitPos = SGGeodesy::direct(tc2, next.legCourseTrue + p , turnRadius);
                     overflightCompensationAngle = -theta;
 
                     // sign of angles will differ, so compute distances seperately
@@ -576,23 +590,28 @@ public:
 
   SGGeod pointAlongExitPath(double distanceM) const
   {
-      double theta = (distanceM / turnRadius) * SG_RADIANS_TO_DEGREES;
-      double p = copysign(90, turnExitAngle);
+      double basicTurnDistance = pathDistanceForTurnAngle(turnExitAngle);
+      
+      if (distanceM > basicTurnDistance) {
+          assert(flyOver);
+          assert(overflightCompensationAngle != 0.0);
+          double p = copysign(90, turnExitAngle);
 
-      if (flyOver && (overflightCompensationAngle != 0.0)) {
-          // figure out if we're in the compensation section
-          if (theta > turnExitAngle) {
-              // compute the compensation turn center - twice the turn radius
-              // from turnCenter
-              SGGeod tc2 = SGGeodesy::direct(turnExitCenter,
-                                             legCourseTrue - overflightCompensationAngle - p,
-                                             turnRadius * 2.0);
-              theta = copysign(theta - turnExitAngle, overflightCompensationAngle);
-              return SGGeodesy::direct(tc2,
-                                       legCourseTrue - overflightCompensationAngle + theta + p, turnRadius);
-          }
+          double distanceAlongCompensationTurn = distanceM - basicTurnDistance;
+          double theta = (distanceAlongCompensationTurn / turnRadius) * SG_RADIANS_TO_DEGREES;
+
+          // compute the compensation turn center - twice the turn radius
+          // from turnCenter
+          SGGeod tc2 = SGGeodesy::direct(turnExitCenter,
+                                         legCourseTrue + turnExitAngle - p,
+                                         turnRadius * 2.0);
+
+          theta = copysign(theta, overflightCompensationAngle);
+          return SGGeodesy::direct(tc2,
+                                   legCourseTrue + turnExitAngle + theta + p, turnRadius);
       }
-
+      
+      double theta = (distanceM / turnRadius) * SG_RADIANS_TO_DEGREES;
       theta = copysign(theta, turnExitAngle);
       double inboundCourse = legCourseTrue + (flyOver ? 0.0 : turnExitAngle);
       return pointOnExitTurnFromHeading(inboundCourse + theta);

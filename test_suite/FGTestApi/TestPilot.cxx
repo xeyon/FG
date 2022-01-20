@@ -273,4 +273,10 @@ bool TestPilot::isOnHeading(double heading) const
     return fabs(hdgDelta) < 0.5;
 }
 
+double TestPilot::trueCourseDeg() const
+{
+    return _trueCourseDeg;
+}
+
+
 } // of namespace
