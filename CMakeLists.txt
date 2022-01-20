@@ -115,7 +115,7 @@ IF(APPLE)
 elseif(WIN32)
     set(EVENT_INPUT_DEFAULT 1)
     set(ENABLE_VR_DEFAULT 1)
-    list(APPEND PLATFORM_LIBS "Shlwapi.lib")
+    list(APPEND PLATFORM_LIBS "Shlwapi.lib" "Version.lib")
 
     set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION "bin")
     set(CMAKE_INSTALL_UCRT_LIBRARIES TRUE)
