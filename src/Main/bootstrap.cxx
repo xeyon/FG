@@ -298,8 +298,8 @@ int main ( int argc, char **argv )
   if (!checkUniversalCRTVersion()) {
 	  flightgear::fatalMessageBoxThenExit(
 		  "Fatal error",
-		  "The Microsoft Universal CRT on this computer is to old to run FlightGear. "
-		"Pleaese use Windows Update to update to a more recent Universal CRT version.");
+		  "The Microsoft Universal CRT on this computer is too old to run FlightGear. "
+		"Please use Windows Update to install a more recent Universal CRT version.");
   }
 #else
   // Unix(alike) systems
