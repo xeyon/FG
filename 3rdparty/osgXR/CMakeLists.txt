@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.11)
 
 set(osgXR_MAJOR_VERSION 0)
 set(osgXR_MINOR_VERSION 3)
-set(osgXR_PATCH_VERSION 7)
-set(osgXR_SOVERSION 5)
+set(osgXR_PATCH_VERSION 8)
+set(osgXR_SOVERSION 6)
 
 set(osgXR_VERSION "${osgXR_MAJOR_VERSION}.${osgXR_MINOR_VERSION}.${osgXR_PATCH_VERSION}")
 
@@ -22,6 +22,7 @@ if(CMAKE_PROJECT_NAME STREQUAL osgXR)
     # Build options
     option(BUILD_SHARED_LIBS "Whether to build as a shared library" ON)
     option(BUILD_OSGXR_EXAMPLES "Enable to build osgXR examples" OFF)
+    option(OSGXR_WARNINGS "Enable compiler warnings for osgXR" OFF)
 
     # Source files in src/
     add_subdirectory(src)
