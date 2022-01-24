@@ -1129,10 +1129,8 @@ MK_VIII::IOHandler::update_inputs ()
         mk_dinput(glideslope_inhibit) = mk_node(nav0_gs_distance)->getDoubleValue() < 0;
     if (mk_dinput_feed(autopilot_engaged))
     {
-        const char *mode;
-
-        mode = mk_node(autopilot_heading_lock)->getStringValue().c_str();
-        mk_dinput(autopilot_engaged) = mode && *mode;
+        const auto mode = mk_node(autopilot_heading_lock)->getStringValue();
+        mk_dinput(autopilot_engaged) = !mode.empty();
     }
 
     if (mk_ainput_feed(uncorrected_barometric_altitude))
