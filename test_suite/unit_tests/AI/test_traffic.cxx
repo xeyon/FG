@@ -73,6 +73,8 @@ void TrafficTests::setUp()
     fgSetBool("/environment/realwx/enabled", false);
     fgSetBool("/environment/metar/valid", false);
     fgSetBool("/sim/terrasync/ai-data-update-now", false);
+    fgSetBool("/sim/sound/atc/enabled", true);
+    fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", 121.70);
 
     globals->append_data_path(SGPath::fromUtf8(FG_TEST_SUITE_DATA), false);
 

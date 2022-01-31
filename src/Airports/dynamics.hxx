@@ -42,16 +42,16 @@ class ParkingAssignment
 public:
   ParkingAssignment();
   ~ParkingAssignment();
-  
+
 // create a parking assignment (and mark it as unavailable)
   ParkingAssignment(FGParking* pk, FGAirportDynamics* apt);
-  
+
   ParkingAssignment(const ParkingAssignment& aOther);
   void operator=(const ParkingAssignment& aOther);
-  
+
   bool isValid() const;
   FGParking* parking() const;
-  
+
   void release();
 private:
   void clear();
@@ -107,13 +107,13 @@ public:
     virtual ~FGAirportDynamics();
 
     void init();
-  
+
     double getElevation() const;
     const std::string getId() const;
-  
+
     FGAirport* parent() const
     { return _ap; }
-  
+
     void getActiveRunway( const std::string& trafficType,
                           int action,
                           std::string& runway,
@@ -131,9 +131,9 @@ public:
                           const std::string& acType, const std::string& airline);
 
     void setParkingAvailable(FGParking* park, bool available);
-  
+
     bool isParkingAvailable(FGParking* parking) const;
-  
+
     void releaseParking(FGParking* id);
 
     FGParkingList getParkings(bool onlyAvailable, const std::string& type) const;
@@ -150,7 +150,7 @@ public:
             * availabiity (i.e try them all)
      */
     ParkingAssignment getAvailableParkingByName(const std::string & name);
-    
+
     FGParkingRef getOccupiedParkingByName(const std::string& name) const;
 
     // ATC related functions.
@@ -167,6 +167,7 @@ public:
         return &approachController;
     };
 
+    int getApproachFrequency  (unsigned nr);
     int getGroundFrequency(unsigned leg);
     int getTowerFrequency  (unsigned nr);
 

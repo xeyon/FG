@@ -63,7 +63,7 @@ using std::string;
  * class FGTowerController
 s * subclass of FGATCController
  **************************************************************************/
- 
+
 FGTowerController::FGTowerController(FGAirportDynamics *par) :
         FGATCController()
 {
@@ -72,8 +72,6 @@ FGTowerController::FGTowerController(FGAirportDynamics *par) :
 
 FGTowerController::~FGTowerController()
 {
-    _isDestroying = true;
-    clearTrafficControllers(activeTraffic);
 }
 
 //
@@ -86,10 +84,10 @@ void FGTowerController::announcePosition(int id,
         FGAIAircraft * ref)
 {
     init();
-	
+
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
+
     // Add a new TrafficRecord if no one exsists for this aircraft.
     if (i == activeTraffic.end() || (activeTraffic.empty())) {
         FGTrafficRecord rec;
@@ -132,8 +130,8 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
         double dt)
 {
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
+
     setDt(getDt() + dt);
 
     if (i == activeTraffic.end() || (activeTraffic.empty())) {
@@ -150,14 +148,14 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
     // see if we already have a clearance record for the currently active runway
     // NOTE: dd. 2011-08-07: Because the active runway has been constructed in the announcePosition function, we may safely assume that is
     // already exists here. So, we can simplify the current code.
-    
+
     ActiveRunwayVecIterator rwy = activeRunways.begin();
     //if (parent->getId() == fgGetString("/sim/presets/airport-id")) {
     //    for (rwy = activeRunways.begin(); rwy != activeRunways.end(); rwy++) {
     //        rwy->printdepartureQueue();
     //    }
     //}
-    
+
     rwy = activeRunways.begin();
     while (rwy != activeRunways.end()) {
         if (rwy->getRunwayName() == current.getRunway()) {
@@ -186,9 +184,11 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
         if (ac->getTakeOffStatus() == 1) {
             // transmit takeoff clearance
             ac->setTakeOffStatus(2);
+            transmit(&(*i), &(*parent), MSG_CLEARED_FOR_TAKEOFF, ATC_GROUND_TO_AIR, true);
+            i->setState(10);
         }
     }
-    
+    //FIXME Make it an member of traffic record
     if (current.getAircraft()->getTakeOffStatus() == 2) {
         current.setHoldPosition(false);
     } else {
@@ -208,7 +208,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
                 // transmit takeoff clearacne? But why twice?
         }
     }
-} 
+}
 
 
 void FGTowerController::signOff(int id)
@@ -218,7 +218,7 @@ void FGTowerController::signOff(int id)
         return;
 
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
     if (i == activeTraffic.end() || (activeTraffic.empty())) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
@@ -240,8 +240,7 @@ void FGTowerController::signOff(int id)
     }
 
     i->getAircraft()->resetTakeOffStatus();
-    activeTraffic.erase(i);
-    SG_LOG(SG_ATC, SG_DEBUG, "Signing off from tower controller");
+    FGATCController::signOff(id);
 }
 
 // NOTE:
@@ -253,8 +252,8 @@ void FGTowerController::signOff(int id)
 bool FGTowerController::hasInstruction(int id)
 {
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
+
     if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
@@ -268,8 +267,8 @@ bool FGTowerController::hasInstruction(int id)
 FGATCInstruction FGTowerController::getInstruction(int id)
 {
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
+
     if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
@@ -290,5 +289,10 @@ string FGTowerController::getName() {
 
 void FGTowerController::update(double dt)
 {
-    FGATCController::eraseDeadTraffic(activeTraffic);
+    FGATCController::eraseDeadTraffic();
+}
+
+int FGTowerController::getFrequency() {
+    int towerFreq = parent->getTowerFrequency(2);
+    return towerFreq;
 }

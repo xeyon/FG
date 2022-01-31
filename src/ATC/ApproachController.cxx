@@ -63,7 +63,7 @@ using std::string;
  * class FGApproachController
  * subclass of FGATCController
  **************************************************************************/
- 
+
 FGApproachController::FGApproachController(FGAirportDynamics *par):
         FGATCController()
 {
@@ -72,8 +72,6 @@ FGApproachController::FGApproachController(FGAirportDynamics *par):
 
 FGApproachController::~FGApproachController()
 {
-    _isDestroying = true;
-    clearTrafficControllers(activeTraffic);
 }
 
 
@@ -86,10 +84,10 @@ void FGApproachController::announcePosition(int id,
         int leg, FGAIAircraft * ref)
 {
     init();
-    
+
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
+
     // Add a new TrafficRecord if no one exsists for this aircraft.
     if (i == activeTraffic.end() || activeTraffic.empty()) {
         FGTrafficRecord rec;
@@ -98,7 +96,7 @@ void FGApproachController::announcePosition(int id,
         rec.setPositionAndHeading(lat, lon, heading, speed, alt);
         rec.setRunway(intendedRoute->getRunway());
         rec.setLeg(leg);
-        //rec.setCallSign(callsign);
+        rec.setCallsign(ref->getCallSign());
         rec.setAircraft(ref);
         activeTraffic.push_back(rec);
     } else {
@@ -111,9 +109,9 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
         double dt)
 {
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
     TrafficVectorIterator current;
-	
+
     // update position of the current aircraft
     if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
@@ -122,85 +120,43 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
         current = i;
         SG_LOG(SG_ATC, SG_BULK, "ApproachController: checking for speed");
-        time_t time_diff =
-            current->getAircraft()->
-            checkForArrivalTime(string("final001"));
-        if (time_diff > 15) {
-            current->setSpeedAdjustment(current->getAircraft()->
-                                        getPerformance()->vDescent() *
-                                        1.35);
-        } else if (time_diff > 5) {
-            current->setSpeedAdjustment(current->getAircraft()->
-                                        getPerformance()->vDescent() *
-                                        1.2);
-        } else if (time_diff < -15) {
-            current->setSpeedAdjustment(current->getAircraft()->
-                                        getPerformance()->vDescent() *
-                                        0.65);
-        } else if (time_diff < -5) {
-            current->setSpeedAdjustment(current->getAircraft()->
-                                        getPerformance()->vDescent() *
-                                        0.8);
-        } else {
-            current->clearSpeedAdjustment();
+        if(current->getAircraft()) {
+            //FIXME No call to aircraft! -> set instruction
+            time_t time_diff =
+                current->getAircraft()->
+                checkForArrivalTime(string("final001"));
+            if (time_diff > 15) {
+                current->setSpeedAdjustment(current->getAircraft()->
+                                            getPerformance()->vDescent() *
+                                            1.35);
+            } else if (time_diff > 5) {
+                current->setSpeedAdjustment(current->getAircraft()->
+                                            getPerformance()->vDescent() *
+                                            1.2);
+            } else if (time_diff < -15) {
+                current->setSpeedAdjustment(current->getAircraft()->
+                                            getPerformance()->vDescent() *
+                                            0.65);
+            } else if (time_diff < -5) {
+                current->setSpeedAdjustment(current->getAircraft()->
+                                            getPerformance()->vDescent() *
+                                            0.8);
+            } else {
+                current->clearSpeedAdjustment();
+            }
+
         }
         //current->setSpeedAdjustment(current->getAircraft()->getPerformance()->vDescent() + time_diff);
     }
     setDt(getDt() + dt);
 }
 
-/* Search for and erase traffic record with a specific id */
-void FGApproachController::signOff(int id)
-{
-    // ensure we don't modify activeTraffic during destruction
-    if (_isDestroying)
-        return;
-
-    // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
-    if (i == activeTraffic.end() || activeTraffic.empty()) {
-        SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: Aircraft without traffic record is signing off from approach at " << SG_ORIGIN);
-    } else {
-        i = activeTraffic.erase(i);
-    }
-}
-
 /* Periodically check for and remove dead traffic records */
 void FGApproachController::update(double dt)
 {
-    FGATCController::eraseDeadTraffic(activeTraffic);
+    FGATCController::eraseDeadTraffic();
 }
 
-bool FGApproachController::hasInstruction(int id)
-{
-    // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
-    if (i == activeTraffic.end() || activeTraffic.empty()) {
-        SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
-    } else {
-        return i->hasInstruction();
-    }
-    return false;
-}
-
-
-FGATCInstruction FGApproachController::getInstruction(int id)
-{
-    // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
-    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
-        SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
-    } else {
-        return i->getInstruction();
-    }
-    return FGATCInstruction();
-}
 
 
 ActiveRunway *FGApproachController::getRunway(const string& name)
@@ -228,5 +184,11 @@ void FGApproachController::render(bool visible) {
 }
 
 string FGApproachController::getName() {
-    return string(parent->getId() + "-approach");
+    return string(parent->parent()->getName() + "-approach");
+}
+
+int FGApproachController::getFrequency() {
+    int groundFreq = parent->getApproachFrequency(2);
+    int towerFreq = parent->getTowerFrequency(2);
+    return groundFreq>0?groundFreq:towerFreq;
 }

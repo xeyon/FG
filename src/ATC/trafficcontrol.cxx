@@ -36,6 +36,7 @@
 #include <simgear/scene/material/mat.hxx>
 #include <simgear/scene/util/OsgMath.hxx>
 #include <simgear/timing/sg_time.hxx>
+#include <simgear/math/sg_geodesy.hxx>
 
 #include <Scenery/scenery.hxx>
 
@@ -58,7 +59,7 @@ using std::string;
 /***************************************************************************
  * ActiveRunway
  **************************************************************************/
- 
+
 ActiveRunway::ActiveRunway(const std::string& r, int cc) :
     rwy(r)
 {
@@ -87,7 +88,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
     //    time_t separation = 120;
     //}
     bool found = false;
-    
+
     // if the aircraft is the first arrival, add to the vector and return eta directly
     if (estimatedArrivalTimes.empty()) {
         estimatedArrivalTimes.push_back(eta);
@@ -97,13 +98,13 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
         // First check the already assigned slots to see where we need to fit the flight in
         TimeVectorIterator i = estimatedArrivalTimes.begin();
         SG_LOG(SG_ATC, SG_DEBUG, "Checking eta slots " << eta << ": ");
-        
+
         // is this needed - just a debug output?
         for (i = estimatedArrivalTimes.begin();
                 i != estimatedArrivalTimes.end(); i++) {
             SG_LOG(SG_ATC, SG_BULK, "Stored time : " << (*i));
         }
-        
+
         // if the flight is before the first scheduled slot + separation
         i = estimatedArrivalTimes.begin();
         if ((eta + separation) < (*i)) {
@@ -113,11 +114,11 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
             slotHousekeeping(newEta);
             return newEta;
         }
-        
+
         // else, look through the rest of the slots
         while ((i != estimatedArrivalTimes.end()) && (!found)) {
             TimeVectorIterator j = i + 1;
-            
+
             // if the flight is after the last scheduled slot check if separation is needed
             if (j == estimatedArrivalTimes.end()) {
                 if (((*i) + separation) < eta) {
@@ -180,7 +181,7 @@ void ActiveRunway::slotHousekeeping(time_t newEta)
     // add the slot to the vector and resort the vector
     estimatedArrivalTimes.push_back(newEta);
     sort(estimatedArrivalTimes.begin(), estimatedArrivalTimes.end());
-    
+
     // do some housekeeping : remove any slots that are past
     time_t now = globals->get_time_params()->get_cur_time();
 
@@ -204,7 +205,7 @@ void ActiveRunway::printDepartureQueue()
         SG_LOG(SG_ATC, SG_DEBUG, "     " << acft->getCallSign() << " " << acft->getTakeOffStatus());
         SG_LOG(SG_ATC, SG_DEBUG, " " << acft->_getLatitude() << " " << acft->_getLongitude() << acft->getSpeed() << " " << acft->getAltitude());
     }
-    
+
 }
 
 /* Fetch the first aircraft in the departure cue with a certain status */
@@ -213,11 +214,11 @@ SGSharedPtr<FGAIAircraft>ActiveRunway::getFirstOfStatus(int stat) const
     auto it = std::find_if(departureQueue.begin(), departureQueue.end(), [stat](const SGSharedPtr<FGAIAircraft>& acft) {
         return acft->getTakeOffStatus() == stat;
     });
-    
+
     if (it == departureQueue.end()) {
         return {};
     }
-    
+
     return *it;
 }
 
@@ -226,7 +227,7 @@ SGSharedPtr<FGAIAircraft> ActiveRunway::getFirstAircraftInDepartureQueue() const
     if (departureQueue.empty()) {
         return {};
     }
-    
+
     return departureQueue.front();
 };
 
@@ -241,7 +242,7 @@ void ActiveRunway::addToDepartureQueue(FGAIAircraft *ac)
 /***************************************************************************
  * FGTrafficRecord
  **************************************************************************/
- 
+
 FGTrafficRecord::FGTrafficRecord():
         id(0), waitsForId(0),
         currentPos(0),
@@ -252,7 +253,7 @@ FGTrafficRecord::FGTrafficRecord():
         allowPushback(true),
         priority(0),
         timer(0),
-        latitude(0), longitude(0), heading(0), speed(0), altitude(0), radius(0)
+        heading(0), speed(0), altitude(0), radius(0)
 {
 }
 
@@ -289,12 +290,27 @@ void FGTrafficRecord::setAircraft(FGAIAircraft *ref)
     aircraft = ref;
 }
 
-FGAIAircraft* FGTrafficRecord::getAircraft() const
-{
-    return aircraft.ptr();
-}
+bool FGTrafficRecord::isDead() const {
+        if (!aircraft) {
+            return true;
+        }
+        return aircraft->getDie();
+    }
 
-/*
+    void FGTrafficRecord::clearATCController() const {
+        if (aircraft) {
+           aircraft->clearATCController();
+        }
+    }
+
+    FGAIAircraft* FGTrafficRecord::getAircraft() const
+    {
+        if(aircraft.valid()) {
+          return aircraft.ptr();
+        }
+        return 0;
+    }
+/**
 * Check if another aircraft is ahead of the current one, and on the same taxiway
 * @return true / false if this is/isn't the case.
 */
@@ -339,8 +355,7 @@ void FGTrafficRecord::setPositionAndHeading(double lat, double lon,
         double hdg, double spd,
         double alt)
 {
-    latitude = lat;
-    longitude = lon;
+    this->pos = SGGeod::fromDegFt(lon, lat, alt);
     heading = hdg;
     speed = spd;
     altitude = alt;
@@ -504,7 +519,7 @@ bool FGTrafficRecord::isActive(int margin) const
     if (aircraft->getDie()) {
         return false;
     }
-    
+
     time_t now = globals->get_time_params()->get_cur_time();
     time_t deptime = aircraft->getTrafficRef()->getDepartureTime();
     return ((now + margin) > deptime);
@@ -532,9 +547,9 @@ bool FGTrafficRecord::pushBackAllowed() const
 
 /***************************************************************************
  * FGATCInstruction
- * 
+ *
  **************************************************************************/
- 
+
 FGATCInstruction::FGATCInstruction()
 {
     holdPattern = false;

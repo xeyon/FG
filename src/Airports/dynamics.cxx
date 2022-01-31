@@ -86,7 +86,7 @@ public:
 
   unsigned int refCount;
   FGParkingRef parking;
-    
+
 // we don't want an owning ref here, otherwise we
 // have a circular ownership from AirportDynamics -> us
   SGWeakPtr<FGAirportDynamics> dynamics;
@@ -215,6 +215,7 @@ FGAirportDynamics::FGAirportDynamics(FGAirport * ap):
     startupController    (this),
     towerController      (this),
     approachController   (this),
+    groundController     (this),
     atisSequenceIndex(-1),
     atisSequenceTimeStamp(0.0)
 
@@ -232,7 +233,7 @@ FGAirportDynamics::~FGAirportDynamics()
 void FGAirportDynamics::init()
 {
     groundController.setTowerController(&towerController);
-    groundController.init(this);
+    groundController.init();
 }
 
 FGParking* FGAirportDynamics::innerGetAvailableParking(double radius, const string & flType,
@@ -342,13 +343,13 @@ ParkingAssignment FGAirportDynamics::getAvailableParkingByName(const std::string
     auto it = std::find_if(parkings.begin(), parkings.end(), [this, name] (FGParkingRef parking){
        if (parking->name() != name)
            return false;
-        
+
         return this->isParkingAvailable(parking);
     });
-    
+
     if (it == parkings.end())
         return {}; // no assignment possible
-    
+
     return {*it, this};
 }
 
@@ -812,7 +813,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
         if (!landing.empty()) {
             runway = chooseRwyByHeading(landing, heading);
         }
-        
+
         if (runway.empty()) { //fallback
             runway = chooseRunwayFallback();
         }
@@ -886,6 +887,34 @@ const string FGAirportDynamics::getId() const
 // operations is completely arbitrary. As such, is a short cut I need to take now,
 // so that at least I can start working on assigning different frequencies to different
 // operations.
+
+int FGAirportDynamics::getApproachFrequency(unsigned nr)
+{
+    int approachFreq = 0;
+    if (nr < 2) {
+        SG_LOG(SG_ATC, SG_ALERT,
+               "Leg value is smaller than two at " << SG_ORIGIN);
+    }
+
+    const intVec& freqApproach(parent()->groundNetwork()->getApproachFrequencies());
+
+    if (freqApproach.size() == 0) {
+        return 0;
+    }
+    if ((freqApproach.size() > nr - 1) && (nr > 1)) {
+        approachFreq = freqApproach[nr - 1];
+    }
+    if ((freqApproach.size() < nr - 1) && (nr > 1)) {
+        approachFreq =
+            (freqApproach.size() <
+             (nr - 1)) ? freqApproach[freqApproach.size() -
+                                     1] : freqApproach[nr - 2];
+    }
+    if ((freqApproach.size() >= nr - 1) && (nr > 1)) {
+        approachFreq = freqApproach[nr - 2];
+    }
+    return approachFreq;
+}
 
 int FGAirportDynamics::getGroundFrequency(unsigned leg)
 {

@@ -63,7 +63,7 @@ private:
     // the ground-network owns the nodes
     const FGTaxiNode* startNode;
     const FGTaxiNode* endNode;
-    
+
     bool isActive;
     BlockList blockTimes;
 
@@ -73,26 +73,26 @@ private:
     friend class FGGroundNetwork;
 public:
     FGTaxiSegment(FGTaxiNode* start, FGTaxiNode* end);
-  
+
     void setIndex        (int val) {
         index     = val;
     };
-  
+
     void setDimensions(double elevation);
     void block(int id, time_t blockTime, time_t now);
-    void unblock(time_t now); 
+    void unblock(time_t now);
     bool hasBlock(time_t now);
 
     FGTaxiNodeRef getEnd() const;
     FGTaxiNodeRef getStart() const;
-  
+
     double getLength() const;
-  
+
     // compute the center of the arc
     SGGeod getCenter() const;
-  
+
     double getHeading() const;
-    
+
     int getIndex() {
       return index;
     };
@@ -154,7 +154,7 @@ public:
         return nodes.empty();
     };
     bool next(FGTaxiNodeRef& nde, int *rte);
-  
+
     void first() {
         currNode = nodes.begin();
         currRoute = routes.begin();
@@ -179,7 +179,7 @@ private:
     bool networkInitialized;
 
     int version;
-  
+
     FGTaxiSegmentVector segments;
 
     FGAirport *parent;
@@ -234,7 +234,7 @@ private:
 public:
     FGGroundNetwork(FGAirport* pr);
     ~FGGroundNetwork();
-    
+
     void setVersion (int v) { version = v;};
     int getVersion() { return version; };
 
@@ -274,7 +274,7 @@ public:
     */
     FGTaxiNodeVector findSegmentsFrom(const FGTaxiNodeRef& from) const;
 
-  
+
     FGTaxiRoute findShortestRoute(FGTaxiNode* start, FGTaxiNode* end, bool fullSearch=true);
 
 
@@ -284,9 +284,10 @@ public:
     void addVersion(int v) {version = v; };
     void unblockAllSegments(time_t now);
 
+    const intVec& getApproachFrequencies() const;
     const intVec& getTowerFrequencies() const;
     const intVec& getGroundFrequencies() const;
-    
+
 };
 
 

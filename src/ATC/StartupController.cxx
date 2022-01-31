@@ -71,8 +71,6 @@ FGStartupController::FGStartupController(FGAirportDynamics *par):
 
 FGStartupController::~FGStartupController()
 {
-    _isDestroying = true;
-    clearTrafficControllers(activeTraffic);
 }
 
 void FGStartupController::announcePosition(int id,
@@ -85,8 +83,8 @@ void FGStartupController::announcePosition(int id,
 {
     init();
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
+
     // Add a new TrafficRecord if no one exsists for this aircraft.
     if (i == activeTraffic.end() || activeTraffic.empty()) {
         FGTrafficRecord rec;
@@ -96,7 +94,7 @@ void FGStartupController::announcePosition(int id,
         rec.setRunway(intendedRoute->getRunway());
         rec.setLeg(leg);
         rec.setPositionAndIntentions(currentPosition, intendedRoute);
-        //rec.setCallSign(callsign);
+        rec.setCallsign(ref->getCallSign());
         rec.setAircraft(ref);
         rec.setHoldPosition(true);
         activeTraffic.push_back(rec);
@@ -104,59 +102,6 @@ void FGStartupController::announcePosition(int id,
         i->setPositionAndIntentions(currentPosition, intendedRoute);
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
 
-    }
-}
-
-// NOTE:
-// IF WE MAKE TRAFFICRECORD A MEMBER OF THE BASE CLASS
-// THE FOLLOWING THREE FUNCTIONS: SIGNOFF, HAS INSTRUCTION AND GETINSTRUCTION CAN
-// BECOME DEVIRTUALIZED AND BE A MEMBER OF THE BASE ATCCONTROLLER CLASS
-// WHICH WOULD SIMPLIFY CODE MAINTENANCE.
-// Note that this function is probably obsolete
-bool FGStartupController::hasInstruction(int id)
-{
-    // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
-    if (i == activeTraffic.end() || activeTraffic.empty()) {
-        SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
-    } else {
-        return i->hasInstruction();
-    }
-    return false;
-}
-
-
-FGATCInstruction FGStartupController::getInstruction(int id)
-{
-    // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
-    if (i == activeTraffic.end() || activeTraffic.empty()) {
-        SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
-    } else {
-        return i->getInstruction();
-    }
-    return FGATCInstruction();
-}
-
-void FGStartupController::signOff(int id)
-{
-    // ensure we don't modify activeTraffic during destruction
-    if (_isDestroying)
-        return;
-
-    // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
-    
-    if (i == activeTraffic.end() || activeTraffic.empty()) {
-        SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: Aircraft without traffic record is signing off from tower at " << SG_ORIGIN);
-    } else {
-        SG_LOG(SG_ATC, SG_DEBUG, i->getAircraft()->getCallSign() << " signing off from startupcontroller");
-        i = activeTraffic.erase(i);
     }
 }
 
@@ -198,9 +143,9 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
         double dt)
 {
     // Search activeTraffic for a record matching our id
-    TrafficVectorIterator i = searchActiveTraffic(activeTraffic, id);
+    TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
 	TrafficVectorIterator current, closest;
-	
+
     if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
@@ -225,9 +170,10 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
     time_t startTime = i->getAircraft()->getTrafficRef()->getDepartureTime();
     time_t now = globals->get_time_params()->get_cur_time();
 
-    SG_LOG(SG_ATC, SG_BULK, i->getAircraft()->getTrafficRef()->getCallSign()
-         << " is scheduled to depart in " << startTime-now << " seconds. Available = " << available
-         << " at parking " << getGateName(i->getAircraft()));
+
+    if ((startTime - now) > 0) {
+        SG_LOG(SG_ATC, SG_BULK, i->getAircraft()->getTrafficRef()->getCallSign() << " is scheduled to depart in " << startTime - now << " seconds. Available = " << available << " at parking " << getGateName(i->getAircraft()));
+    }
 
     if ((now - lastTransmission) > 3 + (rand() % 15)) {
         available = true;
@@ -317,7 +263,7 @@ void FGStartupController::render(bool visible)
                 SG_LOG(SG_ATC, SG_BULK, "rendering for " << i->getAircraft()->getCallSign() << "pos = " << pos);
                 if (pos > 0) {
                     FGTaxiSegment *segment = groundNet->findSegment(pos);
-                    SGGeod start(SGGeod::fromDeg((i->getLongitude()), (i->getLatitude())));
+                    SGGeod start = i->getPos();
                     SGGeod end  (segment->getEnd()->geod());
 
                     double length = SGGeodesy::distanceM(start, end);
@@ -480,11 +426,17 @@ void FGStartupController::render(bool visible)
 }
 
 string FGStartupController::getName() {
-    return string(parent->getId() + "-startup");
+    return string(parent->parent()->getName() + "-Startup");
 }
 
 void FGStartupController::update(double dt)
 {
-    FGATCController::eraseDeadTraffic(activeTraffic);
+    FGATCController::eraseDeadTraffic();
+}
+
+int FGStartupController::getFrequency() {
+    int groundFreq = parent->getGroundFrequency(2);
+    int towerFreq = parent->getTowerFrequency(2);
+    return groundFreq>0?groundFreq:towerFreq;
 }
 

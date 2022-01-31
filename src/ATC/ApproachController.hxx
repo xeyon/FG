@@ -28,8 +28,7 @@
 #include <osg/Shape>
 
 #include <simgear/compiler.h>
-// There is probably a better include than sg_geodesy to get the SG_NM_TO_METER...
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -38,28 +37,24 @@
 #include <ATC/trafficcontrol.hxx>
 
 /******************************************************************************
- * class FGTowerControl
+ * class FGApproachController
  *****************************************************************************/
 class FGApproachController : public FGATCController
 {
 private:
-    TrafficVector activeTraffic;
     ActiveRunwayVec activeRunways;
-    FGAirportDynamics *parent;
-
+    /**Returns the frequency to be used. */
+    int getFrequency();
 public:
     FGApproachController(FGAirportDynamics * parent);
     virtual ~FGApproachController();
-    
+
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon,
                                   double hdg, double spd, double alt, double radius, int leg,
                                   FGAIAircraft *aircraft);
-    virtual void             signOff(int id);
     virtual void             updateAircraftInformation(int id, double lat, double lon,
             double heading, double speed, double alt, double dt);
-    virtual bool             hasInstruction(int id);
-    virtual FGATCInstruction getInstruction(int id);
 
     virtual void render(bool);
     virtual std::string getName();
@@ -67,12 +62,6 @@ public:
 
     ActiveRunway* getRunway(const std::string& name);
 
-    bool hasActiveTraffic() {
-        return ! activeTraffic.empty();
-    };
-    TrafficVector &getActiveTraffic() {
-        return activeTraffic;
-    };
 };
 
 #endif

@@ -79,6 +79,8 @@ FGATCController::~FGATCController()
         auto mgr = globals->get_subsystem<FGATCManager>();
         mgr->removeController(this);
     }
+    _isDestroying = true;
+    clearTrafficControllers();
 }
 
 void FGATCController::init()
@@ -124,44 +126,28 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     int ground_to_air=0;
 
     //double commFreqD;
-    sender = rec->getAircraft()->getTrafficRef()->getCallSign();
+    sender = rec->getCallsign();
     if (rec->getAircraft()->getTaxiClearanceRequest()) {
         instructionText = "push-back and taxi";
     } else {
         instructionText = "taxi";
     }
-   
+
     SG_LOG(SG_ATC, SG_DEBUG, "transmitting for: " << sender << "Leg = " << rec->getLeg());
 
     auto depApt = rec->getAircraft()->getTrafficRef()->getDepartureAirport();
 
-    //FIXME Must be transferred to controller and fallback for GROUND -> TOWER if GROUND not set
-    switch (rec->getLeg()) {
-    case 1:
-    case 2:
-        // avoid crash FLIGHTGEAR-ER
-        if (!depApt) {
-            SG_LOG(SG_ATC, SG_DEV_ALERT, "TrafficRec has empty departure airport, can't transmit");
-            return;
-        }
-
-        freqId = rec->getNextFrequency();
-        stationFreq = depApt->getDynamics()->getGroundFrequency(rec->getLeg() + freqId);
-        taxiFreq = depApt->getDynamics()->getGroundFrequency(2);
-        towerFreq = depApt->getDynamics()->getTowerFrequency(2);
-        receiver = depApt->getName() + "-Ground";
-        atisInformation = depApt->getDynamics()->getAtisSequence();
-        break;
-    case 3:
-        if (!depApt) {
-            SG_LOG(SG_ATC, SG_DEV_ALERT, "TrafficRec has empty departure airport, can't transmit");
-            return;
-        }
-
-        receiver = depApt->getName() + "-Tower";
-        break;
+    if (!depApt) {
+        SG_LOG(SG_ATC, SG_DEV_ALERT, "TrafficRec has empty departure airport, can't transmit");
+        return;
     }
-    
+
+    stationFreq = getFrequency();
+    taxiFreq = depApt->getDynamics()->getGroundFrequency(2);
+    towerFreq = depApt->getDynamics()->getTowerFrequency(2);
+    receiver = getName();
+    atisInformation = depApt->getDynamics()->getAtisSequence();
+
     // Swap sender and receiver value in case of a ground to air transmission
     if (msgDir == ATC_GROUND_TO_AIR) {
         string tmp = sender;
@@ -169,7 +155,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         receiver = tmp;
         ground_to_air = 1;
     }
-    
+
     switch (msgId) {
     case MSG_ANNOUNCE_ENGINE_START:
         text = sender + ". Ready to Start up.";
@@ -262,7 +248,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         if (rec->getAircraft()->getTaxiClearanceRequest()) {
             text = receiver + ". Push-back approved. " + sender + ".";
         } else {
-            text = receiver + ". Cleared to Taxi. " + sender + "."; 
+            text = receiver + ". Cleared to Taxi. " + sender + ".";
         }
         break;
     case MSG_HOLD_PUSHBACK_CLEARANCE:
@@ -306,6 +292,16 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         //text = "test2";
         SG_LOG(SG_ATC, SG_DEBUG, "2 Currently at leg " << rec->getLeg());
         break;
+    case MSG_CLEARED_FOR_TAKEOFF:
+        activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
+        //activeRunway = "test";
+        text = receiver + ". Cleared for takeoff runway " + activeRunway + ". " + sender + ".";
+        break;
+    case MSG_ACKNOWLEDGE_CLEARED_FOR_TAKEOFF:
+        activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
+        text = receiver + " Roger. Cleared for takeoff runway " + activeRunway + ". " + sender + ".";
+        //text = "test2";
+        break;
     case MSG_SWITCH_TOWER_FREQUENCY:
         towerFreqStr = formatATCFrequency3_2(towerFreq);
         text = receiver + " Contact Tower at " + towerFreqStr + ". " + sender + ".";
@@ -323,7 +319,7 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         text = text + sender + ". Transmitting unknown Message.";
         break;
     }
-    
+
     const bool atcAudioEnabled = fgGetBool("/sim/sound/atc/enabled", false);
     if (audible && atcAudioEnabled) {
         double onBoardRadioFreq0 =
@@ -333,35 +329,36 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         int onBoardRadioFreqI0 = (int) floor(onBoardRadioFreq0 * 100 + 0.5);
         int onBoardRadioFreqI1 = (int) floor(onBoardRadioFreq1 * 100 + 0.5);
         SG_LOG(SG_ATC, SG_DEBUG, "Using " << onBoardRadioFreq0 << ", " << onBoardRadioFreq1 << " and " << stationFreq << " for " << text << endl);
+        if( stationFreq == 0 ) {
+           SG_LOG(SG_ATC, SG_DEBUG, getName() << " stationFreq not found");
+        }
 
         // Display ATC message only when one of the radios is tuned
         // the relevant frequency.
         // Note that distance attenuation is currently not yet implemented
-                
+
         if ((stationFreq > 0)&&
             ((onBoardRadioFreqI0 == stationFreq)||
              (onBoardRadioFreqI1 == stationFreq))) {
             if (rec->allowTransmissions()) {
-                
+
                 if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
                     SG_LOG(SG_ATC, SG_DEBUG, "Using ITM radio propagation");
                     FGRadioTransmission* radio = new FGRadioTransmission();
                     SGGeod sender_pos;
                     double sender_alt_ft, sender_alt;
                     if(ground_to_air) {
-                  sender_pos = parent->parent()->geod();
-                     }
+                         sender_pos = parent->parent()->geod();
+                    }
                     else {
-                          sender_alt_ft = rec->getAltitude();
-                          sender_alt = sender_alt_ft * SG_FEET_TO_METER;
-                          sender_pos= SGGeod::fromDegM( rec->getLongitude(),
-                                 rec->getLatitude(), sender_alt );
+                          sender_pos= rec->getPos();
                     }
                     double frequency = ((double)stationFreq) / 100;
                     radio->receiveATC(sender_pos, frequency, text, ground_to_air);
                     delete radio;
                 }
                 else {
+                    SG_LOG(SG_ATC, SG_BULK, "Transmitting " << text);
                     fgSetString("/sim/messages/atc", text.c_str());
                 }
             }
@@ -370,6 +367,48 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         //FGATCDialogNew::instance()->addEntry(1, text);
     }
 }
+
+void FGATCController::signOff(int id)
+{
+    TrafficVectorIterator i = searchActiveTraffic(id);
+    if (i == activeTraffic.end()) {
+        SG_LOG(SG_ATC, SG_ALERT,
+               "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN);
+        return;
+    }
+    activeTraffic.erase(i);
+    SG_LOG(SG_ATC, SG_DEBUG, i->getCallsign() << " signing off from " << getName() );
+}
+
+bool FGATCController::hasInstruction(int id)
+{
+    // Search activeTraffic for a record matching our id
+    TrafficVectorIterator i = searchActiveTraffic(id);
+
+    if (i == activeTraffic.end()) {
+        SG_LOG(SG_ATC, SG_ALERT,
+               "AI error: checking ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
+    } else {
+        return i->hasInstruction();
+    }
+    return false;
+}
+
+
+FGATCInstruction FGATCController::getInstruction(int id)
+{
+    // Search activeTraffic for a record matching our id
+    TrafficVectorIterator i = searchActiveTraffic(id);
+
+    if (i == activeTraffic.end() || (activeTraffic.size() == 0)) {
+        SG_LOG(SG_ATC, SG_ALERT,
+               "AI error: requesting ATC instruction for aircraft without traffic record at " << SG_ORIGIN);
+    } else {
+        return i->getInstruction();
+    }
+    return FGATCInstruction();
+}
+
 
 /*
 * Format integer frequency xxxyy as xxx.yy
@@ -402,32 +441,33 @@ string FGATCController::genTransponderCode(const string& fltRules)
     return std::to_string(val);
 }
 
-void FGATCController::eraseDeadTraffic(TrafficVector& vec)
+void FGATCController::eraseDeadTraffic()
 {
-    auto it = std::remove_if(vec.begin(), vec.end(), [](const FGTrafficRecord& traffic)
+    auto it = std::remove_if(activeTraffic.begin(), activeTraffic.end(), [](const FGTrafficRecord& traffic)
     {
-        if (!traffic.getAircraft()) {
-            return true;
-        }
-        return traffic.getAircraft()->getDie();
+        return traffic.isDead();
     });
-    vec.erase(it, vec.end());
+    activeTraffic.erase(it, activeTraffic.end());
 }
 
-void FGATCController::clearTrafficControllers(TrafficVector& vec)
+/*
+* Search activeTraffic vector to find matching id
+* @param id integer to search for in the vector
+* @return the matching item OR activeTraffic.end()
+*/
+TrafficVectorIterator FGATCController::searchActiveTraffic(int id)
 {
-    for (const auto& traffic : vec) {
-        if (!traffic.getAircraft()) {
-            continue;
-        }
+    return std::find_if(activeTraffic.begin(), activeTraffic.end(),
+                        [id] (const FGTrafficRecord& rec)
+                        { return rec.getId() == id; }
+                        );
+}
 
-        traffic.getAircraft()->clearATCController();
+void FGATCController::clearTrafficControllers()
+{
+    for (const auto& traffic : activeTraffic) {
+        traffic.clearATCController();
     }
 }
 
-TrafficVectorIterator FGATCController::searchActiveTraffic(TrafficVector& vec, int id)
-{
-    return std::find_if(vec.begin(), vec.end(), [id] (const FGTrafficRecord& rec)
-                 { return rec.getId() == id; });
-}
 
