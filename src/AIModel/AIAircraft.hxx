@@ -81,6 +81,7 @@ public:
     const std::string& getCompany() const { return company; }
     void setCompany(const std::string& comp) { company = comp;};
 
+//ATC
     void announcePositionToController(); //TODO have to be public?
     void processATC(const FGATCInstruction& instruction);
     void setTaxiClearanceRequest(bool arg) { needsTaxiClearance = arg; };

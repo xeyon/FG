@@ -250,13 +250,13 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOffRunway(const SGGeod& aGeod, FGR
                  [runwayLine, cartPos, marginMSqr] (const FGTaxiNodeRef& a)
     {
         if (a->getIsOnRunway()) return false;
-        
+
         // exclude parking positions from consideration. This helps to
         // exclude airports whose ground nets only list parking positions,
         // since these typically produce bad results. See discussion in
         // https://sourceforge.net/p/flightgear/codetickets/2110/
         if (a->type() == FGPositioned::PARKING) return false;
-        
+
         return (distSqr(runwayLine, a->cart()) >= marginMSqr);
     });
 
@@ -564,7 +564,10 @@ FGTaxiSegment* FGGroundNetwork::findSegmentByHeading(const FGTaxiNode* from, con
     return best; // not found
 }
 
-
+const intVec& FGGroundNetwork::getApproachFrequencies() const
+{
+    return freqApproach;
+}
 
 const intVec& FGGroundNetwork::getTowerFrequencies() const
 {

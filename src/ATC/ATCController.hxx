@@ -28,8 +28,7 @@
 #include <osg/Shape>
 
 #include <simgear/compiler.h>
-// There is probably a better include than sg_geodesy to get the SG_NM_TO_METER...
-#include <simgear/math/sg_geodesy.hxx>
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/SGReferenced.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
@@ -46,19 +45,25 @@ private:
 
 
 protected:
+    // guard variable to avoid modifying state during destruction
+    bool _isDestroying = false;
     bool initialized;
     bool available;
     time_t lastTransmission;
+    TrafficVector activeTraffic;
 
     double dt_count;
     osg::Group* group;
+    FGAirportDynamics *parent = nullptr;
 
     std::string formatATCFrequency3_2(int );
     std::string genTransponderCode(const std::string& fltRules);
     bool isUserAircraft(FGAIAircraft*);
-    void clearTrafficControllers(TrafficVector& vec);
-    TrafficVectorIterator searchActiveTraffic(TrafficVector& vec, int id);
-    void eraseDeadTraffic(TrafficVector& vec);
+    void clearTrafficControllers();
+    TrafficVectorIterator searchActiveTraffic(int id);
+    void eraseDeadTraffic();
+    /**Returns the frequency to be used. */
+    virtual int getFrequency() = 0;
 public:
     typedef enum {
         MSG_ANNOUNCE_ENGINE_START,
@@ -81,6 +86,8 @@ public:
         MSG_ACKNOWLEDGE_RESUME_TAXI,
         MSG_REPORT_RUNWAY_HOLD_SHORT,
         MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT,
+        MSG_CLEARED_FOR_TAKEOFF,
+        MSG_ACKNOWLEDGE_CLEARED_FOR_TAKEOFF,
         MSG_SWITCH_TOWER_FREQUENCY,
         MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY
     } AtcMsgId;
@@ -97,11 +104,19 @@ public:
                                   double lat, double lon,
                                   double hdg, double spd, double alt, double radius, int leg,
                                   FGAIAircraft *aircraft) = 0;
-    virtual void             signOff(int id) = 0;
     virtual void             updateAircraftInformation(int id, double lat, double lon,
             double heading, double speed, double alt, double dt) = 0;
-    virtual bool             hasInstruction(int id) = 0;
-    virtual FGATCInstruction getInstruction(int id) = 0;
+
+    void signOff(int id);
+    bool hasInstruction(int id);
+    FGATCInstruction getInstruction(int id);
+
+    bool hasActiveTraffic() {
+        return ! activeTraffic.empty();
+    };
+    TrafficVector &getActiveTraffic() {
+        return activeTraffic;
+    };
 
     double getDt() {
         return dt_count;
@@ -113,16 +128,10 @@ public:
     std::string getGateName(FGAIAircraft *aircraft);
     virtual void render(bool) = 0;
     virtual std::string getName()  = 0;
-
     virtual void update(double) = 0;
 
 
-protected:
-    // guard variable to avoid modifying state during destruction
-    bool _isDestroying = false;
-
 private:
-
     AtcMsgDir lastTransmissionDirection;
 };
 

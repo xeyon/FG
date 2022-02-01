@@ -48,7 +48,8 @@ using std::string;
 using std::cerr;
 using std::endl;
 
-//#include <Airports/trafficcontroller.hxx>
+#include <ATC/ATCController.hxx>
+#include <ATC/trafficcontrol.hxx>
 
 FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI Aircraft,
       * otherwise traffic detection isn't working as expected.*/
@@ -651,7 +652,7 @@ void FGAIAircraft::announcePositionToController() {
     // NOTE: As of July, 30, 2011, the post-creation leg updating is no longer happening. 
     // Leg numbers are updated only once the aircraft passes the last waypoint created for that legm so I should probably just use
     // the original leg numbers here!
-    switch (leg) {
+    switch (leg) { 
       case 1:              // Startup and Push back
         if (trafficRef->getDepartureAirport()->getDynamics())
             controller = trafficRef->getDepartureAirport()->getDynamics()->getStartupController();
@@ -755,9 +756,7 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction) {
         }
     }
     if (instruction.getChangeAltitude()) {}
-
 }
-
 
 void FGAIAircraft::handleFirstWaypoint() {
     bool eraseWaypoints;         //TODO YAGNI

@@ -32,7 +32,7 @@
 class FGAirportDynamics;
 
 /**************************************************************************************
- * class FGGroundNetWork
+ * class FGGroundController
  *************************************************************************************/
 class FGGroundController : public FGATCController
 {
@@ -42,14 +42,10 @@ private:
     bool networkInitialized;
     int count;
     int version;
-  
-
-    TrafficVector activeTraffic;
-    TrafficVectorIterator currTraffic;
 
     FGTowerController *towerController;
-    FGAirport *parent;
-    FGAirportDynamics* dynamics;
+    /**Returns the frequency to be used. */
+    int getFrequency();
 
 
     void checkSpeedAdjustment(int id, double lat, double lon,
@@ -61,13 +57,12 @@ private:
     void updateStartupTraffic(TrafficVectorIterator i, int& priority, time_t now);
     bool updateActiveTraffic(TrafficVectorIterator i, int& priority, time_t now);
 public:
-    FGGroundController();
+    FGGroundController(FGAirportDynamics *par);
     ~FGGroundController();
-    
+
     void setVersion (int v) { version = v;};
     int getVersion() { return version; };
 
-    void init(FGAirportDynamics* pr);
     bool exists() {
         return hasNetwork;
     };
@@ -76,14 +71,10 @@ public:
     };
 
 
-	virtual TrafficVectorIterator searchActiveTraffic(int id);
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon, double hdg, double spd, double alt,
                                   double radius, int leg, FGAIAircraft *aircraft);
-    virtual void signOff(int id);
     virtual void updateAircraftInformation(int id, double lat, double lon, double heading, double speed, double alt, double dt);
-    virtual bool hasInstruction(int id);
-    virtual FGATCInstruction getInstruction(int id);
 
     bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                 AtcMsgDir msgDir);

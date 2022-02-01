@@ -334,7 +334,7 @@ void FGATCManager::update ( double time ) {
         }
 #if 0
         // Test code: Print how far we're progressing along the taxi route. 
-        SG_LOG(SG_ATC, SG_DEBUG, "Size of waypoint cue " << size);
+        SG_LOG(SG_ATC, SG_DEBUG, "Size of waypoint queue " << size);
         for (int i = 0; i < size; i++) {
             int val = fp->getRouteIndex(i);
             SG_LOG(SG_ATC, SG_BULK, fp->getWayPoint(i)->getName() << " ");
