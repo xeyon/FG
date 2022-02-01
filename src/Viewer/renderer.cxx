@@ -851,8 +851,10 @@ FGRenderer::update( ) {
         _updateVisitor->setViewData(current__view->getViewPosition(),
                                     current__view->getViewOrientation());
         //_updateVisitor->setViewData(eye2, center3);
-        SGVec3f direction(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
-        _updateVisitor->setLight(direction, l->scene_ambient(),
+        SGVec3f sundirection(l->sun_vec()[0], l->sun_vec()[1], l->sun_vec()[2]);
+	SGVec3f moondirection(l->moon_vec()[0], l->moon_vec()[1], l->moon_vec()[2]);
+	
+	_updateVisitor->setLight(sundirection,moondirection, l->scene_ambient(),
                                  l->scene_diffuse(), l->scene_specular(),
                                  l->adj_fog_color(),
                                  l->get_sun_angle()*SGD_RADIANS_TO_DEGREES);
@@ -901,7 +903,8 @@ FGRenderer::updateSky()
     scolor.cloud_color = SGVec3f(l->cloud_color().data());
     scolor.sun_angle   = l->get_sun_angle();
     scolor.moon_angle  = l->get_moon_angle();
-
+    scolor.altitude_m =  altitude_m;
+    
     Ephemeris* ephemerisSub = globals->get_subsystem<Ephemeris>();
     double delta_time_sec = _sim_delta_sec->getDoubleValue();
     _sky->reposition( sstate, *ephemerisSub->data(), delta_time_sec );
