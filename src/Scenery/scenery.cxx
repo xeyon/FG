@@ -283,6 +283,7 @@ public:
         setupPropertyListener(elevationMeshNode, "lod-range-factor");
         setupPropertyListener(elevationMeshNode, "sample-ratio");
         setupPropertyListener(elevationMeshNode, "vertical-scale");
+        setupPropertyListener(elevationMeshNode, "separate-water-mesh");
 
         // We also need to set the maximum range based on the LOD ranges
         SGPropertyNode_ptr lodNode = fgGetNode(lod_node_path, true);
@@ -307,6 +308,7 @@ public:
     virtual void valueChanged(SGPropertyNode * node)
     {
         float f = node->getFloatValue();
+        bool  b = node->getBoolValue();
         std::string name(node->getNameString());
 
         if (name == "constraint-gap-m") {
@@ -315,6 +317,8 @@ public:
             SGSceneFeatures::instance()->setVPBSampleRatio(f);
         } else if (name == "vertical-scale") {
             SGSceneFeatures::instance()->setVPBVerticalScale(f);
+        } else if (name == "separate-water-mesh") {
+            SGSceneFeatures::instance()->setVPBSeparateWaterMesh(b);
         } else {
             SG_LOG(SG_TERRAIN, SG_ALERT, "Unexpected property in listener " << node->getPath());
         }
