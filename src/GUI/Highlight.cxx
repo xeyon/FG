@@ -347,7 +347,7 @@ struct FdmInitialisedListener : SGPropertyChangeListener
     }
     ~FdmInitialisedListener()
     {
-        globals->get_props()->getNode("sim/fdm-initialized")->removeChangeListener(this);
+        m_fdm_initialised->removeChangeListener(this);
     }
     SGPropertyNode_ptr m_fdm_initialised;
 };
