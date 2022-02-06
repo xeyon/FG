@@ -118,7 +118,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         while (route.next(node, &rte))
         {
             char buffer[20];
-            sprintf (buffer, "pushback-%03d",  (short)node->getIndex());
+            snprintf (buffer, sizeof(buffer), "pushback-%03d",  (short)node->getIndex());
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), node->geod(), dep->getElevation(), vTaxiBackward);
 
             /*
@@ -179,7 +179,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
             SGGeodesy::direct(parking->geod(), parkingHeading,
                               (((double)i / numSegments) * distance), pushForwardPt, az2);
             char buffer[20];
-            sprintf(buffer, "pushforward-%03d", (short)i);
+            snprintf(buffer, sizeof(buffer), "pushforward-%03d", (short)i);
             FGAIWaypoint *wpt = createOnGround(ac, string(buffer), pushForwardPt, dep->getElevation(), vTaxiReduced);
 
             wpt->setRouteIndex(pushForwardSegment->getIndex());

@@ -247,7 +247,9 @@ public:
     { return parent; }
 
     FGTaxiNodeRef findNearestNode(const SGGeod& aGeod) const;
-    FGTaxiNodeRef findNearestNodeOnRunway(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
+    FGTaxiNodeRef findNearestNodeOnRunwayEntry(const SGGeod& aGeod) const;
+    /**Returns the nearest node in that is in direction of runway heading. Falls back to ones behind aircraft*/
+    FGTaxiNodeRef findNearestNodeOnRunwayExit(const SGGeod& aGeod, FGRunway* aRunway = NULL) const;
 
     FGTaxiNodeRef findNearestNodeOffRunway(const SGGeod& aGeod, FGRunway* aRunway, double distanceM) const;
 

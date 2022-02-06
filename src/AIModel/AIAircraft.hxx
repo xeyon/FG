@@ -32,6 +32,23 @@ class FGAIFlightPlan;
 class FGATCController;
 class FGATCInstruction;
 class FGAIWaypoint;
+class sg_ofstream;
+
+namespace AILeg
+{
+    enum Type
+    {
+      STARTUP_PUSHBACK = 1,
+      TAXI = 2,
+      TAKEOFF = 3,
+      CLIMB = 4,
+      CRUISE = 5,
+      APPROACH = 6,
+      LANDING = 7,
+      PARKING_TAXI = 8,
+      PARKING = 9
+    };
+}
 
 class FGAIAircraft : public FGAIBaseAircraft {
 
@@ -57,7 +74,8 @@ public:
     FGAIFlightPlan* GetFlightPlan() const { return fp.get(); };
     void ProcessFlightPlan( double dt, time_t now );
     time_t checkForArrivalTime(const std::string& wptName);
-    
+    time_t calcDeparture();
+
     void AccelTo(double speed);
     void PitchTo(double angle);
     void RollTo(double angle);
@@ -90,6 +108,9 @@ public:
     void setTrafficRef(FGAISchedule *ref) { trafficRef = ref; };
     void resetTakeOffStatus() { takeOffStatus = 0;};
     void setTakeOffStatus(int status) { takeOffStatus = status; };
+    int getTakeOffStatus() { return takeOffStatus; };
+    void setTakeOffSlot(time_t timeSlot) { takeOffTimeSlot = timeSlot;};
+    time_t getTakeOffSlot(){return takeOffTimeSlot;};
     void scheduleForATCTowerDepartureControl(int state);
 
     const std::string& GetTransponderCode() { return transponderCode; };
@@ -107,8 +128,6 @@ public:
     inline double airspeed() const { return props->getFloatValue("velocities/airspeed-kt");};
     const std::string& atGate();
     std::string acwakecategory;
-    
-    int getTakeOffStatus() { return takeOffStatus; };
 
     void checkTcas();
     double calcVerticalSpeed(double vert_ft, double dist_m, double speed, double error);
@@ -116,9 +135,9 @@ public:
     FGATCController * getATCController() { return controller; };
     
     void clearATCController();
-    void dumpCSVHeader(std::ofstream& o);
-    void dumpCSV(std::ofstream& o, int lineIndex);
-
+    bool isBlockedBy(FGAIAircraft* other);
+    void dumpCSVHeader(std::unique_ptr<sg_ofstream> &o);
+    void dumpCSV(std::unique_ptr<sg_ofstream> &o, int lineIndex);
 protected:
     void Run(double dt);
 
@@ -155,7 +174,8 @@ private:
     bool handleAirportEndPoints(FGAIWaypoint* prev, time_t now);
     bool reachedEndOfCruise(double&);
     bool aiTrafficVisible(void);
-    void controlHeading(FGAIWaypoint* curr);
+    void controlHeading(FGAIWaypoint* curr,
+                        FGAIWaypoint* next);
     void controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next);
     
     void updatePrimaryTargetValues(double dt, bool& flightplanActive, bool& aiOutOfSight);
@@ -196,7 +216,7 @@ private:
     /**Kills a flight when it's stuck */
     const int AI_STUCK_LIMIT = 100;
     int stuckCounter = 0;
-
+    bool tracked = false;
     /**
      * Signals a reset to leg 1 at a different airport. 
      * The leg loading happens at a different place than the parking loading.
@@ -211,7 +231,8 @@ private:
 
     bool needsTaxiClearance = false;
     bool _needsGroundElevation = true;
-    int  takeOffStatus; // 1 = joined departure queue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state. 
+    int  takeOffStatus; // 1 = joined departure queue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state.
+    time_t takeOffTimeSlot;
     time_t timeElapsed;
 
     PerformanceData* _performance; // the performance data for this aircraft
@@ -235,4 +256,7 @@ private:
         _controlsTargetAltitude,
         _controlsTargetPitch,
         _controlsTargetSpeed;
+
+    std::unique_ptr<sg_ofstream> csvFile;
+    long csvIndex;
 };

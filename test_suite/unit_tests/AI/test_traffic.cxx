@@ -75,8 +75,10 @@ void TrafficTests::setUp()
     fgSetBool("/sim/terrasync/ai-data-update-now", false);
     fgSetBool("/sim/sound/atc/enabled", true);
     fgSetDouble("/instrumentation/comm[0]/frequencies/selected-mhz", 121.70);
+    fgSetString("/sim/multiplay/callsign", "AI-Shadow");
 
     globals->append_data_path(SGPath::fromUtf8(FG_TEST_SUITE_DATA), false);
+    globals->set_download_dir(globals->get_fg_home());
 
     // ensure EDDF has a valid ground net for parking testing
     FGAirport::clearAirportsCache();
@@ -129,7 +131,7 @@ void TrafficTests::testPushback()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", departureAirport->getId(), "G-BLA", "ID", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushback", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
     SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
@@ -145,6 +147,7 @@ void TrafficTests::testPushback()
     aiAircraft->setAcType("B737");
     aiAircraft->setSpeed(0);
     aiAircraft->setBank(0);
+
 
     const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
 
@@ -184,7 +187,7 @@ void TrafficTests::testPushbackCargo()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", "EGPH", "G-BLA", "ID", false, "B737", "KLM", "N", "cargo", 24, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushbackCargo", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
     SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
@@ -249,7 +252,7 @@ void TrafficTests::testChangeRunway()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", departureAirport->getId(), "G-BLA", "ID", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
+    FGScheduledFlight* flight = new FGScheduledFlight("testChangeRunway", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
     SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
@@ -307,7 +310,7 @@ void TrafficTests::testPushforward()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", departureAirport->getId(), "G-BLA", "ID", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushforward", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
     SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
@@ -364,7 +367,7 @@ void TrafficTests::testPushforwardSpeedy()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", departureAirport->getId(), "G-BLA", "ID", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushforwardSpeedy", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
     SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
@@ -422,7 +425,7 @@ void TrafficTests::testPushforwardParkYBBN()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", departureAirport->getId(), "G-BLA", "ID", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushforwardParkYBBN", "", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "HBR_BN_2");
     schedule->assign(flight);
 
     SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
@@ -500,10 +503,10 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
 
     FGAISchedule* schedule = new FGAISchedule(
         "B737", "KLM", departureAirport->getId(), "G-BLA", "TST_BN_1", false, "B737", "KLM", "N", flighttype, radius, 8);
-    FGScheduledFlight* flight = new FGScheduledFlight("gaParkYSSY", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_1");
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushforwardParkYBBNRepeatGa", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_1");
     schedule->assign(flight);
 
-    FGScheduledFlight* returnFlight = new FGScheduledFlight("gaParkYSSY", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_1");
+    FGScheduledFlight* returnFlight = new FGScheduledFlight("testPushforwardParkYBBNRepeatGa", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_1");
     schedule->assign(returnFlight);
 
     SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
@@ -554,6 +557,102 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
     CPPUNIT_ASSERT_EQUAL(true, (aiAircraft->getDie() || aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getName() == "park"));
 }
 
+void TrafficTests::testPushforwardParkYBBNRepeatGaDelayed()
+{
+    FGAirportRef departureAirport = FGAirport::getByIdent("YBBN");
+
+    FGAirportRef arrivalAirport = FGAirport::getByIdent("YSSY");
+
+    fgSetString("/sim/presets/airport-id", arrivalAirport->getId());
+
+    // Time to depart
+    std::string dep = getTimeString(120);
+    // Time to arrive
+    std::string arr = getTimeString(3260);
+    // Time to arrive back
+    std::string ret = getTimeString(6460);
+
+    const int radius = 8.0;
+    const int cruiseAltFt = 32000;
+    const int cruiseSpeedKnots = 80;
+    const char* flighttype = "ga";
+
+    FGAISchedule* schedule = new FGAISchedule(
+        "B737", "KLM", departureAirport->getId(), "G-BLA", "TST_BN_1", false, "B737", "KLM", "N", flighttype, radius, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushforwardParkYBBNRepeatGaDelayed", "VFR", departureAirport->getId(), arrivalAirport->getId(), 24, dep, arr, "WEEK", "TST_BN_1");
+    schedule->assign(flight);
+
+    FGScheduledFlight* returnFlight = new FGScheduledFlight("testPushforwardParkYBBNRepeatGaDelayed", "", arrivalAirport->getId(), departureAirport->getId(), 24, arr, ret, "WEEK", "TST_BN_1");
+    schedule->assign(returnFlight);
+
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
+
+    const SGGeod position = departureAirport->geod();
+    FGTestApi::setPositionAndStabilise(position);
+
+    aiAircraft->setPerformance("ga", "");
+    aiAircraft->setCompany("KLM");
+    aiAircraft->setAcType("B737");
+    aiAircraft->setSpeed(0);
+    aiAircraft->setBank(0);
+
+    const string flightPlanName = departureAirport->getId() + "-" + arrivalAirport->getId() + ".xml";
+
+    const double crs = SGGeodesy::courseDeg(departureAirport->geod(), arrivalAirport->geod()); // direct course
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime + 90;
+
+
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                                          flightPlanName, crs, departureTime,
+                                                          departureAirport, arrivalAirport, true, radius,
+                                                          cruiseAltFt, // cruise alt
+                                                          position.getLatitudeDeg(),
+                                                          position.getLongitudeDeg(),
+                                                          cruiseSpeedKnots, flighttype,
+                                                          aiAircraft->getAcType(),
+                                                          aiAircraft->getCompany()));
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+    globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+
+    FGAirport* departure = aiAircraft->getTrafficRef()->getDepartureAirport();
+    FGAirportDynamicsRef departureDynamics = departure->getDynamics();
+    ActiveRunway* activeDepartureRunway = departureDynamics->getApproachController()->getRunway("01");
+    time_t newDeparture = activeDepartureRunway->requestTimeSlot(aiAircraft->GetFlightPlan()->getStartTime());
+// See that the wait queue is filled
+    for (size_t i = 0; i < 100; i++)
+    {
+        newDeparture = activeDepartureRunway->requestTimeSlot(newDeparture);
+    }
+
+    FGAirport* arrival = aiAircraft->getTrafficRef()->getArrivalAirport();
+    FGAirportDynamicsRef arrivalDynamics = arrival->getDynamics();
+    ActiveRunway* activeYSSYRunway = arrivalDynamics->getApproachController()->getRunway("16R");
+    time_t newArrival = activeYSSYRunway->requestTimeSlot(aiAircraft->GetFlightPlan()->getStartTime());
+// See that the wait queue is filled
+    for (size_t i = 0; i < 100; i++)
+    {
+        newArrival = activeYSSYRunway->requestTimeSlot(newArrival);
+    }
+
+    aiAircraft = flyAI(aiAircraft, "flight_ga_YSSY_YBBN_park_repeat" + std::to_string(departureTime));
+
+    int shortestDistance = 10000;
+    const FGParkingList& parkings(arrivalAirport->groundNetwork()->allParkings());
+    FGParkingList::const_iterator it;
+    FGParking* nearestParking = 0;
+    for (it = parkings.begin(); it != parkings.end(); ++it) {
+        int currentDistance = !nearestParking ? 9999 : SGGeodesy::distanceM(nearestParking->geod(), (*it)->geod());
+        if (currentDistance < shortestDistance) {
+            nearestParking = (*it);
+            shortestDistance = currentDistance;
+        }
+    }
+
+    CPPUNIT_ASSERT_EQUAL(true, (aiAircraft->getDie() || aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getName() == "park"));
+}
+
 void TrafficTests::testPushforwardParkYBBNRepeatGate()
 {
     FGAirportRef departureAirport = FGAirport::getByIdent("YBBN");
@@ -569,7 +668,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
     // Time to arrive back
     std::string ret = getTimeString(6460);
 
-    const int radius = 20.0;
+    const int radius = 32.0;
     const int cruiseAltFt = 32000;
     const int cruiseSpeedKnots = 80;
     const char* flighttype = "gate";
@@ -658,7 +757,7 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
     
     char fname [160];
     time_t t = time(0);   // get time now
-    snprintf (fname, sizeof(fname), "%lld.csv", (long long) t);
+    snprintf (fname, sizeof(fname), "%ld.csv", t);
     SGPath p = SGPath::desktop() / (testname + fname);
     sg_ofstream csvFile;
     csvFile.open(p);

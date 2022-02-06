@@ -91,7 +91,7 @@ void GroundnetTests::testShortestRoute()
     FGGroundNetwork* network = egph->groundNetwork();    
     FGParkingRef startParking = network->findParkingByName("main-apron10");
     FGRunwayRef runway = egph->getRunwayByIndex(0);
-    FGTaxiNodeRef end = network->findNearestNodeOnRunway(runway->threshold());
+    FGTaxiNodeRef end = network->findNearestNodeOnRunwayEntry(runway->threshold());
     FGTaxiRoute route = network->findShortestRoute(startParking, end); 
     CPPUNIT_ASSERT_EQUAL(true, network->exists());
     CPPUNIT_ASSERT_EQUAL(29, route.size());

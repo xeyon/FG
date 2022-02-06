@@ -301,7 +301,8 @@ bool FGAirportDynamics::hasParkings() const
     return !parent()->groundNetwork()->allParkings().empty();
 }
 
-ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, const string & flType,
+ParkingAssignment FGAirportDynamics::getAvailableParking(double radius, 
+                                            const string & flType,
                                             const string & acType,
                                             const string & airline)
 {

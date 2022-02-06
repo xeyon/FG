@@ -432,23 +432,30 @@ double FGAIFlightPlan::getDistanceToGo(double lat, double lon, FGAIWaypoint* wp)
 }
 
 // sets distance in feet from a lead point to the current waypoint
+// basically a catch radius, that triggers the advancement of WPs
 void FGAIFlightPlan::setLeadDistance(double speed, double bearing, 
                                      FGAIWaypoint* current, FGAIWaypoint* next){
-  double turn_radius;
+  double turn_radius_m;
   // Handle Ground steering
   // At a turn rate of 30 degrees per second, it takes 12 seconds to do a full 360 degree turn
   // So, to get an estimate of the turn radius, calculate the cicumference of the circle
   // we travel on. Get the turn radius by dividing by PI (*2).
   // FIXME Why when going backwards? No fabs
   if (speed < 0.5) {
-        lead_distance_ft = 0.5;
-        return;
+    lead_distance_ft = 0.5;
+    return;
+  }
+  if (speed > 0 && speed < 0.5) {
+    lead_distance_ft = 5 * SG_FEET_TO_METER;
+    SG_LOG(SG_AI, SG_BULK, "Setting Leaddistance fixed " << (lead_distance_ft*SG_FEET_TO_METER));
+    return;
   }
 
+  double speed_mps = speed * SG_KT_TO_MPS;
   if (speed < 25) {
-      turn_radius = ((360/30)*fabs(speed)) / (2*M_PI);
+    turn_radius_m = ((360/30)*fabs(speed_mps)) / (2*M_PI);
   } else {
-      turn_radius = 0.1911 * speed * speed; // an estimate for 25 degrees bank
+    turn_radius_m = 0.1911 * speed * speed; // an estimate for 25 degrees bank
   }
 
   double inbound = bearing;
@@ -459,9 +466,12 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   //  leadInAngle = 30.0;
   
   //lead_distance_ft = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
-  lead_distance_ft = turn_radius * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
+
+  double lead_distance_m = turn_radius_m * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
+  lead_distance_ft = lead_distance_m * SG_METER_TO_FEET;
+  SG_LOG(SG_AI, SG_BULK, "Setting Leaddistance " << (lead_distance_ft*SG_FEET_TO_METER) << " Turnradius " << turn_radius_m << " Speed " << speed_mps << " Half turn Angle " << (leadInAngle)/2);
   if (lead_distance_ft > 1000) {
-     SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance_ft << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
+      SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance_ft << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
   }
   /*
   if ((lead_distance_ft > (3*turn_radius)) && (current->on_ground == false)) {

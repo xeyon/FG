@@ -274,10 +274,27 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOffRunway(const SGGeod& aGeod, FGR
     return *node;
 }
 
-FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGRunway* aRunway) const
+FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunwayEntry(const SGGeod & aGeod) const
 {
-    SG_UNUSED(aRunway);
+    double d = DBL_MAX;
+    SGVec3d cartPos = SGVec3d::fromGeod(aGeod);
+    FGTaxiNodeRef result;
+    for (auto it = m_nodes.begin(); it != m_nodes.end(); ++it) {
+        if (!(*it)->getIsOnRunway())
+            continue;
+        double localDistanceSqr = distSqr(cartPos, (*it)->cart());
+        if (localDistanceSqr < d) {
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunway from Threshold " << localDistanceSqr);
+            d = localDistanceSqr;
+            result = *it;
+        }
+    }
 
+    return result;
+}
+
+FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunwayExit(const SGGeod & aGeod, FGRunway* aRunway) const
+{
     double d = DBL_MAX;
     SGVec3d cartPos = SGVec3d::fromGeod(aGeod);
     FGTaxiNodeRef result = 0;
@@ -289,6 +306,8 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGR
         if (aRunway) {
             double headingTowardsExit = SGGeodesy::courseDeg(aGeod, (*it)->geod());
             double diff = fabs(aRunway->headingDeg() - headingTowardsExit);
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit " << aRunway->headingDeg() << " " 
+              << " Diff : " << diff << " " << (*it)->getIndex());
             if (diff > 10) {
                 // Only ahead
                 continue;
@@ -301,18 +320,64 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunway(const SGGeod & aGeod, FGR
             double exitHeading = SGGeodesy::courseDeg((*it)->geod(),
                                                       (exitSegments.back())->geod());
             diff = fabs(aRunway->headingDeg() - exitHeading);
-            if (diff > 80) {
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit2 " << diff << " " << (*it)->getIndex());
+            if (diff > 70) {
                 // Only exits going in our direction
                 continue;
             }
+        } else {
+            SG_LOG(SG_AI, SG_BULK, "No Runway findNearestNodeOnRunwayExit");
         }
         if (localDistanceSqr < d) {
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit3 " << localDistanceSqr << " " << (*it)->getIndex());
             d = localDistanceSqr;
             result = *it;
         }
     }
-
-    return result;
+    if(result) {
+        return result;
+    }
+    // Ok then fallback only exits ahead
+    for (it = m_nodes.begin(); it != m_nodes.end(); ++it) {
+        if (!(*it)->getIsOnRunway())
+            continue;
+        double localDistanceSqr = distSqr(cartPos, (*it)->cart());
+        if (aRunway) {
+            double headingTowardsExit = SGGeodesy::courseDeg(aGeod, (*it)->geod());
+            double diff = fabs(aRunway->headingDeg() - headingTowardsExit);
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExitFallback1 " << aRunway->headingDeg() << " " 
+              << " Diff : " << diff << " " << (*it)->getIndex());
+            if (diff > 10) {
+                // Only ahead
+                continue;
+            }
+        }    
+        if (localDistanceSqr < d) {
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExitFallback1 " << localDistanceSqr);
+            d = localDistanceSqr;
+            result = *it;
+        }
+    }
+    if(result) {
+        return result;
+    }
+    // Ok then fallback only exits
+    for (it = m_nodes.begin(); it != m_nodes.end(); ++it) {
+        if (!(*it)->getIsOnRunway())
+            continue;
+        double localDistanceSqr = distSqr(cartPos, (*it)->cart());
+        if (localDistanceSqr < d) {
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExitFallback2 " << localDistanceSqr);
+            d = localDistanceSqr;
+            result = *it;
+        }
+    }
+    if(result) {
+        return result;
+    } else {
+        SG_LOG(SG_AI, SG_WARN, "No Exit found");
+        return 0;
+    }
 }
 
 FGTaxiSegment *FGGroundNetwork::findOppositeSegment(unsigned int index) const

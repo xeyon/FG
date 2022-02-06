@@ -174,7 +174,9 @@ public:
    double getDistanceToGo(double lat, double lon, FGAIWaypoint* wp) const;
    int getLeg () const { return leg;};
 
+   /** Set lead_distance_ft*/
    void setLeadDistance(double speed, double bearing, FGAIWaypoint* current, FGAIWaypoint* next);
+   /** Set lead_distance_ft*/
    void setLeadDistance(double distance_ft);
    double getLeadDistance( void ) const {return lead_distance_ft;}
    double getBearing(FGAIWaypoint* previous, FGAIWaypoint* next) const;
@@ -272,6 +274,8 @@ private:
   void eraseLastWaypoint();
   void pushBackWaypoint(FGAIWaypoint *wpt);
 
+  /**Create an arc flightplan around a center from startAngle to endAngle.*/
+  void createArc(FGAIAircraft *ac, const SGGeod& center, int startAngle, int endAngle, int increment, int radius, double aElev, double aSpeed, const char* pattern);
   bool createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
   void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);

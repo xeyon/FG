@@ -42,6 +42,7 @@ class TrafficTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testPushforwardSpeedy);
     CPPUNIT_TEST(testPushforwardParkYBBN);
     CPPUNIT_TEST(testPushforwardParkYBBNRepeatGa);
+    CPPUNIT_TEST(testPushforwardParkYBBNRepeatGaDelayed);    
     CPPUNIT_TEST(testPushforwardParkYBBNRepeatGate);
     CPPUNIT_TEST_SUITE_END();
 public:
@@ -60,6 +61,7 @@ public:
     void testPushforwardSpeedy();
     void testPushforwardParkYBBN();
     void testPushforwardParkYBBNRepeatGa();
+    void testPushforwardParkYBBNRepeatGaDelayed();
     void testPushforwardParkYBBNRepeatGate();
 private:
     long currentWorldTime;
