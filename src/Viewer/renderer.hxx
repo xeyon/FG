@@ -99,6 +99,8 @@ public:
 
 	void setPlanes( double zNear, double zFar );
 
+    SplashScreen* getSplash();
+
 protected:
     int composite_viewer_enabled = -1;
     osg::ref_ptr<osgViewer::Viewer> viewer;
@@ -133,7 +135,7 @@ protected:
 
     void setupRoot();
 
-    SplashScreen* _splash;
+    osg::ref_ptr<SplashScreen> _splash;
     QQuickDrawable* _quickDrawable = nullptr;
     flightgear::PUICamera* _puiCamera = nullptr;
 };

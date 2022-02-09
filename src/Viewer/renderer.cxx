@@ -345,7 +345,8 @@ bool FGScenerySwitchCallback::scenery_enabled = false;
 
 FGRenderer::FGRenderer() :
     _sky(NULL),
-    MaximumTextureSize(0)
+    MaximumTextureSize(0),
+    _splash(nullptr)
 {
 	_root = new osg::Group;
 	_root->setName("fakeRoot");
@@ -427,8 +428,7 @@ FGRenderer::preinit( void )
     view->setDatabasePager(FGScenery::getPagerSingleton());
 
     _quickDrawable = nullptr;
-    _splash = new SplashScreen;
-	_viewerSceneRoot->addChild(_splash);
+    getSplash();
 
     if (composite_viewer) {
         // Nothing to do - composite_viewer->addView() will tell view to use
@@ -1164,6 +1164,14 @@ void
 FGRenderer::setPlanes( double zNear, double zFar )
 {
 //	_planes->set( osg::Vec3f( - zFar, - zFar * zNear, zFar - zNear ) );
+}
+
+SplashScreen*
+FGRenderer::getSplash()
+{
+    if (!_splash)
+        _splash = new SplashScreen;
+    return _splash;
 }
 
 bool

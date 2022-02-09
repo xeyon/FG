@@ -71,7 +71,8 @@ struct CameraInfo : public osg::Referenced
         FIXED_NEAR_FAR = 0x20,     /**< take the near far values in the
                                       projection for real. */
         ENABLE_MASTER_ZOOM = 0x40, /**< Can apply the zoom algorithm. */
-        VR_MIRROR = 0x80           /**< Switch to a mirror of VR. */
+        VR_MIRROR = 0x80,          /**< Switch to a mirror of VR. */
+        SPLASH = 0x100             /**< For splash screen. */
     };
 
     CameraInfo(unsigned flags_)     :
@@ -165,6 +166,16 @@ public:
      * @param info the camera info to remove.
      */
     void removeCamera(CameraInfo *info);
+    /** Create a camera from properties that will draw the splash screen and add
+     * it to the camera group.
+     * @param cameraNode the property node. This can be 0, in which
+     * case a default GUI camera is created.
+     * @param window the GraphicsWindow to use for the splash camera. If
+     * this is 0, the window is determined from the property node.
+     * @return a CameraInfo object for the GUI camera.
+     */
+    void buildSplashCamera(SGPropertyNode* cameraNode,
+                           GraphicsWindow* window = 0);
     /** Create a camera from properties that will draw the GUI and add
      * it to the camera group.
      * @param cameraNode the property node. This can be 0, in which
