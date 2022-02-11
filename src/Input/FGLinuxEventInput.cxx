@@ -503,6 +503,7 @@ void FGLinuxEventInput::postinit()
     udev_device_unref(dev);
   }
 
+  udev_enumerate_unref(enumerate); // REVIEW: this should fix the memory leak
   udev_unref(udev);
 
 }
