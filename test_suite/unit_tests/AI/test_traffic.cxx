@@ -60,7 +60,7 @@ void TrafficTests::setUp()
 {
     time_t t = time(0);   // get time now
 
-    this->currentWorldTime = t - t%86400 + 86400 + 9 * 60; 
+    this->currentWorldTime = t - t%86400 + 86400 + 9 * 60;
 
 
     FGTestApi::setUp::initTestGlobals("Traffic");
@@ -98,7 +98,7 @@ void TrafficTests::setUp()
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
     globals->get_subsystem_mgr()->postinit();
-    // This means time is always 00:09 
+    // This means time is always 00:09
     FGTestApi::adjustSimulationWorldTime(this->currentWorldTime);
 }
 
@@ -401,7 +401,7 @@ void TrafficTests::testPushforwardSpeedy()
     CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
     aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
-   
+
     aiAircraft = flyAI(aiAircraft, "flight_ga_YSSY_fast_depart_" + std::to_string(departureTime));
 }
 
@@ -732,10 +732,10 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
 }
 
 /**
- * 
- * 
- * 
- */ 
+ *
+ *
+ *
+ */
 
 FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::string testname) {
     int lineIndex = 0;
@@ -752,16 +752,16 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
 
     strftime (buffer,50,"%FT%TZ",startTime);
     strftime (buffer2,50,"%FT%TZ", localtime(&departureTime));
- 
+
     SG_LOG(SG_AI, SG_DEBUG, "Start Time " << buffer << " First Departure " << buffer2);
-    
+
     char fname [160];
     time_t t = time(0);   // get time now
     snprintf (fname, sizeof(fname), "%ld.csv", t);
     SGPath p = SGPath::desktop() / (testname + fname);
-    sg_ofstream csvFile;
-    csvFile.open(p);
-    if(!csvFile.is_open()) {
+    std::unique_ptr<sg_ofstream> csvFile = std::make_unique<sg_ofstream>();
+    (*csvFile).open(p);
+    if(!(*csvFile).is_open()) {
         SG_LOG(SG_AI, SG_DEBUG, "CSV File " << fname << " couldn't be opened");
     }
     if (sglog().get_log_priority() <= SG_DEBUG) {
@@ -822,12 +822,12 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
         // Arrived at a parking
         int beforeNextDepTime = aiAircraft->getTrafficRef()->getDepartureTime() - 30;
 
-        if (iteration > 1  
-        && aiAircraft->GetFlightPlan()->getLeg() == 1 
-        && aiAircraft->getSpeed() == 0 
+        if (iteration > 1
+        && aiAircraft->GetFlightPlan()->getLeg() == 1
+        && aiAircraft->getSpeed() == 0
         && this->currentWorldTime < beforeNextDepTime) {
             FGTestApi::adjustSimulationWorldTime(beforeNextDepTime);
-            SG_LOG(SG_AI, SG_BULK, "Jumped time " << (beforeNextDepTime - this->currentWorldTime) );            
+            SG_LOG(SG_AI, SG_BULK, "Jumped time " << (beforeNextDepTime - this->currentWorldTime) );
             this->currentWorldTime = beforeNextDepTime;
         }
         FGTestApi::runForTime(1);
@@ -839,7 +839,7 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
         FGTestApi::writeGeodsToKML(buffer, geods);
     }
     geods.clear();
-    csvFile.close();
+    (*csvFile).close();
     return aiAircraft;
 }
 
