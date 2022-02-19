@@ -1114,13 +1114,7 @@ FGReplayInternal::update( double dt )
 
     if (m_simple_time_enabled->getBoolValue())
     {
-        double new_sim_time = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
-        SG_LOG( SG_GENERAL, SG_ALERT,
-                "m_sim_time=" << m_sim_time
-                << " new_sim_time=" << new_sim_time <<
-                " new_sim_time <= m_sim_time=" << (new_sim_time <= m_sim_time)
-                );
-        m_sim_time = new_sim_time;
+        m_sim_time = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
     }
     else
     {
