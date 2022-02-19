@@ -1077,9 +1077,12 @@ FGReplayInternal::update( double dt )
             if (reset_time)
                 m_replay_master->setIntValue(replay_state);
 
-            if (m_replay_multiplayer->getIntValue())
+            if (m_replay_multiplayer->getIntValue() && !m_continuous->m_in_time_to_frameinfo.empty())
             {
-                // Carry on recording while replaying.
+                // Carry on recording while replaying a Continuous
+                // recording. We don't want to do this with a Normal recording
+                // because it will prune the short, medium and long-term
+                // buffers, which will degrade the replay experience.
                 break;
             }
             else
@@ -1111,7 +1114,13 @@ FGReplayInternal::update( double dt )
 
     if (m_simple_time_enabled->getBoolValue())
     {
-        m_sim_time = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
+        double new_sim_time = globals->get_subsystem<TimeManager>()->getMPProtocolClockSec();
+        SG_LOG( SG_GENERAL, SG_ALERT,
+                "m_sim_time=" << m_sim_time
+                << " new_sim_time=" << new_sim_time <<
+                " new_sim_time <= m_sim_time=" << (new_sim_time <= m_sim_time)
+                );
+        m_sim_time = new_sim_time;
     }
     else
     {
@@ -1306,7 +1315,8 @@ loadRawReplayData(
         //FGFlightRecorder* pRecorder,
         std::deque<FGReplayData*>& replay_data,
         size_t record_size,
-        bool multiplayer
+        bool multiplayer,
+        bool multiplayer_legacy
         )
 {
     size_t size = 0;
@@ -1325,7 +1335,7 @@ loadRawReplayData(
         return false;
     }
     
-    SG_LOG(SG_SYSTEMS, SG_DEBUG, "multiplayer=" << multiplayer << " record_size=" << record_size << " Type=" << Type << " ize=" << size);
+    SG_LOG(SG_SYSTEMS, SG_DEBUG, "multiplayer=" << multiplayer << " record_size=" << record_size << " Type=" << Type << " size=" << size);
 
     // read the raw data
     size_t count = size / record_size;
@@ -1343,25 +1353,46 @@ loadRawReplayData(
 
         if (multiplayer)
         {
-            uint32_t    length;
-            readRaw(input, length);
-            uint32_t    pos = 0;
-            for(;;)
+            if (multiplayer_legacy)
             {
-                if (pos == length) break;
-                assert(pos < length);
-                uint16_t message_size;
-                readRaw(input, message_size);
-                pos += sizeof(message_size) + message_size;
-                if (pos > length)
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "reading Normal multiplayer recording with legacy format");
+                size_t  num_messages = 0;
+                input.read(reinterpret_cast<char*>(&num_messages), sizeof(num_messages));
+                for (size_t i=0; i<num_messages; ++i)
                 {
-                    SG_LOG(SG_SYSTEMS, SG_ALERT, "Tape appears to have corrupted multiplayer data");
-                    return false;
+                    size_t  message_size;
+                    input.read(reinterpret_cast<char*>(&message_size), sizeof(message_size));
+                    std::shared_ptr<std::vector<char>>  message(new std::vector<char>(message_size));
+                    input.read(&message->front(), message_size);
+                    buffer->multiplayer_messages.push_back( message);
                 }
-                auto message = std::make_shared<std::vector<char>>(message_size);
-                //std::shared_ptr<std::vector<char>>  message(new std::vector<char>(message_size));
-                input.read(&message->front(), message_size);
-                buffer->multiplayer_messages.push_back( message);
+            }
+            else
+            {
+                SG_LOG(SG_SYSTEMS, SG_DEBUG, "reading Normal multiplayer recording");
+                uint32_t    length;
+                readRaw(input, length);
+                uint32_t    pos = 0;
+                for(;;)
+                {
+                    if (pos == length) break;
+                    assert(pos < length);
+                    uint16_t message_size;
+                    readRaw(input, message_size);
+                    pos += sizeof(message_size) + message_size;
+                    if (pos > length)
+                    {
+                        SG_LOG(SG_SYSTEMS, SG_ALERT, "Tape appears to have corrupted multiplayer data"
+                                << " length=" << length
+                                << " message_size=" << message_size
+                                << " pos=" << pos
+                                );
+                        return false;
+                    }
+                    auto message = std::make_shared<std::vector<char>>(message_size);
+                    input.read(&message->front(), message_size);
+                    buffer->multiplayer_messages.push_back( message);
+                }
             }
         }
     }
@@ -1911,8 +1942,7 @@ FGReplayInternal::loadTape(
                     << filename << ". Invalid meta data.");
             ok = false;
         }
-        else
-        if (type != ReplayContainer::MetaData)
+        else if (type != ReplayContainer::MetaData)
         {
             SG_LOG(SG_SYSTEMS, SG_DEBUG, "Invalid header. Container type " << type);
             SG_LOG(SG_SYSTEMS, SG_ALERT, "File not recognized. This is not a valid FlightGear flight recorder tape: "
@@ -1921,6 +1951,7 @@ FGReplayInternal::loadTape(
         }
         else
         {
+            SG_LOG(SG_SYSTEMS, SG_BULK, "meta_data is:\n" << meta_data);
             try
             {
                 readProperties(meta_data, size-1, meta_data_props);
@@ -1968,6 +1999,7 @@ FGReplayInternal::loadTape(
         SGPropertyNode_ptr config = new SGPropertyNode();
         if (ok)
         {
+            SG_LOG(SG_SYSTEMS, SG_BULK, "config_xml is:\n" << config_xml);
             try
             {
                 readProperties(config_xml, size-1, config);
@@ -2011,6 +2043,7 @@ FGReplayInternal::loadTape(
             }
 
             bool multiplayer = false;
+            bool multiplayer_legacy = false;
             for (auto data: meta_meta.getChildren("data"))
             {
                 if (data->getStringValue() == "multiplayer")
@@ -2018,10 +2051,18 @@ FGReplayInternal::loadTape(
                     multiplayer = true;
                 }
             }
+            if (!multiplayer)
+            {
+                multiplayer_legacy = meta_meta.getBoolValue("multiplayer", 0);
+                if (multiplayer_legacy)
+                {
+                    multiplayer = true;
+                }
+            }
             SG_LOG(SG_SYSTEMS, SG_ALERT, "multiplayer=" << multiplayer);
-            if (ok) ok = loadRawReplayData(input, m_short_term,  record_size, multiplayer);
-            if (ok) ok = loadRawReplayData(input, m_medium_term, record_size, multiplayer);
-            if (ok) ok = loadRawReplayData(input, m_long_term,   record_size, multiplayer);
+            if (ok) ok = loadRawReplayData(input, m_short_term,  record_size, multiplayer, multiplayer_legacy);
+            if (ok) ok = loadRawReplayData(input, m_medium_term, record_size, multiplayer, multiplayer_legacy);
+            if (ok) ok = loadRawReplayData(input, m_long_term,   record_size, multiplayer, multiplayer_legacy);
 
             // restore replay messages
             if (ok)
