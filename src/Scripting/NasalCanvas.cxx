@@ -18,9 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+#include "config.h"
 
 #include "NasalCanvas.hxx"
 #include <Canvas/canvas_mgr.hxx>
@@ -36,11 +34,12 @@
 #include <simgear/canvas/CanvasWindow.hxx>
 #include <simgear/canvas/elements/CanvasElement.hxx>
 #include <simgear/canvas/elements/CanvasText.hxx>
-#include <simgear/canvas/layout/BoxLayout.hxx>
-#include <simgear/canvas/layout/NasalWidget.hxx>
 #include <simgear/canvas/events/CustomEvent.hxx>
 #include <simgear/canvas/events/KeyboardEvent.hxx>
 #include <simgear/canvas/events/MouseEvent.hxx>
+#include <simgear/canvas/layout/BoxLayout.hxx>
+#include <simgear/canvas/layout/GridLayout.hxx>
+#include <simgear/canvas/layout/NasalWidget.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
@@ -77,6 +76,7 @@ typedef nasal::Ghost<sc::ImagePtr> NasalImage;
 typedef nasal::Ghost<sc::LayoutItemRef> NasalLayoutItem;
 typedef nasal::Ghost<sc::LayoutRef> NasalLayout;
 typedef nasal::Ghost<sc::BoxLayoutRef> NasalBoxLayout;
+typedef nasal::Ghost<sc::GridLayoutRef> NasalGridLayout;
 
 typedef nasal::Ghost<sc::WindowPtr> NasalWindow;
 
@@ -422,6 +422,17 @@ static naRef f_imageSetPixel(sc::Image& img, const nasal::CallContext& ctx)
     return naNil();
 }
 
+static naRef f_gridLayoutAddItem(sc::GridLayout& grid,
+                                 const nasal::CallContext& ctx)
+{
+    grid.addItem(ctx.requireArg<sc::LayoutItemRef>(0),
+                 ctx.requireArg<int>(1),
+                 ctx.requireArg<int>(2),
+                 ctx.getArg<int>(3, 1),
+                 ctx.getArg<int>(4, 1));
+    return naNil();
+}
+
 naRef initNasalCanvas(naRef globals, naContext c)
 {
   nasal::Hash globals_module(globals, c),
@@ -548,27 +559,30 @@ naRef initNasalCanvas(naRef globals, naContext c)
     = &sc::LayoutItem::setContentsMargins;
 
   NasalLayoutItem::init("canvas.LayoutItem")
-    .method("getCanvas", &sc::LayoutItem::getCanvas)
-    .method("setCanvas", &sc::LayoutItem::setCanvas)
-    .method("getParent", &sc::LayoutItem::getParent)
-    .method("setParent", &sc::LayoutItem::setParent)
-    .method("setContentsMargins", f_layoutItemSetContentsMargins)
-    .method("setContentsMargin", &sc::LayoutItem::setContentsMargin)
-    .method("sizeHint", &sc::LayoutItem::sizeHint)
-    .method("minimumSize", &sc::LayoutItem::minimumSize)
-    .method("maximumSize", &sc::LayoutItem::maximumSize)
-    .method("hasHeightForWidth", &sc::LayoutItem::hasHeightForWidth)
-    .method("heightForWidth", &sc::LayoutItem::heightForWidth)
-    .method("minimumHeightForWidth", &sc::LayoutItem::minimumHeightForWidth)
-    .method("setAlignment", &sc::LayoutItem::setAlignment)
-    .method("alignment", &sc::LayoutItem::alignment)
-    .method("setVisible", &sc::LayoutItem::setVisible)
-    .method("isVisible", &sc::LayoutItem::isVisible)
-    .method("isExplicitlyHidden", &sc::LayoutItem::isExplicitlyHidden)
-    .method("show", &sc::LayoutItem::show)
-    .method("hide", &sc::LayoutItem::hide)
-    .method("setGeometry", &sc::LayoutItem::setGeometry)
-    .method("geometry", &sc::LayoutItem::geometry);
+      .method("getCanvas", &sc::LayoutItem::getCanvas)
+      .method("setCanvas", &sc::LayoutItem::setCanvas)
+      .method("getParent", &sc::LayoutItem::getParent)
+      .method("setParent", &sc::LayoutItem::setParent)
+      .method("setContentsMargins", f_layoutItemSetContentsMargins)
+      .method("setContentsMargin", &sc::LayoutItem::setContentsMargin)
+      .method("sizeHint", &sc::LayoutItem::sizeHint)
+      .method("minimumSize", &sc::LayoutItem::minimumSize)
+      .method("maximumSize", &sc::LayoutItem::maximumSize)
+      .method("hasHeightForWidth", &sc::LayoutItem::hasHeightForWidth)
+      .method("heightForWidth", &sc::LayoutItem::heightForWidth)
+      .method("minimumHeightForWidth", &sc::LayoutItem::minimumHeightForWidth)
+      .method("setAlignment", &sc::LayoutItem::setAlignment)
+      .method("alignment", &sc::LayoutItem::alignment)
+      .method("setVisible", &sc::LayoutItem::setVisible)
+      .method("isVisible", &sc::LayoutItem::isVisible)
+      .method("isExplicitlyHidden", &sc::LayoutItem::isExplicitlyHidden)
+      .method("show", &sc::LayoutItem::show)
+      .method("hide", &sc::LayoutItem::hide)
+      .method("setGeometry", &sc::LayoutItem::setGeometry)
+      .method("geometry", &sc::LayoutItem::geometry)
+      .method("setGridLocation", &sc::LayoutItem::setGridLocation)
+      .method("setGridSpan", &sc::LayoutItem::setGridSpan);
+
   sc::NasalWidget::setupGhost(canvas_module);
 
   NasalLayout::init("canvas.Layout")
@@ -598,6 +612,13 @@ naRef initNasalCanvas(naRef globals, naContext c)
                .set("new", &f_newAsBase<sc::HBoxLayout, sc::BoxLayout>);
   canvas_module.createHash("VBoxLayout")
                .set("new", &f_newAsBase<sc::VBoxLayout, sc::BoxLayout>);
+
+  NasalGridLayout::init("canvas.GridLayout")
+      .bases<NasalLayout>()
+      .method("addItem", &f_gridLayoutAddItem)
+      .method("setRowStretch", &sc::GridLayout::setRowStretch)
+      .method("setColumnStretch", &sc::GridLayout::setColumnStretch);
+
 
   //----------------------------------------------------------------------------
   // Window
