@@ -182,6 +182,9 @@ private:
   double    m_simple_time_compensation = 0.0;
   double    m_simple_time_recent_packet_time = 0.0;
   
+  SGPropertyNode_ptr m_lagPPSAveragedNode;
+  SGPropertyNode_ptr m_lagModAveragedNode;
+
   SGPropertyNode_ptr    m_node_simple_time_latest;
   SGPropertyNode_ptr    m_node_simple_time_offset;
   SGPropertyNode_ptr    m_node_simple_time_offset_smoothed;
