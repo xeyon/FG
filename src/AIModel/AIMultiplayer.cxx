@@ -381,12 +381,8 @@ static void s_MotionLogging(const std::string& _callsign, double tInterp, SGVec3
                 n->setStringValue(buffer);
             }
 
-            SGGeod  user_pos_geod = SGGeod::fromDegFt(
-                    fgGetDouble("/position/longitude-deg"),
-                    fgGetDouble("/position/latitude-deg"),
-                    fgGetDouble("/position/altitude-ft")
-                    );
-            SGVec3d user_pos = SGVec3d::fromGeod(user_pos_geod);
+            SGGeod  user_pos_geod = globals->get_aircraft_position();
+            SGVec3d user_pos = globals->get_aircraft_position_cart();
 
             double user_to_mp_distance = SGGeodesy::distanceM(user_pos_geod, pos_geod);
             double user_to_mp_bearing = SGGeodesy::courseDeg(user_pos_geod, pos_geod);
