@@ -156,6 +156,13 @@ public:
 
     string_list getAndClearErrorList();
 
+    /**
+     @brief Convert the value of an SGPropertyNode to its Nasal representation. Used by
+     props.Node.getValue internally, but exposed here for other use cases which don't want to create
+     a props.Node wrapper each time.
+     */
+    static naRef getPropertyValue(naContext c, SGPropertyNode* node);
+
 private:
     void initLogLevelConstants();
 

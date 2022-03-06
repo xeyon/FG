@@ -305,30 +305,7 @@ static naRef f_getValue(naContext c, naRef me, int argc, naRef* args)
     using namespace simgear;
     NODEARG();
     MOVETARGET(naVec_size(argv) > 0, false);
-    switch(node->getType()) {
-    case props::BOOL:   case props::INT:
-    case props::LONG:   case props::FLOAT:
-    case props::DOUBLE:
-    {
-        double dv = node->getDoubleValue();
-        if (SGMisc<double>::isNaN(dv)) {
-          SG_LOG(SG_NASAL, SG_ALERT, "Nasal getValue: property " << node->getPath() << " is NaN");
-          return naNil();
-        }
-
-        return naNum(dv);
-    }
-
-    case props::STRING:
-    case props::UNSPECIFIED:
-        return NASTR(node->getStringValue().c_str());
-    case props::VEC3D:
-        return makeVectorFromVec(c, node->getValue<SGVec3d>());
-    case props::VEC4D:
-        return makeVectorFromVec(c, node->getValue<SGVec4d>());
-    default:
-        return naNil();
-    }
+    return FGNasalSys::getPropertyValue(c, node);
 }
 
 template<typename T>
@@ -940,4 +917,36 @@ naRef FGNasalSys::genPropsModule()
         hashset(namespc, propfuncs[i].name,
                 naNewFunc(_context, naNewCCode(_context, propfuncs[i].func)));
     return namespc;
+}
+
+naRef FGNasalSys::getPropertyValue(naContext c, SGPropertyNode* node)
+{
+    using namespace simgear;
+    if (!node)
+        return naNil();
+    
+    switch(node->getType()) {
+    case props::BOOL:   case props::INT:
+    case props::LONG:   case props::FLOAT:
+    case props::DOUBLE:
+    {
+        double dv = node->getDoubleValue();
+        if (SGMisc<double>::isNaN(dv)) {
+          SG_LOG(SG_NASAL, SG_ALERT, "Nasal getValue: property " << node->getPath() << " is NaN");
+          return naNil();
+        }
+
+        return naNum(dv);
+    }
+
+    case props::STRING:
+    case props::UNSPECIFIED:
+        return NASTR(node->getStringValue().c_str());
+    case props::VEC3D:
+        return makeVectorFromVec(c, node->getValue<SGVec3d>());
+    case props::VEC4D:
+        return makeVectorFromVec(c, node->getValue<SGVec4d>());
+    default:
+        return naNil();
+    }
 }
