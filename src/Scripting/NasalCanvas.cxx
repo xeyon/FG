@@ -40,6 +40,7 @@
 #include <simgear/canvas/layout/BoxLayout.hxx>
 #include <simgear/canvas/layout/GridLayout.hxx>
 #include <simgear/canvas/layout/NasalWidget.hxx>
+#include <simgear/canvas/layout/SpacerItem.hxx>
 
 #include <simgear/nasal/cppbind/from_nasal.hxx>
 #include <simgear/nasal/cppbind/to_nasal.hxx>
@@ -77,6 +78,7 @@ typedef nasal::Ghost<sc::LayoutItemRef> NasalLayoutItem;
 typedef nasal::Ghost<sc::LayoutRef> NasalLayout;
 typedef nasal::Ghost<sc::BoxLayoutRef> NasalBoxLayout;
 typedef nasal::Ghost<sc::GridLayoutRef> NasalGridLayout;
+using NasalSpacerItem = nasal::Ghost<sc::SpacerItemRef>;
 
 typedef nasal::Ghost<sc::WindowPtr> NasalWindow;
 
@@ -433,6 +435,16 @@ static naRef f_gridLayoutAddItem(sc::GridLayout& grid,
     return naNil();
 }
 
+static naRef f_newGridLayout(const nasal::CallContext& ctx)
+{
+    return ctx.to_nasal(new sc::GridLayout);
+}
+
+static naRef f_newSpacerItem(const nasal::CallContext& ctx)
+{
+    return ctx.to_nasal(new sc::SpacerItem);
+}
+
 naRef initNasalCanvas(naRef globals, naContext c)
 {
   nasal::Hash globals_module(globals, c),
@@ -608,17 +620,23 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("setStretchFactor", &sc::BoxLayout::setStretchFactor)
     .method("stretch", &sc::BoxLayout::stretch);
 
-  canvas_module.createHash("HBoxLayout")
-               .set("new", &f_newAsBase<sc::HBoxLayout, sc::BoxLayout>);
-  canvas_module.createHash("VBoxLayout")
-               .set("new", &f_newAsBase<sc::VBoxLayout, sc::BoxLayout>);
-
   NasalGridLayout::init("canvas.GridLayout")
       .bases<NasalLayout>()
       .method("addItem", &f_gridLayoutAddItem)
       .method("setRowStretch", &sc::GridLayout::setRowStretch)
       .method("setColumnStretch", &sc::GridLayout::setColumnStretch);
 
+    NasalSpacerItem::init("canvas.SpacerItem")
+        .bases<NasalLayoutItem>();
+    
+    canvas_module.createHash("HBoxLayout")
+                 .set("new", &f_newAsBase<sc::HBoxLayout, sc::BoxLayout>);
+    canvas_module.createHash("VBoxLayout")
+                 .set("new", &f_newAsBase<sc::VBoxLayout, sc::BoxLayout>);
+    canvas_module.createHash("GridLayout")
+                 .set("new", &f_newGridLayout);
+    canvas_module.createHash("Spacer")
+                 .set("new", &f_newSpacerItem);
 
   //----------------------------------------------------------------------------
   // Window
