@@ -27,12 +27,12 @@ namespace canvas
     public simgear::canvas::SystemAdapter
   {
     public:
-      virtual simgear::canvas::FontPtr getFont(const std::string& name) const;
-      virtual void addCamera(osg::Camera* camera) const;
-      virtual void removeCamera(osg::Camera* camera) const;
-      virtual osg::ref_ptr<osg::Image> getImage(const std::string& path) const;
-      virtual SGSubsystem* getSubsystem(const std::string& name) const;
-      virtual simgear::HTTP::Client* getHTTPClient() const;
+      simgear::canvas::FontPtr getFont(const std::string& name) const override;
+      void addCamera(osg::Camera* camera) const override;
+      void removeCamera(osg::Camera* camera) const override;
+      osg::ref_ptr<osg::Image> getImage(const std::string& path) const override;
+      SGSubsystem* getSubsystem(const std::string& name) const override;
+      simgear::HTTP::Client* getHTTPClient() const override;
   };
 }
 
