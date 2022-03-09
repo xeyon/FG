@@ -168,7 +168,8 @@ private:
 
     void loadPropertyScripts();
     void loadPropertyScripts(SGPropertyNode* n);
-    void loadScriptDirectory(simgear::Dir nasalDir, SGPropertyNode* loadorder);
+    void loadScriptDirectory(simgear::Dir nasalDir, SGPropertyNode* loadorder,
+                             bool excludeUnspecifiedInLoadOrder);
     void addModule(std::string moduleName, simgear::PathList scripts);
     static void logError(naContext);
     naRef parse(naContext ctx, const char* filename, const char* buf, int len,

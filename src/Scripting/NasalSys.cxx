@@ -1152,7 +1152,12 @@ void FGNasalSys::init()
 
     // Now load the various source files in the Nasal directory
     simgear::Dir nasalDir(SGPath(globals->get_fg_root(), "Nasal"));
-    loadScriptDirectory(nasalDir, globals->get_props()->getNode("/sim/nasal-load-priority"));
+    
+    // load core Nasal scripts. In GUI startup mode, we restrict to a limited
+    // set of modules deliberately
+    loadScriptDirectory(nasalDir,
+                        globals->get_props()->getNode("/sim/nasal-load-priority"),
+                        fgGetBool("/sim/gui/startup"));
 
     // Add modules in Nasal subdirectories to property tree
     simgear::PathList directories = nasalDir.children(simgear::Dir::TYPE_DIR+
@@ -1298,7 +1303,8 @@ bool pathSortPredicate(const SGPath& p1, const SGPath& p2)
 
 // Loads all scripts in given directory, with an optional partial ordering of
 // files defined in loadorder.
-void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir, SGPropertyNode* loadorder)
+void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir, SGPropertyNode* loadorder,
+                                     bool excludeUnspecifiedInLoadOrder)
 {
     simgear::PathList scripts = nasalDir.children(simgear::Dir::TYPE_FILE, ".nas");
 
@@ -1319,6 +1325,10 @@ void FGNasalSys::loadScriptDirectory(simgear::Dir nasalDir, SGPropertyNode* load
       std::for_each(files.begin(), files.end(), loadAndErase);
     }
 
+    if (excludeUnspecifiedInLoadOrder) {
+        return;
+    }
+    
     // Load any remaining scripts.
     // Note: simgear::Dir already reports file entries in a deterministic order,
     // so a fixed loading sequence is guaranteed (same for every user)
@@ -1538,7 +1548,7 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
 
 void FGNasalSys::deleteModule(const char* moduleName)
 {
-    if (!_inited) {
+    if (!_inited || naIsNil(_globals)) {
         // can occur on shutdown due to us being shutdown first, but other
         // subsystems having Nasal objects.
         return;
