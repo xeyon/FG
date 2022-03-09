@@ -1,8 +1,6 @@
 // new_gui.cxx: implementation of XML-configurable GUI support.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include "new_gui.hxx"
 
@@ -34,6 +32,10 @@
 
 #if defined(SG_WINDOWS)
 #include "FGWindowsMenuBar.hxx"
+#endif
+
+#if defined(HAVE_PUI)
+    #include <plib/puAux.h>
 #endif
 
 #if defined(ENABLE_PUICOMPAT)
@@ -595,7 +597,7 @@ NewGUI::setStyle (void)
     }
 
     FGColor *c = _colors["background"];
-#if !defined(ENABLE_PUICOMPAT)
+#if defined(HAVE_PUI)
     puSetDefaultColourScheme(c->red(), c->green(), c->blue(), c->alpha());
 #endif
 }
@@ -604,7 +606,7 @@ NewGUI::setStyle (void)
 void
 NewGUI::setupFont (SGPropertyNode *node)
 {
-#if !defined(ENABLE_PUICOMPAT)
+#if defined(HAVE_PUI)
     _font = FGFontCache::instance()->get(node);
     puSetDefaultFonts(*_font, *_font);
 #endif
