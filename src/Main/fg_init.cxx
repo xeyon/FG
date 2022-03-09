@@ -1103,7 +1103,10 @@ void fgCreateSubsystems(bool duringReset) {
           simgear::canvas::SystemAdapterPtr(new canvas::FGCanvasSystemAdapter)
         );
         globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
-        globals->add_subsystem("CanvasGUI", new GUIMgr, SGSubsystemMgr::DISPLAY);
+        
+        auto canvasGui = new GUIMgr;
+        globals->add_subsystem("CanvasGUI", canvasGui, SGSubsystemMgr::DISPLAY);
+        canvasGui->setGUIView(globals->get_renderer()->getView());
 
         #ifdef ENABLE_AUDIO_SUPPORT
         globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);

@@ -126,18 +126,20 @@ NewGUI::init ()
     SGPath p(globals->get_fg_root(), "gui/dialogs");
     readDir(p);
     
-    SGPath aircraftDialogDir(fgGetString("/sim/aircraft-dir"), "gui/dialogs");
-    if (aircraftDialogDir.exists()) {
-        readDir(aircraftDialogDir);
-    }
+    if (fgGetBool("/sim/gui/startup") == false) {
+        SGPath aircraftDialogDir(fgGetString("/sim/aircraft-dir"), "gui/dialogs");
+        if (aircraftDialogDir.exists()) {
+            readDir(aircraftDialogDir);
+        }
 
-    // Read XML dialogs made available by registered add-ons
-    const auto& addonManager = flightgear::addons::AddonManager::instance();
-    for (const auto& addon: addonManager->registeredAddons()) {
-        SGPath addonDialogDir = addon->getBasePath() / "gui/dialogs";
+        // Read XML dialogs made available by registered add-ons
+        const auto& addonManager = flightgear::addons::AddonManager::instance();
+        for (const auto& addon: addonManager->registeredAddons()) {
+            SGPath addonDialogDir = addon->getBasePath() / "gui/dialogs";
 
-        if (addonDialogDir.exists()) {
-            readDir(addonDialogDir);
+            if (addonDialogDir.exists()) {
+                readDir(addonDialogDir);
+            }
         }
     }
 

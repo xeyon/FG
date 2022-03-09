@@ -28,6 +28,7 @@
 #include <osg/Geode>
 #include <osg/MatrixTransform>
 
+namespace osgViewer { class View; }
 namespace osgGA
 {
   class GUIEventAdapter;
@@ -70,9 +71,14 @@ public:
      */
     void ungrabPointer(const simgear::canvas::WindowPtr& window);
 
+    /**
+     * specify the osgViewer::View which contains the GUI. 
+     */
+    void setGUIView(osgViewer::View* view);
 protected:
     simgear::canvas::GroupPtr           _desktop;
     osg::ref_ptr<GUIEventHandler>       _event_handler;
+    osg::ref_ptr<osgViewer::View>       _viewerView;;
 
     simgear::canvas::Placements
     addWindowPlacement( SGPropertyNode* placement,
