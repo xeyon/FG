@@ -149,7 +149,7 @@ void SplashScreen::createNodes()
     fgSetString("/sim/startup/description", fgGetString("/sim/description"));
     fgSetString("/sim/startup/title", "FlightGear "s + fgGetString("/sim/version/flightgear"));
 
-    if (!strcmp(FG_BUILD_TYPE, "Nightly") || !strcmp(FG_BUILD_TYPE, "Dev")) {
+    if (!strcmp(FG_BUILD_TYPE, "Nightly")) {
         fgSetString("sim/build-warning", globals->get_locale()->getLocalizedString("unstable-warning", "sys", "unstable!"));
         fgSetBool("sim/build-warning-active", true);
     }
