@@ -49,42 +49,7 @@ public:
     void resize(int width, int height);
     
 private:
-    friend class SplashScreenUpdateCallback;
-
-    void createNodes();
-    void setupLogoImage();
-
-    void doUpdate();
-    void updateSplashSpinner();
-    void updateText();
-    
-    std::string selectSplashImage();
-
-    void addText(osg::Geode* geode, const osg::Vec2& pos, double size, const std::string& text,
-                 const osgText::Text::AlignmentType alignment,
-                 SGPropertyNode* dynamicValue = nullptr,
-                 double maxWidthFraction = -1.0,
-                 const osg::Vec4& textColor = osg::Vec4(1, 1, 1, 1));
-
-    osg::ref_ptr<osg::Camera> createFBOCamera();
-    void manuallyResizeFBO(int width, int height);
-
-    bool _legacySplashScreenMode = false;
-    SGPropertyNode_ptr _splashAlphaNode;
-    osg::ref_ptr<osg::Camera> _splashFBOCamera;
-    double _splashImageAspectRatio; // stores width/height of the splash image we loaded
-    osg::Image* _splashImage = nullptr;
-    osg::Image* _logoImage = nullptr;
-    osg::Vec3Array* _splashImageVertexArray = nullptr;
-    osg::Vec3Array* _splashSpinnerVertexArray = nullptr;
-    osg::Vec3Array* _aircraftLogoVertexArray = nullptr;
-    
-    int _width, _height;
-
-    osg::Texture2D* _splashFBOTexture;
-    osg::Vec4Array* _splashFSQuadColor;
-    osg::ref_ptr<osg::Camera> _splashQuadCamera;
-
+    // model-content or content
     struct TextItem
     {
         osg::ref_ptr<osgText::Text> textNode;
@@ -94,14 +59,66 @@ private:
         double maxWidthFraction = -1.0;
         unsigned int maxLineCount = 0;
         double maxHeightFraction = -1.0;
-        
+        SGCondition* condition;
+        unsigned int drawMode;
         void recomputeSize(int height) const;
         void reposition(int width, int height) const;
+
+    };
+    // used to manage the displayed images on the splash screen
+    struct ImageItem
+    {
+        std::string name;
+        double x;
+        double y;
+        double width;
+        double height;
+        bool isBackground;
+        double aspectRatio;
+        int imageWidth;
+        int imageHeight;
+        osg::ref_ptr<osg::Vec3Array> vertexArray = nullptr;
+        osg::ref_ptr<osg::Image> Image = nullptr;
     };
 
+    friend class SplashScreenUpdateCallback;
+
+    void createNodes();
+    void CreateTextFromNode(const SGPropertyNode_ptr& content, osg::Geode* geode);
+
+    void doUpdate();
+    void updateSplashSpinner();
+    void updateTipText();
+    
+    std::string selectSplashImage();
+
+    TextItem* addText(osg::Geode* geode, const osg::Vec2& pos, double size, const std::string& text,
+                 const osgText::Text::AlignmentType alignment,
+                 SGPropertyNode* dynamicValue = nullptr,
+                 double maxWidthFraction = -1.0,
+                 const osg::Vec4& textColor = osg::Vec4(1, 1, 1, 1),
+                 const std::string &fontFace = "Fonts/LiberationFonts/LiberationSans-BoldItalic.ttf");
+
+    osg::ref_ptr<osg::Camera> createFBOCamera();
+    void manuallyResizeFBO(int width, int height);
+
+    bool _legacySplashScreenMode = false;
+    SGPropertyNode_ptr _splashAlphaNode;
+    osg::ref_ptr<osg::Camera> _splashFBOCamera;
+    osg::Vec3Array* _splashSpinnerVertexArray = nullptr;
+    
+    int _width, _height;
+
+    osg::Texture2D* _splashFBOTexture;
+    osg::Vec4Array* _splashFSQuadColor;
+    osg::ref_ptr<osg::Camera> _splashQuadCamera;
+
+     std::vector<ImageItem> _imageItems;
     std::vector<TextItem> _items;
+    
     SGTimeStamp _splashStartTime;
     bool _haveSetStartupTip = false;
+    const ImageItem* addImage(const std::string& path, bool isAbsolutePath, double x, double y, double width, double height, bool isSplash);
 };
 
 /** Set progress information.
