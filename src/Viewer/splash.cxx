@@ -137,8 +137,11 @@ void SplashScreen::createNodes()
         if (!splashLogoImage.empty())
         {
             float logoX = fgGetDouble("/sim/startup/splash-logo-x-norm", 0.0);
-            float logoY = fgGetDouble("/sim/startup/splash-logo-y-norm", 0.935);
-            auto img = addImage(splashLogoImage, false, logoX, logoY, 0.6, 0.6, false);
+            float logoY = 1.0 - fgGetDouble("/sim/startup/splash-logo-y-norm", 0.065);
+
+            float logoWidth = fgGetDouble("/sim/startup/splash-logo-width", 0.6);
+
+            auto img = addImage(splashLogoImage, false, logoX, logoY, logoWidth, 0, false);
             if (img != nullptr)
                 legacySplashLogoMode = true;
         }
@@ -161,7 +164,7 @@ void SplashScreen::createNodes()
 
     // load all model content first.
     for (const auto& content : root->getChildren("model-content")) {
-        CreateTextFromNode(content, geode);
+        CreateTextFromNode(content, geode, true);
     }
     
     fgSetBool("/sim/startup/legacy-splash-screen", _legacySplashScreenMode);
@@ -171,13 +174,18 @@ void SplashScreen::createNodes()
 #else
     fgSetBool("/sim/startup/build-type-debug", false);
 #endif
+    
     // default content comes in second; and has the ability to be overriden by the model
     for (const auto& content : root->getChildren("content")) {
-        // default content can be hidden by the model. By hidden it will never be
-        // added (there is also the possibility to use a condition to dynamically hide content)
-        if (!content->getBoolValue("hide"))
-            CreateTextFromNode(content, geode);
+        if (content->getIndex()) { // Skip 0 element - reserved for future usage.
+            // default content can be hidden by the model. By hidden it will never be
+            // added (there is also the possibility to use a condition to dynamically hide content)
+            if (!content->getBoolValue("hide"))
+                CreateTextFromNode(content, geode, false);
+        }
     }
+    // add main title last so it is atop all.
+    addText(geode, osg::Vec2(0.025f, 0.02f), 0.08, "FlightGear "s + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
 
    ///////////
 
@@ -249,7 +257,7 @@ void SplashScreen::createNodes()
 // <max-lines> [optional] the max number of lines this text can be wrapped over
 //              wrapping takes place at max-width
 // 
-void SplashScreen::CreateTextFromNode(const SGPropertyNode_ptr& content, osg::Geode* geode)
+void SplashScreen::CreateTextFromNode(const SGPropertyNode_ptr& content, osg::Geode* geode, bool modelContent)
 {
     auto text = content->getStringValue("text", "");
     std::string textFromProperty = content->getStringValue("text-prop", "");
@@ -267,8 +275,18 @@ void SplashScreen::CreateTextFromNode(const SGPropertyNode_ptr& content, osg::Ge
     if (conditionNode != nullptr) {
         condition = sgReadCondition(fgGetNode("/"), conditionNode);
     }
+    auto x = content->getDoubleValue("x", 0.5);
+    auto y = content->getDoubleValue("y", 0.5);
 
-    auto textItem = addText(geode, osg::Vec2(content->getDoubleValue("x", 0.5), content->getDoubleValue("y", 0.5)),
+    if (modelContent) {
+        // the top 0.2 of the screen is for system usage
+        if (y < 0.2) {
+            SG_LOG(SG_VIEW, SG_ALERT, "model content cannot be above 0.2 y");
+            y = 0.2;
+        }
+    }
+
+    auto textItem = addText(geode, osg::Vec2(x, y),
         content->getDoubleValue("font/size", 0.06),
         text,
         osgutils::mapAlignment(content->getStringValue("font/alignment", "left-top")),
@@ -353,6 +371,8 @@ const SplashScreen::ImageItem *SplashScreen::addImage(const std::string &path, b
     item.imageWidth = item.Image->s();
     item.imageHeight = item.Image->t();
     item.aspectRatio = static_cast<double>(item.imageWidth) / item.imageHeight;
+    if (item.height == 0 && item.imageWidth != 0)
+        item.height = item.imageHeight * (item.width / item.imageWidth);
 
     osg::Texture2D* imageTexture = new osg::Texture2D(item.Image);
     imageTexture->setResizeNonPowerOfTwoHint(false);

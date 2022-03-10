@@ -84,7 +84,7 @@ private:
     friend class SplashScreenUpdateCallback;
 
     void createNodes();
-    void CreateTextFromNode(const SGPropertyNode_ptr& content, osg::Geode* geode);
+    void CreateTextFromNode(const SGPropertyNode_ptr& content, osg::Geode* geode, bool modelContent);
 
     void doUpdate();
     void updateSplashSpinner();
