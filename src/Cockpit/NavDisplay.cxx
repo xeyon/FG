@@ -41,6 +41,7 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
 #include <simgear/math/sg_geodesy.hxx>
+#include <simgear/structure/OSGUtils.hxx>
 
 #include <cstdio>
 #include <sstream>
@@ -88,37 +89,6 @@ static osg::Vec4 readColor(SGPropertyNode* colorNode, const osg::Vec4& c)
     result.b() = colorNode->getDoubleValue("blue",  c.b());
     result.a() = colorNode->getDoubleValue("alpha", c.a());
     return result;
-}
-
-static osgText::Text::AlignmentType readAlignment(const std::string& t)
-{
-    if (t == "left-top") {
-        return osgText::Text::LEFT_TOP;
-    } else if (t == "left-center") {
-        return osgText::Text::LEFT_CENTER;
-    } else if (t == "left-bottom") {
-        return osgText::Text::LEFT_BOTTOM;
-    } else if (t == "center-top") {
-        return osgText::Text::CENTER_TOP;
-    } else if (t == "center-center") {
-        return osgText::Text::CENTER_CENTER;
-    } else if (t == "center-bottom") {
-        return osgText::Text::CENTER_BOTTOM;
-    } else if (t == "right-top") {
-        return osgText::Text::RIGHT_TOP;
-    } else if (t == "right-center") {
-        return osgText::Text::RIGHT_CENTER;
-    } else if (t == "right-bottom") {
-        return osgText::Text::RIGHT_BOTTOM;
-    } else if (t == "left-baseline") {
-        return osgText::Text::LEFT_BASE_LINE;
-    } else if (t == "center-baseline") {
-        return osgText::Text::CENTER_BASE_LINE;
-    } else if (t == "right-baseline") {
-        return osgText::Text::RIGHT_BASE_LINE;
-    }
-    
-    return osgText::Text::BASE_LINE;
 }
 
 static string formatPropertyValue(SGPropertyNode* nd, const string& format)
@@ -306,7 +276,7 @@ public:
         hasText = false;
         if (node->hasChild("text")) {
             hasText = true;
-            alignment = readAlignment(node->getStringValue("text-align"));
+            alignment = simgear::osgutils::mapAlignment(node->getStringValue("text-align"));
             textTemplate = node->getStringValue("text");
             textOffset.x() = node->getFloatValue("text-offset-x", 0);
             textOffset.y() = node->getFloatValue("text-offset-y", 0);
