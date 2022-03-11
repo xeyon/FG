@@ -110,7 +110,7 @@ void SplashScreen::createNodes()
     std::string licenseUrlText = globals->get_locale()->getLocalizedString("license-url", "sys", LICENSE_URL_TEXT);
     // add the splash image
     std::string splashImageName = selectSplashImage();
-    const ImageItem* splashImage = addImage(splashImageName, true, 0, 0, 1, 1, true);
+    const ImageItem* splashImage = addImage(splashImageName, true, 0, 0, 1, 1, nullptr, true);
 
     // parse the content from the tree
     // there can be many <content> <model-content> and <image> nodes
@@ -129,7 +129,9 @@ void SplashScreen::createNodes()
                      image->getDoubleValue("x", 0.025f),
                      image->getDoubleValue("y", 0.935f),
                      image->getDoubleValue("width", 0.1),
-                     image->getDoubleValue("height", 0.1), false);
+                     image->getDoubleValue("height", 0.1), 
+                     image->getNode("condition"),
+                     false);
         }
     } else {
         // if there are no image nodes then revert to the legacy (2020.3 or before) way of doing things
@@ -141,7 +143,7 @@ void SplashScreen::createNodes()
 
             float logoWidth = fgGetDouble("/sim/startup/splash-logo-width", 0.6);
 
-            auto img = addImage(splashLogoImage, false, logoX, logoY, logoWidth, 0, false);
+            auto img = addImage(splashLogoImage, false, logoX, logoY, logoWidth, 0, nullptr, false);
             if (img != nullptr)
                 legacySplashLogoMode = true;
         }
@@ -162,19 +164,20 @@ void SplashScreen::createNodes()
     fgSetString("/sim/startup/licence", licenseUrlText);
     fgSetString("/sim/startup/tip", licenseUrlText);
 
-    // load all model content first.
-    for (const auto& content : root->getChildren("model-content")) {
-        CreateTextFromNode(content, geode, true);
-    }
-    
-    fgSetBool("/sim/startup/legacy-splash-screen", _legacySplashScreenMode);
-    fgSetBool("/sim/startup/legacy-splash-logo", legacySplashLogoMode);
 #ifndef NDEBUG
     fgSetBool("/sim/startup/build-type-debug", true);
 #else
     fgSetBool("/sim/startup/build-type-debug", false);
 #endif
-    
+
+    fgSetBool("/sim/startup/legacy-splash-screen", _legacySplashScreenMode);
+    fgSetBool("/sim/startup/legacy-splash-logo", legacySplashLogoMode);
+
+    // load all model content first.
+    for (const auto& content : root->getChildren("model-content")) {
+        CreateTextFromNode(content, geode, true);
+    }
+
     // default content comes in second; and has the ability to be overriden by the model
     for (const auto& content : root->getChildren("content")) {
         if (content->getIndex()) { // Skip 0 element - reserved for future usage.
@@ -297,6 +300,10 @@ void SplashScreen::CreateTextFromNode(const SGPropertyNode_ptr& content, osg::Ge
 
     textItem->condition = condition;
 
+    if (textItem->condition != nullptr && !textItem->condition->test())
+        textItem->textNode->setDrawMode(0);
+
+
     auto maxHeight = content->getDoubleValue("max-height", -1.0);
     auto maxLineCount = content->getIntValue("max-line-count", -1);
 
@@ -334,7 +341,8 @@ osg::ref_ptr<osg::Camera> SplashScreen::createFBOCamera()
 // - x,y,width,height (normalized coordinates)
 // - isBackground flag to indicate that this image is the background image. Only set during one call to this method when loading the splash image
 //
-const SplashScreen::ImageItem *SplashScreen::addImage(const std::string &path, bool isAbsolutePath, double x, double y, double width, double height, bool isBackground)
+const SplashScreen::ImageItem *SplashScreen::addImage(const std::string &path, bool isAbsolutePath, double x, double y, double width, double height, SGPropertyNode*
+ conditionNode, bool isBackground)
 {
     if (path.empty())
         return nullptr;
@@ -359,6 +367,11 @@ const SplashScreen::ImageItem *SplashScreen::addImage(const std::string &path, b
     item.width = width;
     item.isBackground = isBackground;
 
+    if (conditionNode != nullptr)
+        item.condition = sgReadCondition(fgGetNode("/"), conditionNode);
+    else
+        item.condition = nullptr;
+
     osg::ref_ptr<simgear::SGReaderWriterOptions> staticOptions = simgear::SGReaderWriterOptions::copyOrCreate(osgDB::Registry::instance()->getOptions());
     staticOptions->setLoadOriginHint(simgear::SGReaderWriterOptions::LoadOriginHint::ORIGIN_SPLASH_SCREEN);
 
@@ -373,7 +386,7 @@ const SplashScreen::ImageItem *SplashScreen::addImage(const std::string &path, b
     item.aspectRatio = static_cast<double>(item.imageWidth) / item.imageHeight;
     if (item.height == 0 && item.imageWidth != 0)
         item.height = item.imageHeight * (item.width / item.imageWidth);
-
+    
     osg::Texture2D* imageTexture = new osg::Texture2D(item.Image);
     imageTexture->setResizeNonPowerOfTwoHint(false);
     imageTexture->setInternalFormat(GL_RGBA);
@@ -406,10 +419,16 @@ const SplashScreen::ImageItem *SplashScreen::addImage(const std::string &path, b
     stateSet->setTextureMode(0, GL_TEXTURE_2D, osg::StateAttribute::ON);
     stateSet->setTextureAttribute(0, imageTexture);
     stateSet->setMode(GL_BLEND, osg::StateAttribute::ON);
-
+    
     osg::Geode* geode = new osg::Geode;
     _splashFBOCamera->addChild(geode);
     geode->addDrawable(geometry);
+
+    item.geode = geode;
+    item.nodeMask = geode->getNodeMask();
+
+    if (item.condition != nullptr && !item.condition->test())
+        item.geode->setNodeMask(0);
 
     _imageItems.push_back(item);
     return &_imageItems.back();
@@ -574,7 +593,14 @@ void SplashScreen::doUpdate()
                   osgText::String::Encoding::ENCODING_UTF8);
             }
         }
-
+        for (const ImageItem& image : _imageItems) {
+            if (image.condition) {
+                if (!image.condition->test())
+                    image.geode->setNodeMask(0);
+                else
+                    image.geode->setNodeMask(image.nodeMask);
+            }
+        }
         updateSplashSpinner();
         updateTipText();
     }

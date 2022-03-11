@@ -79,6 +79,9 @@ private:
         int imageHeight;
         osg::ref_ptr<osg::Vec3Array> vertexArray = nullptr;
         osg::ref_ptr<osg::Image> Image = nullptr;
+        SGCondition* condition;
+        osg::Node::NodeMask nodeMask;
+        osg::Geode* geode;
     };
 
     friend class SplashScreenUpdateCallback;
@@ -118,7 +121,7 @@ private:
     
     SGTimeStamp _splashStartTime;
     bool _haveSetStartupTip = false;
-    const ImageItem* addImage(const std::string& path, bool isAbsolutePath, double x, double y, double width, double height, bool isSplash);
+    const ImageItem* addImage(const std::string& path, bool isAbsolutePath, double x, double y, double width, double height, SGPropertyNode* condition, bool isSplash);
 };
 
 /** Set progress information.
