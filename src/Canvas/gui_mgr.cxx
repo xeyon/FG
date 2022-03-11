@@ -116,7 +116,7 @@ class DesktopGroup:
   public sc::Group
 {
   public:
-    DesktopGroup(osgViewer::View* view);
+    DesktopGroup(osg::Camera* camera);
 
     void setFocusWindow(const sc::WindowPtr& window);
 
@@ -202,7 +202,7 @@ bool GUIEventHandler::handle( const osgEA& ea,
 }
 
 //------------------------------------------------------------------------------
-DesktopGroup::DesktopGroup(osgViewer::View* view):
+DesktopGroup::DesktopGroup(osg::Camera* camera):
   Group(sc::CanvasPtr(), fgGetNode("/sim/gui/canvas", true)),
   _cb_mouse_mode( this,
                   &DesktopGroup::handleMouseMode,
@@ -210,7 +210,6 @@ DesktopGroup::DesktopGroup(osgViewer::View* view):
   _width(_node, "size[0]"),
   _height(_node, "size[1]")
 {
-  auto camera = view->getCamera();
   if( !camera )
   {
     SG_LOG(SG_GUI, SG_WARN, "DesktopGroup: failed to get GUI camera.");
@@ -642,9 +641,10 @@ GUIMgr::GUIMgr()
 }
 
 //------------------------------------------------------------------------------
-void GUIMgr::setGUIView(osgViewer::View* view)
+void GUIMgr::setGUIViewAndCamera(osgViewer::View* view, osg::Camera* cam)
 {
   _viewerView = view;
+    _camera = cam;
 }
 
 //------------------------------------------------------------------------------
@@ -666,7 +666,12 @@ void GUIMgr::init()
     return;
   }
 
-  DesktopPtr desktop( new DesktopGroup(_viewerView) );
+    auto camera = _camera;
+    if (!camera) {
+        camera = _viewerView->getCamera();
+    }
+    
+  DesktopPtr desktop( new DesktopGroup(camera) );
   desktop->handleResize
   (
     0,

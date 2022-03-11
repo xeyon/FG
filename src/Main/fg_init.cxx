@@ -1106,7 +1106,8 @@ void fgCreateSubsystems(bool duringReset) {
         
         auto canvasGui = new GUIMgr;
         globals->add_subsystem("CanvasGUI", canvasGui, SGSubsystemMgr::DISPLAY);
-        canvasGui->setGUIView(globals->get_renderer()->getView());
+        auto guiCamera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
+        canvasGui->setGUIViewAndCamera(globals->get_renderer()->getView(), guiCamera);
 
         #ifdef ENABLE_AUDIO_SUPPORT
         globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
