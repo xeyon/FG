@@ -661,29 +661,15 @@ void SplashScreen::updateTipText()
         _haveSetStartupTip = true;
         FGLocale* locale = globals->get_locale();
         const int tipCount = locale->getLocalizedStringCount("tip", "tips");
+        if (tipCount == 0) {
+            return;
+        }
+        
         int tipIndex = globals->get_props()->getIntValue("/sim/session",0) % tipCount;
 
         std::string tipText = locale->getLocalizedStringWithIndex("tip", "tips", tipIndex);
         fgSetString("/sim/startup/tip", tipText);
     }
-}
-
-// remove once we require OSG 3.4
-void SplashScreen::manuallyResizeFBO(int width, int height)
-{
-    _splashFBOTexture->setTextureSize(width, height);
-    _splashFBOTexture->dirtyTextureObject();
-
-    osg::ref_ptr<osg::Camera> newCam = createFBOCamera();
-
-    // swap everything around
-    for (unsigned int i=0; i < _splashFBOCamera->getNumChildren(); ++i) {
-        newCam->addChild(_splashFBOCamera->getChild(i));
-    }
-
-    addChild(newCam);
-    removeChild(_splashFBOCamera);
-    _splashFBOCamera = newCam;
 }
 
 void SplashScreen::resize( int width, int height )
