@@ -101,26 +101,21 @@ using std::vector;
 extern int _bootstrap_OSInit;
 
 static SGPropertyNode_ptr frame_signal;
-static SGPropertyNode_ptr nasal_gc_threaded;
-static SGPropertyNode_ptr nasal_gc_threaded_wait;
 
 #ifdef NASAL_BACKGROUND_GC_THREAD
-extern "C" {
-    extern void startNasalBackgroundGarbageCollection();
-    extern void stopNasalBackgroundGarbageCollection();
-    extern void performNasalBackgroundGarbageCollection();
-    extern void awaitNasalGarbageCollectionComplete(bool can_wait);
-}
-#endif
+static SGPropertyNode_ptr nasal_gc_threaded;
+static SGPropertyNode_ptr nasal_gc_threaded_wait;
 static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_begin(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::Begin));
 static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_end(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::End));
 static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_started(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::Started));
 static  SGSharedPtr<simgear::Notifications::MainLoopNotification> mln_stopped(new simgear::Notifications::MainLoopNotification(simgear::Notifications::MainLoopNotification::Type::Stopped));
 static  SGSharedPtr<simgear::Notifications::NasalGarbageCollectionConfigurationNotification> ngccn;
+#endif
 // This method is usually called after OSG has finished rendering a frame in what OSG calls an idle handler and
 // is reposonsible for invoking all of the relevant per frame processing; most of which is handled by subsystems.
 static void fgMainLoop( void )
 {
+#ifdef NASAL_BACKGROUND_GC_THREAD
     //
     // the Nasal GC will automatically run when (during allocation) it discovers that more space is needed.
     // This has a cost of between 5ms and 50ms (depending on the amount of currently active Nasal).
@@ -147,6 +142,7 @@ static void fgMainLoop( void )
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(ngccn);
 
      simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_begin);
+#endif
 
     if (sglog().has_popup()) {
         std::string s = sglog().get_popup();
@@ -168,7 +164,9 @@ static void fgMainLoop( void )
     SGCommandMgr::instance()->executedQueuedCommands();
     simgear::AtomicChangeListener::fireChangeListeners();
 
-     simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_end);
+#ifdef NASAL_BACKGROUND_GC_THREAD
+    simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_end);
+#endif
 }
 
 static void initTerrasync()
@@ -277,9 +275,11 @@ void registerMainLoop()
 {
     // stash current frame signal property
     frame_signal = fgGetNode("/sim/signals/frame", true);
+
+#ifdef NASAL_BACKGROUND_GC_THREAD
     nasal_gc_threaded = fgGetNode("/sim/nasal-gc-threaded", true);
     nasal_gc_threaded_wait = fgGetNode("/sim/nasal-gc-threaded-wait", true);
-
+#endif
     // init the Emesary receiver for Nasal
     nasal::initMainLoopRecipient();
 
@@ -290,8 +290,10 @@ void unregisterMainLoopProperties()
 {
     nasal::shutdownMainLoopRecipient();
     frame_signal.reset();
+#ifdef NASAL_BACKGROUND_GC_THREAD
     nasal_gc_threaded.reset();
     nasal_gc_threaded_wait.reset();
+#endif
 }
 
 } // namespace flightgear
@@ -441,10 +443,11 @@ static void fgIdleFunction ( void ) {
         fgSetBool("sim/sceneryloaded", false);
         flightgear::registerMainLoop();
 
+#ifdef NASAL_BACKGROUND_GC_THREAD
         ngccn = new simgear::Notifications::NasalGarbageCollectionConfigurationNotification(nasal_gc_threaded->getBoolValue(), nasal_gc_threaded_wait->getBoolValue());
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(ngccn);
          simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_started);
-        
+#endif        
         flightgear::addSentryBreadcrumb("entering main loop", "info");
     }
 
@@ -817,7 +820,9 @@ int fgMainInit( int argc, char **argv )
 
     const bool requestLauncherRestart = fgGetBool("/sim/restart-launcher-on-exit");
 
+#ifdef NASAL_BACKGROUND_GC_THREAD
     simgear::Emesary::GlobalTransmitter::instance()->NotifyAll(mln_stopped);
+#endif
 
     simgear::clearEffectCache();
 
