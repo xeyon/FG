@@ -409,7 +409,7 @@ int usage()
     fprintf(stderr, "                       -a set altitude in meters!\n");
     fprintf(stderr, "                       -s set speed in knots\n");
     fprintf(stderr, "                       -m print mass distribution table: id, x, y, z, mass \n");
-    fprintf(stderr, "                     Options to generate LD curve and greater deteiled plotting\n");
+    fprintf(stderr, "                     Options to generate LD curve and greater detailed plotting\n");
     fprintf(stderr, "  yasim <aircraft.xml> [--detailed-graph] [--detailed-drag]\n");
     fprintf(stderr, "  yasim <aircraft.xml> [--detailed-min-speed -approach]\n");
     fprintf(stderr, "  yasim <aircraft.xml> [--detailed-min-speed -cruise]\n");
@@ -423,7 +423,9 @@ int main(int argc, char** argv)
     FGFDM* fdm = new FGFDM();
     Airplane* a = fdm->getAirplane();
 
-    if(argc < 2) return usage();
+    if (argc < 2 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+        return usage();
+    }
     // Read
     try {
         string file = argv[1];
