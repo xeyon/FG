@@ -51,6 +51,7 @@ bool FGAIMultiplayer::init(ModelSearchOrder searchOrder)
 {
     props->setStringValue("sim/model/path", model_path);
     props->setIntValue("sim/model/fallback-model-index", _getFallbackModelIndex());
+
     //refuel_node = fgGetNode("systems/refuel/contact", true);
     isTanker = false; // do this until this property is
                       // passed over the net
@@ -64,6 +65,12 @@ bool FGAIMultiplayer::init(ModelSearchOrder searchOrder)
         isTanker = true;
         // cout << "isTanker " << isTanker << " " << mCallSign <<endl;
     }
+    // ensure that these are created prior to calling base class init 
+    // as otherwise the MP list will break
+    m_lagPPSAveragedNode = props->getNode("lag/pps-averaged", true);
+    m_lagPPSAveragedNode->setDoubleValue(0);
+    m_lagModAveragedNode = props->getNode("lag/lag-mod-averaged", true);
+    m_lagModAveragedNode->setDoubleValue(0);
 
     // load model
     bool result = FGAIBase::init(searchOrder);
@@ -98,9 +105,6 @@ void FGAIMultiplayer::bind()
     m_node_ai_latch = props->getNode("ai-latch", true /*create*/);
     m_node_log_multiplayer = globals->get_props()->getNode("/sim/log-multiplayer-callsign", true /*create*/);
     
-    m_lagPPSAveragedNode = props->getNode("lag/pps-averaged", true);
-    m_lagModAveragedNode =  props->getNode("lag/lag-mod-averaged", true);
-
 #define AIMPROProp(type, name) \
 SGRawValueMethods<FGAIMultiplayer, type>(*this, &FGAIMultiplayer::get##name)
 
