@@ -580,13 +580,13 @@ void SplashScreen::doUpdate()
         _splashFSQuadColor->dirty();
 
         for (const TextItem& item : _items) {
-            if (item.condition != nullptr)
+            if (item.condition != nullptr) {
 
                 if (item.condition->test())
                     item.textNode->setDrawMode(item.drawMode);
                 else
                     item.textNode->setDrawMode(0);
-
+            }
             if (item.dynamicContent) {
                 item.textNode->setText(
                   item.dynamicContent->getStringValue(),
