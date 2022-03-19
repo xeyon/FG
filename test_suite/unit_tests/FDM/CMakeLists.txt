@@ -4,6 +4,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_ls_matrix.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testAeroElement.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testYASimAtmosphere.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/testYASimGear.cxx
     PARENT_SCOPE
 )
 
@@ -12,5 +13,6 @@ set(TESTSUITE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/test_ls_matrix.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testAeroElement.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testYASimAtmosphere.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/yasim-gear.hxx
     PARENT_SCOPE
 )
