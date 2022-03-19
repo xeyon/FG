@@ -3,6 +3,8 @@
 #  include "config.h"
 #endif
 
+#include <simgear/debug/logstream.hxx>
+
 #include "Math.hpp"
 #include "BodyEnvironment.hpp"
 #include "Ground.hpp"
@@ -18,11 +20,38 @@ static const float DEG2RAD = YASIM_PI / 180.0;
 static const float maxGroundBumpAmplitude=0.4;
         //Amplitude can be positive and negative
 
+/* Sets <out> to unit vector along <v>, or all zeros if <v> is zero
+length. Returns length of <v>. */
+static float magnitudeUnit( const float* v, float* out)
+{
+    float magnitude = Math::mag3( v);
+    if ( magnitude) {
+        Math::mul3( 1 / magnitude, v, out);
+    }
+    else {
+        Math::zero3( out);
+    }
+    return magnitude;
+}
+
+GearVector::GearVector( float v0, float v1, float v2)
+{
+    set( v0, v1, v2);
+}
+
+void GearVector::set( float v0, float v1, float v2)
+{
+    v[0] = v0;
+    v[1] = v1;
+    v[2] = v2;
+    magnitude = magnitudeUnit( v, unit);
+}
+
 Gear::Gear()
 {
     int i;
     for(i=0; i<3; i++)
-        _pos[i] = _cmpr[i] = _stuck[i] = 0;
+        _pos[i] = _stuck[i] = 0;
     _spring = 1;
     _damp = 0;
     _sfric = 0.8f;
@@ -59,6 +88,23 @@ Gear::Gear()
 
     Math::zero3(_ground_trans);
     Math::identity33(_ground_rot);
+    
+    _wheelAxle.set(0, 1, 0);
+    _wheelRadius = 0;
+    _tyreRadius = 0;
+}
+
+void Gear::setCompression(float* compression)
+{
+    _cmpr.set( compression[0], compression[1], compression[2]);
+}
+
+void Gear::setWheelAxle(float* wheel_axle)
+{
+    _wheelAxle.set( wheel_axle[0], wheel_axle[1], wheel_axle[2]);
+    if (_wheelAxle.magnitude == 0) {
+        _wheelAxle.unit[1] = 1;
+    }
 }
 
 void Gear::setGlobalGround(double *global_ground, float* global_vel,
@@ -152,6 +198,206 @@ void Gear::integrate(float dt)
     return;
 }
 
+
+bool gearCompression(
+        const float (&ground)[4],
+        const GearVector& compression,
+        const float (&wheel_pos)[3],
+        const GearVector (&wheel_axle),
+        float wheel_radius,
+        float tyre_radius,
+        std::function< float ()> bump_fn,
+        float (&o_contact)[3],
+        float& o_compression_distance_vertical,
+        float& o_compression_norm
+        )
+{
+    /* In this diagram we are looking at wheel end on.
+
+                N
+                 \     S'
+                  \   /
+                   \ /
+                    W--__
+                   /     --> wheel_axle     |
+                  /                         | G
+                 S                          V
+
+        ------------------------- Ground plus tyre_radius
+
+        ========================= Ground
+
+    W is wheel_pos, position of wheel centre at maximum extension.
+
+    S is the lowest point of rim relative to ground. S' is the highest point
+    of the rim relative to the ground. So SWS' is a diameter across middle of
+    wheel. For most aircraft this will be vertical (relative to the aircraft),
+    but we don't require this; might be useful for a Bf109 aircraft.
+
+    N is position of wheel centre at maximum compression:
+        N = W + compression.
+
+    <wheel_axle> is wheel axle vector. Usually this is close to y axis, e.g. (
+    0, 1, 0).
+
+    G is ground normal, pointing downwards. Points p on ground satisfy:
+        G[:3].p = G3
+
+    Points p on (ground plus tyre_radius) satisfy:
+        G[:3].p = G3 + tyre_radius.
+
+    R is vector from W to S; to make S be lowest point on rim, this is radial
+    vector of wheel that is most closely aligned with G. We use:
+        R = - wheel_axle x G x wheel_axle
+
+    Distance of S below (ground plus tyre_radius), is:
+        a = S.G - ( G3 + tyre_radius)
+
+    If a < 0, the point of maximum extension is above ground and we return
+    false.
+
+    Otherwise, a >= 0 and the point of maximum extension is below ground, so
+    we are in contact with the ground and we compress the grear just enough to
+    make S be on ground plus tyre_radius. The tyre surface is tyre_radius from
+    S, so this ensures that the tyre will just touch the ground.
+
+    Compressing the gear means we move S (and W and S') a distance
+    compression_distance along vector <compression> (the vector from W to N),
+    and the projection of this movement along G must be -a. So:
+        ( compression_distance * compression) . G = -a
+    So:
+        compression_distance = -a / (compression . G)
+    */
+    
+    float ground_unit[3];
+    magnitudeUnit( ground, ground_unit);
+    
+    /* Find S, the lowest point on wheel. */
+    float S[3];
+    Math::set3( wheel_pos, S);
+    
+    if (wheel_radius) {
+        /* Find radial wheel vector pointing closest to ground using two
+        cross-products: wheel_axle_unit x ground_unit x wheel_axle_unit */
+        float R[3];
+        Math::cross3( wheel_axle.unit, ground_unit, R);
+        Math::cross3( R, wheel_axle.unit, R);
+
+        /* Scale R to be length wheel_radius so it is vector from W to S, and
+        use it to find S. */
+        Math::unit3( R, R);
+        Math::mul3( wheel_radius, R, R);
+        
+        /* Add R to S to get lowest point on wheel. */
+        Math::add3( S, R, S);
+    }
+    
+    /* Calculate <a>, distance of S below ground. */
+    float a = Math::dot3( ground, S) - ( ground[3] - tyre_radius);
+    float bump_altitude = 0;
+    if ( a > -maxGroundBumpAmplitude) {
+        bump_altitude = bump_fn();
+        a -= bump_altitude;
+    }
+    
+    if ( a < 0) {
+        /* S is above ground so we are not on ground. */
+        return false;
+    }
+    
+    /* Lowest part of wheel is below ground. */
+    o_compression_distance_vertical = a;
+    
+    /* Find compression_norm. First we need to find compression_distance, the
+    distance to compress the gear so that S (which is below ground+tyre_radius)
+    would move to just touch ground+tyre_radius. We need to move gear further
+    depending on how perpendicular <compression> is to the ground. */
+    o_compression_norm = 0;
+    float compression_distance = 0;
+    float div = Math::dot3( compression.unit, ground_unit);
+    if (div) {
+        /* compression.unit points upwards, ground_unit points downwards, so
+        div is -ve. */
+        compression_distance = -a / div;
+    }
+
+    /* Set o_compression_norm. */
+    if ( compression.magnitude) {
+        o_compression_norm = compression_distance / compression.magnitude;
+    }
+    if (o_compression_norm > 1) {
+        o_compression_norm = 1;
+    }
+    
+    /* Contact point on ground-plus-tyre-radius is S plus compression
+    vector. */
+    float delta[3];
+    Math::mul3( compression_distance, compression.unit, delta);
+    Math::add3( S, delta, o_contact);
+
+    /* Check that <o_contact> is tyre_radius above ground. */
+    assert( fabs( Math::dot3( o_contact, ground) - (ground[3] - tyre_radius + bump_altitude)) < 0.001);
+
+    /* Correct for tyre_radius - need to move o_contact a distance tyre_radius
+    towards ground. */
+    if (tyre_radius) {
+        Math::mul3( tyre_radius, ground_unit, delta);
+        Math::add3( o_contact, delta, o_contact);
+    }
+    
+    /* Check that <o_contact> is on ground. */
+    assert( fabs( Math::dot3( o_contact, ground) - (ground[3] + bump_altitude)) < 0.001);
+    
+    return true;
+}
+
+bool gearCompressionOld(
+        const float (&ground)[4],
+        const GearVector& compression,
+        const float (&pos)[3],
+        std::function< float ()> bump_fn,
+        float (&o_contact)[3],
+        float& o_compression_distance_vertical,
+        float& o_compression_norm
+        )
+{
+    // First off, make sure that the gear "tip" is below the ground.
+    // If it's not, there's no force.
+    float a = ground[3] - Math::dot3(pos, ground);
+    float BumpAltitude=0;
+    if (a<maxGroundBumpAmplitude)
+    {
+        BumpAltitude = bump_fn();
+        a+=BumpAltitude;
+    }
+    
+    if(a > 0) {
+        o_compression_distance_vertical = 0;
+        o_compression_norm = 0;
+        return false;
+    }
+
+    o_compression_distance_vertical = -a;
+    
+    // Now a is the distance from the tip to ground, so make b the
+    // distance from the base to ground.  We can get the fraction
+    // (0-1) of compression from a/(a-b). Note the minus sign -- stuff
+    // above ground is negative.
+    float tmp[3];
+    Math::add3(compression.v, pos, tmp);
+    float b = ground[3] - Math::dot3(tmp, ground)+BumpAltitude;
+
+    // Calculate the point of ground _contact.
+    if(b < 0)
+        o_compression_norm = 1;
+    else
+        o_compression_norm = a/(a-b);
+    for(int i=0; i<3; i++)
+        o_contact[i] = pos[i] + o_compression_norm * compression.v[i];
+    return true;
+}
+
+
 void Gear::calcForce(Ground *g_cb, RigidBody* body, State *s, float* v, float* rot)
 {
     // Init the return values
@@ -180,21 +426,19 @@ void Gear::calcForce(Ground *g_cb, RigidBody* body, State *s, float* v, float* r
     float ground[4];
     s->planeGlobalToLocal(_global_ground, ground);
 
-    // The velocity of the contact patch transformed to local coordinates.
-    float glvel[3];
-    s->globalToLocal(_global_vel, glvel);
-
-    // First off, make sure that the gear "tip" is below the ground.
-    // If it's not, there's no force.
-    float a = ground[3] - Math::dot3(_pos, ground);
-    float BumpAltitude=0;
-    if (a<maxGroundBumpAmplitude)
-    {
-        BumpAltitude=getBumpAltitude();
-        a+=BumpAltitude;
-    }
-    _compressDist = -a;
-    if(a > 0) {
+    bool on_ground = gearCompression(
+            ground,
+            _cmpr,
+            _pos,
+            _wheelAxle,
+            _wheelRadius,
+            _tyreRadius,
+            [this] { return this->getBumpAltitude(); },
+            _contact,
+            _compressDist,
+            _frac
+            );
+    if (!on_ground) {
         _wow = 0;
         _frac = 0;
         _compressDist = 0;
@@ -202,26 +446,13 @@ void Gear::calcForce(Ground *g_cb, RigidBody* body, State *s, float* v, float* r
         return;
     }
 
-    // Now a is the distance from the tip to ground, so make b the
-    // distance from the base to ground.  We can get the fraction
-    // (0-1) of compression from a/(a-b). Note the minus sign -- stuff
-    // above ground is negative.
-    float tmp[3];
-    Math::add3(_cmpr, _pos, tmp);
-    float b = ground[3] - Math::dot3(tmp, ground)+BumpAltitude;
-
-    // Calculate the point of ground _contact.
-    if(b < 0)
-        _frac = 1;
-    else
-        _frac = a/(a-b);
-    for(i=0; i<3; i++)
-        _contact[i] = _pos[i] + _frac*_cmpr[i];
-
+    // The velocity of the contact patch transformed to local coordinates.
+    float glvel[3];
+    s->globalToLocal(_global_vel, glvel);
+    
     // Turn _cmpr into a unit vector and a magnitude
-    float cmpr[3];
-    float clen = Math::mag3(_cmpr);
-    Math::mul3(1/clen, _cmpr, cmpr);
+    const float (&cmpr)[3] = _cmpr.unit;
+    const float &clen = _cmpr.magnitude;
 
     // Now get the velocity of the point of contact
     float cv[3];
@@ -254,6 +485,7 @@ void Gear::calcForce(Ground *g_cb, RigidBody* body, State *s, float* v, float* r
     // Then the damping.  Use the only the velocity into the ground
     // (projection along "ground") projected along the compression
     // axis.  So Vdamp = ground*(ground dot cv) dot cmpr
+    float tmp[3];
     Math::mul3(Math::dot3(ground, cv), ground, tmp);
     float dv = Math::dot3(cmpr, tmp);
     float damp = _damp * dv;

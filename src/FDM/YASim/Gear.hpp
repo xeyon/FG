@@ -2,6 +2,9 @@
 #define _GEAR_HPP
 #include "Math.hpp"
 
+#include <functional>
+
+
 namespace simgear {
 class BVHMaterial;
 }
@@ -11,6 +14,17 @@ namespace yasim {
 class Ground;
 class RigidBody;
 struct State;
+
+
+/* Contains a vector and pre-generates unit and magnitude values. */
+struct GearVector
+{
+    GearVector( float v0=0, float v1=0, float v2=0);
+    void set( float v0, float v1, float v2);
+    float v[3];
+    float unit[3];
+    float magnitude;
+};
 
 // A landing gear has the following parameters:
 //
@@ -37,8 +51,20 @@ public:
     // Externally set values
     void setPosition(float* position) { Math::set3(position, _pos); }
     void getPosition(float* out) { Math::set3(_pos, out); }
-    void setCompression(float* compression) { Math::set3(compression, _cmpr); }
-    void getCompression(float* out) { Math::set3(_cmpr, out); }
+    void setCompression(float* compression);
+    void getCompression(float* out) { Math::set3(_cmpr.v, out); }
+    
+    void setWheelAxle(float* wheelAxle);
+    void getWheelAxle(float* out) { Math::set3(_wheelAxle.v, out); }
+    
+    void setWheelRadius(float wheelRadius) { _wheelRadius = wheelRadius; }
+    float getWheelRadius() { return _wheelRadius; }
+    
+    void setTyreRadius(float tyreRadius) { _tyreRadius = tyreRadius; }
+    float getTyreRadius() { return _tyreRadius; }
+    
+    void getContact(float* contact) { Math::set3( _contact, contact); }
+    
     void setSpring(float spring) { _spring = spring; }
     float getSpring() { return _spring; }
     void setDamping(float damping) { _damp = damping; }
@@ -114,7 +140,7 @@ private:
     bool _slipping;
     float _pos[3];
     double _stuck[3];
-    float _cmpr[3];
+    GearVector _cmpr;
     float _spring;
     float _damp;
     float _sfric;
@@ -125,9 +151,9 @@ private:
     float _force[3];
     float _contact[3];
     float _wow;
-    float _frac;
+    float _frac;    /* Compression as fraction of maximum. */
     float _initialLoad;
-    float _compressDist;
+    float _compressDist;    /* Vertical compression distance. */
     double _global_ground[4];
     float _global_vel[3];
     float _casterAngle;
@@ -153,7 +179,88 @@ private:
     unsigned int _body_id;
     double _ground_rot[9];
     double _ground_trans[3];
+
+    GearVector _wheelAxle;
+    float _wheelRadius;
+    float _tyreRadius;
 };
+
+
+/* [This is internal implementation for Gear(), exposed here to allow unit
+testing.]
+
+Finds compression of gear needed to make outside of tyre rest on ground.
+
+    ground
+        Definition of ground plane; points on ground satisfy p.ground[:3] ==
+        ground[4]. Is assumed that for points below ground, p.ground[:3] is
+        positive.
+    compression
+        Movement of wheel centre at maximum compression.
+    wheel_pos
+        Centre of wheel at full extension.
+    wheel_axle
+        Direction of wheel axle; defines orientation of wheel.
+    wheel_radius
+        Distance from <wheel_pos> to centre of tubular tyre.
+    tyre_radius
+        Radius of tubular tyre.
+    bump_fn
+        Callable that returns bump value.
+    o_contact
+        Out-param for position of tyre contact after compression has been
+        applied.
+    o_compression_distance_vertical
+        Out-param vertical compression distance in metres.
+    o_compression_norm
+        Out-param compression as a fraction of maximum compression.
+
+If on ground, sets out params and returns true. Otherwise returns false.
+*/
+bool gearCompression(
+        const float (&ground)[4],
+        const GearVector& compression,
+        const float (&wheel_pos)[3],
+        const GearVector& wheel_axle,
+        float wheel_radius,
+        float tyre_radius,
+        std::function< float ()> bump_fn,
+        float (&o_contact)[3],
+        float& o_compression_distance_vertical,
+        float& o_compression_norm
+        );
+
+/* Old calculation for simple contact point.
+
+    ground
+        Definition of ground plane; points on ground satisfy p.ground[:3] ==
+        ground[4]. Is assumed that for points below ground, p.ground[:3] is
+        positive.
+    pos
+        Position of contact point.
+    compression
+        Movement of contact point at maximum compression.
+    bump_fn
+        Callable that returns bump value.
+    o_contact
+        Position of tyre contact after our compression has been applied.
+    o_compressDist
+        Compression distance in metres.
+    o_compressNorm
+        Compression as a fraction of maximum compression.
+    bump_altitude_override
+        For testing; if >= 0, we use this instead of getting a live value from
+        getBumpAltitude().
+*/
+bool gearCompressionOld(
+        const float (&ground)[4],
+        const GearVector& compression,
+        const float (&pos)[3],
+        std::function< float ()> bump_fn,
+        float (&o_contact)[3],
+        float& o_compression_distance_vertical,
+        float& o_compression_norm
+        );
 
 }; // namespace yasim
 #endif // _GEAR_HPP

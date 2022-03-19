@@ -198,15 +198,12 @@ void Model::updateGround(State* s)
     int i;
     // The landing gear
     for(i=0; i<_gears.size(); i++) {
-	Gear* g = (Gear*)_gears.get(i);
+        Gear* g = (Gear*)_gears.get(i);
 
-	// Get the point of ground contact
-        float pos[3], cmpr[3];
-	g->getPosition(pos);
-	g->getCompression(cmpr);
-
-	Math::mul3(g->getCompressFraction(), cmpr, cmpr);
-	Math::add3(cmpr, pos, pos);
+        // Get the point of ground contact
+        float pos[3];
+        g->getContact(pos);
+        
         // Transform the local coordinates of the contact point to
         // global coordinates.
         double pt[3];
@@ -437,33 +434,30 @@ void Model::newState(State* s)
     float min = 1e8;
     int i;
     for(i=0; i<_gears.size(); i++) {
-	Gear* g = (Gear*)_gears.get(i);
+        Gear* g = (Gear*)_gears.get(i);
 
         if (!g->getSubmergable())
         {
-	    // Get the point of ground contact
-            float pos[3], cmpr[3];
-	    g->getPosition(pos);
-	    g->getCompression(cmpr);
-	    Math::mul3(g->getCompressFraction(), cmpr, cmpr);
-	    Math::add3(cmpr, pos, pos);
+            // Get the point of ground contact
+            float pos[3];
+            g->getContact(pos);
 
             // The plane transformed to local coordinates.
             double global_ground[4];
             g->getGlobalGround(global_ground);
             float ground[4];
             s->planeGlobalToLocal(global_ground, ground);
-	    float dist = ground[3] - Math::dot3(pos, ground);
+            float dist = ground[3] - Math::dot3(pos, ground);
 
-	    // Find the lowest one
-	    if(dist < min)
-	        min = dist;
+            // Find the lowest one
+            if(dist < min)
+                min = dist;
         }
         g->updateStuckPoint(s);
     }
     _agl = min;
     if(_agl < -1) // Allow for some integration slop
-	_crashed = true;
+    _crashed = true;
 }
 
 // Calculates the airflow direction at the given point and for the

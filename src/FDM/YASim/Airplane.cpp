@@ -442,6 +442,7 @@ void Airplane::compileGear(GearRec* gr)
     g->getCompression(cmp);
     float length = 3 * Math::mag3(cmp);
     g->getPosition(pos);
+    pos[2] -= (g->getWheelRadius() + g->getTyreRadius());
     Math::mul3(0.5, cmp, cmp);
     Math::add3(pos, cmp, pos);
 
@@ -652,7 +653,11 @@ void Airplane::solveGear()
         GearRec* gr = (GearRec*)_gears.get(i);
         Gear* g = gr->gear;
         g->getPosition(pos);
-	Math::sub3(cg, pos, pos);
+        // Move pos to bottom of wheel if specified; in this case the exact
+        // contact point depends on aircraft orientation relative to ground,
+        // but this is probably good enough here.
+        pos[2] -= (g->getWheelRadius() + g->getTyreRadius());
+        Math::sub3(cg, pos, pos);
         gr->wgt = 1.0f/(0.5f+Math::sqrt(pos[0]*pos[0] + pos[1]*pos[1]));
         if (!g->getIgnoreWhileSolving())
             total += gr->wgt;

@@ -207,6 +207,9 @@ void YASim::init()
         node->setDoubleValue("yoffset-m", pos[1]);
         node->setDoubleValue("zoffset-m", pos[2]);
 
+        node->setDoubleValue("wheel-radius-m", g->getWheelRadius());
+        node->setDoubleValue("tyre-radius-m", g->getTyreRadius());
+
         _gearProps.push_back(GearProps(node));
     }
 
@@ -222,6 +225,7 @@ void YASim::init()
             Gear* g = airplane->getGear(i);
             float pos[3];
             g->getPosition(pos);
+            pos[2] -= (g->getWheelRadius() + g->getTyreRadius());
             if(pos[2] < minGearZ)
                 minGearZ = pos[2];
         }
