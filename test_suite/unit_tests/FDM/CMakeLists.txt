@@ -13,6 +13,6 @@ set(TESTSUITE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/test_ls_matrix.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testAeroElement.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/testYASimAtmosphere.hxx
-    ${CMAKE_CURRENT_SOURCE_DIR}/yasim-gear.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/testYASimGear.hxx
     PARENT_SCOPE
 )
