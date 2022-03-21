@@ -210,6 +210,9 @@ void YASim::init()
         node->setDoubleValue("wheel-radius-m", g->getWheelRadius());
         node->setDoubleValue("tyre-radius-m", g->getTyreRadius());
 
+        node->setDoubleValue("spring", g->getSpring());
+        node->setDoubleValue("damping", g->getDamping());
+        
         _gearProps.push_back(GearProps(node));
     }
 
