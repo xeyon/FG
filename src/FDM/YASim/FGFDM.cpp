@@ -1041,8 +1041,18 @@ void FGFDM::parseGear(const XMLAttributes* a)
     float v[3];
     Gear* g = new Gear();
     _currObj = g;
-    attrf_xyz(a, v);
+    
+    /* Override (x, y, z) with wheel-* if specified. */
+    if (a->hasAttribute("wheel-x")) {
+        v[0] = attrf(a, "wheel-x");
+        v[1] = attrf(a, "wheel-y");
+        v[2] = attrf(a, "wheel-z");
+    }
+    else {
+        attrf_xyz(a, v);
+    }
     g->setPosition(v);
+    
     float nrm = Math::mag3(v);
     if (_vehicle_radius < nrm)
         _vehicle_radius = nrm;
