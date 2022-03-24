@@ -308,7 +308,7 @@ do_dialog_new (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_dialog_show (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     gui->showDialog(arg->getStringValue("dialog-name"));
     return true;
 }
@@ -321,7 +321,7 @@ do_dialog_show (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_dialog_toggle (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     gui->toggleDialog(arg->getStringValue("dialog-name"));
     return true;
 }
@@ -333,7 +333,7 @@ do_dialog_toggle (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_dialog_close (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     if(arg->hasValue("dialog-name"))
         return gui->closeDialog(arg->getStringValue("dialog-name"));
     return gui->closeActiveDialog();
@@ -348,7 +348,7 @@ do_dialog_close (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_dialog_update (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     FGDialog * dialog;
     if (arg->hasValue("dialog-name"))
         dialog = gui->getDialog(arg->getStringValue("dialog-name"));
@@ -401,14 +401,14 @@ do_open_launcher(const SGPropertyNode*, SGPropertyNode*)
 static bool
 do_dialog_apply (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
-    FGDialog * dialog;
+    auto gui = globals->get_subsystem<NewGUI>();
+    FGDialog* dialog = nullptr;
     if (arg->hasValue("dialog-name"))
         dialog = gui->getDialog(arg->getStringValue("dialog-name"));
     else
         dialog = gui->getActiveDialog();
 
-    if (dialog != 0) {
+    if (dialog) {
         dialog->applyValues(arg->getStringValue("object-name"));
         return true;
     } else {
