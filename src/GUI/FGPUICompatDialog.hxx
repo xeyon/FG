@@ -119,6 +119,8 @@ private:
     // Show the dialog.
     void display(SGPropertyNode* props);
 
+    void requestClose();
+
 #if 0
     // Build the dialog or a subobject of it.
     puObject* makeObject(SGPropertyNode* props,

@@ -12,6 +12,7 @@
 #include <simgear/props/props_io.hxx> // for copyProperties
 
 #include <GUI/FGPUICompatDialog.hxx>
+#include <GUI/new_gui.hxx>
 #include <Main/fg_props.hxx>
 #include <Scripting/NasalSys.hxx>
 
@@ -153,6 +154,7 @@ void PUICompatObject::init()
         }
 
         SGSharedPtr<PUICompatObject> childObject = createForType(nodeName, childNode);
+        childObject->_parent = this;
         _children.push_back(childObject);
     }
 
@@ -268,7 +270,12 @@ void PUICompatObject::createNasalPeer()
 void PUICompatObject::activateBindings()
 {
     assert(_enabled);
+    auto guiSub = globals->get_subsystem<NewGUI>();
+    assert(guiSub);
+
+    guiSub->setActiveDialog(dialog());
     fireBindingList(_bindings);
+    guiSub->setActiveDialog(nullptr);
 }
 
 void PUICompatObject::setGeometry(const SGRectd& g)

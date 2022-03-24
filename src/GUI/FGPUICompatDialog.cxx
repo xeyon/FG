@@ -85,7 +85,9 @@ void FGPUICompatDialog::setupGhost(nasal::Hash& compatModule)
         .member("y", &FGPUICompatDialog::getY)
         .member("width", &FGPUICompatDialog::width)
         .member("height", &FGPUICompatDialog::height)
-        .member("root", f_dialogRootObject);
+        .member("root", f_dialogRootObject)
+        .method("close", &FGPUICompatDialog::requestClose);
+
 
     using NasalDialogPeer = nasal::Ghost<SGSharedPtr<DialogPeer>>;
     NasalDialogPeer::init("CompatDialogPeer")
@@ -106,6 +108,8 @@ FGPUICompatDialog::FGPUICompatDialog(SGPropertyNode* props) : FGDialog(props),
 
 FGPUICompatDialog::~FGPUICompatDialog()
 {
+    _peer->callMethod<void>("doClose");
+
     _props->setIntValue("lastx", getX());
     _props->setIntValue("lasty", getY());
     // FIXME: save width/height as well?
@@ -761,4 +765,10 @@ std::string FGPUICompatDialog::nameString() const
 std::string FGPUICompatDialog::nasalModule() const
 {
     return _module;
+}
+
+void FGPUICompatDialog::requestClose()
+{
+    auto gui = globals->get_subsystem<NewGUI>();
+    gui->closeDialog(_name);
 }
