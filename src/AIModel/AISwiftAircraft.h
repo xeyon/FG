@@ -25,8 +25,6 @@
 
 #include "AIBaseAircraft.hxx"
 
-using charPtr = const char*;
-
 struct AircraftTransponder
 {
     AircraftTransponder(std::string  callsign, int code, bool modeC, bool ident)
@@ -76,7 +74,7 @@ public:
     string_view getTypeString() const override { return "swift"; }
     void update(double dt) override;
 
-    void updatePosition(SGGeod& position, SGVec3<double>& orientation, double groundspeed, bool initPos);
+    void updatePosition(const SGGeod &position, const SGVec3<double> &orientation, double groundspeed, bool initPos);
     double getGroundElevation(const SGGeod& pos) const;
     void initProps();
     void setPlaneSurface(const AircraftSurfaces& surfaces);

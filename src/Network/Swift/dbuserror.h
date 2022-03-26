@@ -1,5 +1,5 @@
-// dbuserror.h 
-// 
+// dbuserror.h
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -23,35 +23,33 @@
 #include <dbus/dbus.h>
 #include <string>
 
-namespace FGSwiftBus
+namespace FGSwiftBus {
+
+//! DBus error
+class CDBusError
 {
-
-    //! DBus error
-    class CDBusError
-    {
-    public:
-        //! Error type
-        enum ErrorType
-        {
-            NoError,
-            Other
-        };
-
-        //! Default constructur
-        CDBusError() = default;
-
-        //! Constructor
-        explicit CDBusError(const DBusError *error);
-
-        //! Get error type
-        ErrorType getType() const { return m_errorType; }
-
-    private:
-        ErrorType m_errorType = NoError;
-        std::string m_name;
-        std::string m_message;
+public:
+    //! Error type
+    enum ErrorType {
+        NoError,
+        Other
     };
 
-}
+    //! Default constructur
+    CDBusError() = default;
+
+    //! Constructor
+    explicit CDBusError(const DBusError* error);
+
+    //! Get error type
+    ErrorType getType() const { return m_errorType; }
+
+private:
+    ErrorType m_errorType = NoError;
+    std::string m_name;
+    std::string m_message;
+};
+
+} // namespace FGSwiftBus
 
 #endif // guard

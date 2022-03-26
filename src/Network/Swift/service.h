@@ -1,5 +1,5 @@
-// service.h - Service module for swift<->FG connection 
-// 
+// service.h - Service module for swift<->FG connection
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -28,9 +28,8 @@
 
 
 #include "dbusobject.h"
-#include <chrono>
-#include <string>
 #include <Main/fg_props.hxx>
+#include <chrono>
 #include <simgear/compiler.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/io/raw_socket.hxx>
@@ -40,6 +39,7 @@
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/timing/timestamp.hxx>
+#include <string>
 
 
 //! \cond PRIVATE
@@ -49,7 +49,7 @@
 
 namespace FGSwiftBus {
 
-	/*!
+/*!
      * FGSwiftBus service object which is accessible through DBus
      */
 class CService : public CDBusObject
@@ -268,8 +268,6 @@ private:
     SGPropertyNode_ptr m_yawRateNode;
     SGPropertyNode_ptr m_com1VolumeNode;
     SGPropertyNode_ptr m_com2VolumeNode;
-
-
 };
 } // namespace FGSwiftBus
 

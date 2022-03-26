@@ -24,15 +24,10 @@
 #include "plugin.h"
 #include "swift_connection.hxx"
 #include <Main/fg_props.hxx>
-#include <simgear/compiler.h>
-#include <simgear/debug/logstream.hxx>
-#include <simgear/io/raw_socket.hxx>
-#include <simgear/misc/stdint.hxx>
 #include <simgear/props/props.hxx>
 #include <simgear/structure/commands.hxx>
 #include <simgear/structure/event_mgr.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
-#include <simgear/timing/timestamp.hxx>
 
 namespace {
 inline std::string fgswiftbusServiceName()

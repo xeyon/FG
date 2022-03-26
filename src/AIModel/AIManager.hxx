@@ -25,8 +25,11 @@
 #include <list>
 #include <map>
 
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <simgear/math/SGVec3.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/props/props.hxx>
 #include <simgear/structure/SGSharedPtr.hxx>
+#include <simgear/structure/subsystem_mgr.hxx>
 
 class FGAIBase;
 class FGAIThermal;

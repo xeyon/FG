@@ -1,5 +1,5 @@
-// dbuserror.cpp 
-// 
+// dbuserror.cpp
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -19,11 +19,11 @@
 
 #include "dbuserror.h"
 
-namespace FGSwiftBus
+namespace FGSwiftBus {
+
+CDBusError::CDBusError(const DBusError* error)
+    : m_name(error->name), m_message(error->message)
 {
-
-    CDBusError::CDBusError(const DBusError *error)
-        : m_name(error->name), m_message(error->message)
-    { }
-
 }
+
+} // namespace FGSwiftBus

@@ -49,15 +49,12 @@ bool FGSwiftAircraftManager::addPlane(const std::string& callsign, const std::st
     return true;
 }
 
-void FGSwiftAircraftManager::updatePlanes(std::vector<std::string> callsigns, std::vector<SGGeod> positions, std::vector<SGVec3d> orientations, std::vector<double> groundspeeds, std::vector<bool> onGrounds)
+void FGSwiftAircraftManager::updatePlanes(const std::vector<std::string>& callsigns, const std::vector<SGGeod>& positions, const std::vector<SGVec3d>& orientations, const std::vector<double>& groundspeeds, const std::vector<bool>& onGrounds)
 {
-
-	for (long unsigned int i = 0; i < callsigns.size(); i++)
-    {
+    for (long unsigned int i = 0; i < callsigns.size(); i++) {
         auto it = aircraftByCallsign.find(callsigns.at(i));
-        if(it != aircraftByCallsign.end())
-        {
-            it->second->updatePosition(positions.at(i), orientations.at(i), groundspeeds.at(i),true);
+        if (it != aircraftByCallsign.end()) {
+            it->second->updatePosition(positions.at(i), orientations.at(i), groundspeeds.at(i), true);
         }
     }
 }
@@ -73,9 +70,9 @@ void FGSwiftAircraftManager::getRemoteAircraftData(std::vector<std::string>& cal
     elevationsM.clear();
     verticalOffsets.clear();
 
-	for (const auto & requestedCallsign : requestedCallsigns) {
+    for (const auto& requestedCallsign : requestedCallsigns) {
         const auto it = aircraftByCallsign.find(requestedCallsign);
-        if(it == aircraftByCallsign.end()) { continue; }
+        if (it == aircraftByCallsign.end()) { continue; }
 
         const FGAISwiftAircraft* aircraft = it->second;
         assert(aircraft);
@@ -93,14 +90,13 @@ void FGSwiftAircraftManager::getRemoteAircraftData(std::vector<std::string>& cal
         longitudesDeg.push_back(lonDeg);
         elevationsM.push_back(groundElevation);
         verticalOffsets.push_back(0);
-	}
+    }
 }
 
 void FGSwiftAircraftManager::removePlane(const std::string& callsign)
 {
     auto it = aircraftByCallsign.find(callsign);
-    if(it != aircraftByCallsign.end())
-    {
+    if (it != aircraftByCallsign.end()) {
         it->second->setDie(true);
         aircraftByCallsign.erase(it);
     }
@@ -108,18 +104,16 @@ void FGSwiftAircraftManager::removePlane(const std::string& callsign)
 
 void FGSwiftAircraftManager::removeAllPlanes()
 {
-    for(auto it = aircraftByCallsign.begin(); it!= aircraftByCallsign.end();)
-    {
+    for (auto it = aircraftByCallsign.begin(); it != aircraftByCallsign.end();) {
         it->second->setDie(true);
         it = aircraftByCallsign.erase(it);
     }
 }
 
-double FGSwiftAircraftManager::getElevationAtPosition(const std::string &callsign, const SGGeod& pos) const
+double FGSwiftAircraftManager::getElevationAtPosition(const std::string& callsign, const SGGeod& pos) const
 {
     auto it = aircraftByCallsign.find(callsign);
-    if(it != aircraftByCallsign.end())
-    {
+    if (it != aircraftByCallsign.end()) {
         return it->second->getGroundElevation(pos);
     }
     // Aircraft not found in list
@@ -128,11 +122,9 @@ double FGSwiftAircraftManager::getElevationAtPosition(const std::string &callsig
 
 void FGSwiftAircraftManager::setPlanesTransponders(const std::vector<AircraftTransponder>& transponders)
 {
-    for (const auto & transponder : transponders)
-    {
+    for (const auto& transponder : transponders) {
         auto it = aircraftByCallsign.find(transponder.callsign);
-        if(it != aircraftByCallsign.end())
-        {
+        if (it != aircraftByCallsign.end()) {
             it->second->setPlaneTransponder(transponder);
         }
     }
@@ -140,11 +132,9 @@ void FGSwiftAircraftManager::setPlanesTransponders(const std::vector<AircraftTra
 
 void FGSwiftAircraftManager::setPlanesSurfaces(const std::vector<AircraftSurfaces>& surfaces)
 {
-    for (const auto & surface : surfaces)
-    {
+    for (const auto& surface : surfaces) {
         auto it = aircraftByCallsign.find(surface.callsign);
-        if(it != aircraftByCallsign.end())
-        {
+        if (it != aircraftByCallsign.end()) {
             it->second->setPlaneSurface(surface);
         }
     }

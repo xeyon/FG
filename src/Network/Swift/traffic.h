@@ -24,6 +24,7 @@
 
 #include "SwiftAircraftManager.h"
 #include "dbusobject.h"
+
 #include <functional>
 #include <utility>
 
@@ -47,8 +48,8 @@ public:
 
     //! DBus interface name
     static const std::string& InterfaceName();
-    
-	//! DBus object path
+
+    //! DBus object path
     static const std::string& ObjectPath();
 
     //! Initialize the multiplayer planes rendering and return true if successful
@@ -69,11 +70,11 @@ private:
     void cleanup();
 
     struct Plane {
-        void*                                 id = nullptr;
-        std::string                           callsign;
-        char                                  label[32]{};
+        void* id = nullptr;
+        std::string callsign;
+        char label[32]{};
     };
-    
+
     bool m_emitSimFrame = true;
     std::unique_ptr<FGSwiftAircraftManager> acm;
 };

@@ -23,17 +23,15 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <cmath>
 #include <functional>
 #include <iostream>
 #include <simgear/structure/commands.hxx>
-#include <simgear/structure/event_mgr.hxx>
 #include <thread>
 
 namespace {
 inline std::string fgswiftbusServiceName()
 {
-    return std::string("org.swift-project.fgswiftbus");
+    return "org.swift-project.fgswiftbus";
 }
 } // namespace
 
@@ -77,17 +75,6 @@ void CPlugin::startServer()
     });
 
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus started");
-}
-
-float CPlugin::startServerDeferred(float, float, int, void* refcon)
-{
-    auto plugin = static_cast<CPlugin*>(refcon);
-    if (!plugin->m_isRunning) {
-        plugin->startServer();
-        plugin->m_isRunning = true;
-    }
-
-    return 0;
 }
 
 void CPlugin::fastLoop()

@@ -1,5 +1,5 @@
-// service.cpp - Service module for swift<->FG connection 
-// 
+// service.cpp - Service module for swift<->FG connection
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -20,9 +20,9 @@
 #include "service.h"
 #include <Main/fg_props.hxx>
 #include <iostream>
+#include <simgear/constants.h>
 #include <simgear/debug/logstream.hxx>
 #include <simgear/structure/commands.hxx>
-#include <simgear/constants.h>
 
 #define FGSWIFTBUS_API_VERSION 3;
 
@@ -31,51 +31,52 @@ namespace FGSwiftBus {
 CService::CService()
 {
     // Initialize node pointers
-    m_textMessageNode           = fgGetNode("/sim/messages/copilot", true);
-    m_aircraftModelPathNode     = fgGetNode("/sim/aircraft-dir", true);
-    m_aircraftDescriptionNode   = fgGetNode("/sim/description", true);
-    m_isPausedNode              = fgGetNode("/sim/freeze/master", true);
-    m_latitudeNode              = fgGetNode("/position/latitude-deg", true);
-    m_longitudeNode             = fgGetNode("/position/longitude-deg", true);
-    m_altitudeMSLNode           = fgGetNode("/position/altitude-ft", true);
-    m_heightAGLNode             = fgGetNode("/position/altitude-agl-ft", true);
-    m_groundSpeedNode           = fgGetNode("/velocities/groundspeed-kt", true);
-    m_pitchNode                 = fgGetNode("/orientation/pitch-deg", true);
-    m_rollNode                  = fgGetNode("/orientation/roll-deg", true);
-    m_trueHeadingNode           = fgGetNode("/orientation/heading-deg", true);
-    m_wheelsOnGroundNode        = fgGetNode("/gear/gear/wow", true);
-    m_com1ActiveNode            = fgGetNode("/instrumentation/comm/frequencies/selected-mhz", true);
-    m_com1StandbyNode           = fgGetNode("/instrumentation/comm/frequencies/standby-mhz", true);
-    m_com2ActiveNode            = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
-    m_com2StandbyNode           = fgGetNode("/instrumentation/comm[1]/frequencies/standby-mhz", true);
-    m_transponderCodeNode       = fgGetNode("/instrumentation/transponder/id-code", true);
-    m_transponderModeNode       = fgGetNode("/instrumentation/transponder/inputs/knob-mode", true);
-    m_transponderIdentNode      = fgGetNode("/instrumentation/transponder/ident", true);
-    m_beaconLightsNode          = fgGetNode("/controls/lighting/beacon", true);
-    m_landingLightsNode         = fgGetNode("/controls/lighting/landing-lights", true);
-    m_navLightsNode             = fgGetNode("/controls/lighting/nav-lights", true);
-    m_strobeLightsNode          = fgGetNode("/controls/lighting/strobe", true);
-    m_taxiLightsNode            = fgGetNode("/controls/lighting/taxi-light", true);
-    m_altimeterServiceableNode  = fgGetNode("/instrumentation/altimeter/serviceable", true);
-    m_pressAltitudeFtNode       = fgGetNode("/instrumentation/altimeter/pressure-alt-ft", true);
-    m_flapsDeployRatioNode      = fgGetNode("/surface-positions/flap-pos-norm", true);
-    m_gearDeployRatioNode       = fgGetNode("/gear/gear/position-norm", true);
+    m_textMessageNode = fgGetNode("/sim/messages/copilot", true);
+    m_aircraftModelPathNode = fgGetNode("/sim/aircraft-dir", true);
+    m_aircraftDescriptionNode = fgGetNode("/sim/description", true);
+    m_isPausedNode = fgGetNode("/sim/freeze/master", true);
+    m_latitudeNode = fgGetNode("/position/latitude-deg", true);
+    m_longitudeNode = fgGetNode("/position/longitude-deg", true);
+    m_altitudeMSLNode = fgGetNode("/position/altitude-ft", true);
+    m_heightAGLNode = fgGetNode("/position/altitude-agl-ft", true);
+    m_groundSpeedNode = fgGetNode("/velocities/groundspeed-kt", true);
+    m_pitchNode = fgGetNode("/orientation/pitch-deg", true);
+    m_rollNode = fgGetNode("/orientation/roll-deg", true);
+    m_trueHeadingNode = fgGetNode("/orientation/heading-deg", true);
+    m_wheelsOnGroundNode = fgGetNode("/gear/gear/wow", true);
+    m_com1ActiveNode = fgGetNode("/instrumentation/comm/frequencies/selected-mhz", true);
+    m_com1StandbyNode = fgGetNode("/instrumentation/comm/frequencies/standby-mhz", true);
+    m_com2ActiveNode = fgGetNode("/instrumentation/comm[1]/frequencies/selected-mhz", true);
+    m_com2StandbyNode = fgGetNode("/instrumentation/comm[1]/frequencies/standby-mhz", true);
+    m_transponderCodeNode = fgGetNode("/instrumentation/transponder/id-code", true);
+    m_transponderModeNode = fgGetNode("/instrumentation/transponder/inputs/knob-mode", true);
+    m_transponderIdentNode = fgGetNode("/instrumentation/transponder/ident", true);
+    m_beaconLightsNode = fgGetNode("/controls/lighting/beacon", true);
+    m_landingLightsNode = fgGetNode("/controls/lighting/landing-lights", true);
+    m_navLightsNode = fgGetNode("/controls/lighting/nav-lights", true);
+    m_strobeLightsNode = fgGetNode("/controls/lighting/strobe", true);
+    m_taxiLightsNode = fgGetNode("/controls/lighting/taxi-light", true);
+    m_altimeterServiceableNode = fgGetNode("/instrumentation/altimeter/serviceable", true);
+    m_pressAltitudeFtNode = fgGetNode("/instrumentation/altimeter/pressure-alt-ft", true);
+    m_flapsDeployRatioNode = fgGetNode("/surface-positions/flap-pos-norm", true);
+    m_gearDeployRatioNode = fgGetNode("/gear/gear/position-norm", true);
     m_speedBrakeDeployRatioNode = fgGetNode("/surface-positions/speedbrake-pos-norm", true);
-    m_aircraftNameNode          = fgGetNode("/sim/aircraft", true);
-    m_groundElevationNode       = fgGetNode("/position/ground-elev-m", true);
-    m_velocityXNode             = fgGetNode("/velocities/speed-east-fps", true);
-    m_velocityYNode             = fgGetNode("/velocities/speed-down-fps", true);
-    m_velocityZNode             = fgGetNode("/velocities/speed-north-fps", true);
-    m_rollRateNode              = fgGetNode("/orientation/roll-rate-degps", true);
-    m_pichRateNode              = fgGetNode("/orientation/pitch-rate-degps", true);
-    m_yawRateNode               = fgGetNode("/orientation/yaw-rate-degps", true);
-    m_com1VolumeNode            = fgGetNode("/instrumentation/comm/volume", true);
-    m_com2VolumeNode            = fgGetNode("/instrumentation/comm[1]/volume", true);
+    m_aircraftNameNode = fgGetNode("/sim/aircraft", true);
+    m_groundElevationNode = fgGetNode("/position/ground-elev-m", true);
+    m_velocityXNode = fgGetNode("/velocities/speed-east-fps", true);
+    m_velocityYNode = fgGetNode("/velocities/speed-down-fps", true);
+    m_velocityZNode = fgGetNode("/velocities/speed-north-fps", true);
+    m_rollRateNode = fgGetNode("/orientation/roll-rate-degps", true);
+    m_pichRateNode = fgGetNode("/orientation/pitch-rate-degps", true);
+    m_yawRateNode = fgGetNode("/orientation/yaw-rate-degps", true);
+    m_com1VolumeNode = fgGetNode("/instrumentation/comm/volume", true);
+    m_com2VolumeNode = fgGetNode("/instrumentation/comm[1]/volume", true);
 
     SG_LOG(SG_NETWORK, SG_INFO, "FGSwiftBus Service initialized");
 }
 
-const std::string& CService::InterfaceName() {
+const std::string& CService::InterfaceName()
+{
     static const std::string s(FGSWIFTBUS_SERVICE_INTERFACENAME);
     return s;
 }
@@ -98,164 +99,164 @@ void CService::addTextMessage(const std::string& text)
     m_textMessageNode->setStringValue(text);
 }
 
-std::string CService::getAircraftModelPath() const 
-{ 
-	return m_aircraftModelPathNode->getStringValue();
-}
-
-std::string CService::getAircraftLivery() const 
-{ 
-	return ""; 
-}
-
-std::string CService::getAircraftIcaoCode() const 
-{ 
-	return ""; 
-}
-
-std::string CService::getAircraftDescription() const 
-{ 
-	return m_aircraftDescriptionNode->getStringValue();
-}
-
-bool CService::isPaused() const 
-{ 
-	return m_isPausedNode->getBoolValue();
-}
-
-double CService::getLatitude() const 
-{ 
-	return m_latitudeNode->getDoubleValue();
-}
-
-double CService::getLongitude() const 
-{ 
-	return m_longitudeNode->getDoubleValue();
-}
-
-double CService::getAltitudeMSL() const 
-{ 
-	return m_altitudeMSLNode->getDoubleValue();
-}
-
-double CService::getHeightAGL() const 
-{ 
-	return m_heightAGLNode->getDoubleValue();
-}
-
-double CService::getGroundSpeed() const 
-{ 
-	return m_groundSpeedNode->getDoubleValue();
-}
-
-double CService::getPitch() const 
-{ 
-	return m_pitchNode->getDoubleValue();
-}
-
-double CService::getRoll() const 
-{ 
-	return m_rollNode->getDoubleValue();
-}
-
-double CService::getTrueHeading() const 
-{ 
-	return m_trueHeadingNode->getDoubleValue();
-}
-
-bool CService::getAllWheelsOnGround() const 
-{ 
-	return m_wheelsOnGroundNode->getBoolValue();
-}
-
-int CService::getCom1Active() const 
+std::string CService::getAircraftModelPath() const
 {
-	return (int)(m_com1ActiveNode->getDoubleValue() * 1000);
+    return m_aircraftModelPathNode->getStringValue();
 }
 
-int CService::getCom1Standby() const 
-{ 
-	return (int)(m_com1StandbyNode->getDoubleValue() * 1000);
-}
-
-int CService::getCom2Active() const 
-{ 
-	return (int)(m_com2ActiveNode->getDoubleValue() * 1000);
-}
-
-int CService::getCom2Standby() const 
-{ 
-	return (int)(m_com2StandbyNode->getDoubleValue() * 1000);
-}
-
-int CService::getTransponderCode() const 
-{ 
-	return m_transponderCodeNode->getIntValue();
-}
-
-int CService::getTransponderMode() const 
-{ 
-	return m_transponderModeNode->getIntValue();
-}
-
-bool CService::getTransponderIdent() const 
-{ 
-	return m_transponderIdentNode->getBoolValue();
-}
-
-bool CService::getBeaconLightsOn() const 
-{ 
-	return m_beaconLightsNode->getBoolValue();
-}
-
-bool CService::getLandingLightsOn() const 
-{ 
-	return m_landingLightsNode->getBoolValue();
-}
-
-bool CService::getNavLightsOn() const 
-{ 
-	return m_navLightsNode->getBoolValue();
-}
-
-
-bool CService::getStrobeLightsOn() const 
-{ 
-	return m_strobeLightsNode->getBoolValue();
-}
-
-bool CService::getTaxiLightsOn() const 
-{ 
-	return m_taxiLightsNode->getBoolValue();
-}
-
-double CService::getPressAlt() const 
-{ 
-	if (m_altimeterServiceableNode->getBoolValue()){
-		return m_pressAltitudeFtNode->getDoubleValue();
-	} else {
-		return m_altitudeMSLNode->getDoubleValue();
-	}
-}
-
-void CService::setCom1Active(int freq) 
+std::string CService::getAircraftLivery() const
 {
-    m_com1ActiveNode->setDoubleValue(freq /(double)1000);
+    return "";
 }
 
-void CService::setCom1Standby(int freq) 
+std::string CService::getAircraftIcaoCode() const
 {
-    m_com1StandbyNode->setDoubleValue(freq /(double)1000);
+    return "";
 }
 
-void CService::setCom2Active(int freq) 
+std::string CService::getAircraftDescription() const
 {
-    m_com2ActiveNode->setDoubleValue(freq /(double)1000);
+    return m_aircraftDescriptionNode->getStringValue();
 }
 
-void CService::setCom2Standby(int freq) 
+bool CService::isPaused() const
 {
-    m_com2StandbyNode->setDoubleValue(freq /(double)1000);
+    return m_isPausedNode->getBoolValue();
+}
+
+double CService::getLatitude() const
+{
+    return m_latitudeNode->getDoubleValue();
+}
+
+double CService::getLongitude() const
+{
+    return m_longitudeNode->getDoubleValue();
+}
+
+double CService::getAltitudeMSL() const
+{
+    return m_altitudeMSLNode->getDoubleValue();
+}
+
+double CService::getHeightAGL() const
+{
+    return m_heightAGLNode->getDoubleValue();
+}
+
+double CService::getGroundSpeed() const
+{
+    return m_groundSpeedNode->getDoubleValue();
+}
+
+double CService::getPitch() const
+{
+    return m_pitchNode->getDoubleValue();
+}
+
+double CService::getRoll() const
+{
+    return m_rollNode->getDoubleValue();
+}
+
+double CService::getTrueHeading() const
+{
+    return m_trueHeadingNode->getDoubleValue();
+}
+
+bool CService::getAllWheelsOnGround() const
+{
+    return m_wheelsOnGroundNode->getBoolValue();
+}
+
+int CService::getCom1Active() const
+{
+    return (int)(m_com1ActiveNode->getDoubleValue() * 1000);
+}
+
+int CService::getCom1Standby() const
+{
+    return (int)(m_com1StandbyNode->getDoubleValue() * 1000);
+}
+
+int CService::getCom2Active() const
+{
+    return (int)(m_com2ActiveNode->getDoubleValue() * 1000);
+}
+
+int CService::getCom2Standby() const
+{
+    return (int)(m_com2StandbyNode->getDoubleValue() * 1000);
+}
+
+int CService::getTransponderCode() const
+{
+    return m_transponderCodeNode->getIntValue();
+}
+
+int CService::getTransponderMode() const
+{
+    return m_transponderModeNode->getIntValue();
+}
+
+bool CService::getTransponderIdent() const
+{
+    return m_transponderIdentNode->getBoolValue();
+}
+
+bool CService::getBeaconLightsOn() const
+{
+    return m_beaconLightsNode->getBoolValue();
+}
+
+bool CService::getLandingLightsOn() const
+{
+    return m_landingLightsNode->getBoolValue();
+}
+
+bool CService::getNavLightsOn() const
+{
+    return m_navLightsNode->getBoolValue();
+}
+
+
+bool CService::getStrobeLightsOn() const
+{
+    return m_strobeLightsNode->getBoolValue();
+}
+
+bool CService::getTaxiLightsOn() const
+{
+    return m_taxiLightsNode->getBoolValue();
+}
+
+double CService::getPressAlt() const
+{
+    if (m_altimeterServiceableNode->getBoolValue()) {
+        return m_pressAltitudeFtNode->getDoubleValue();
+    } else {
+        return m_altitudeMSLNode->getDoubleValue();
+    }
+}
+
+void CService::setCom1Active(int freq)
+{
+    m_com1ActiveNode->setDoubleValue(freq / (double)1000);
+}
+
+void CService::setCom1Standby(int freq)
+{
+    m_com1StandbyNode->setDoubleValue(freq / (double)1000);
+}
+
+void CService::setCom2Active(int freq)
+{
+    m_com2ActiveNode->setDoubleValue(freq / (double)1000);
+}
+
+void CService::setCom2Standby(int freq)
+{
+    m_com2StandbyNode->setDoubleValue(freq / (double)1000);
 }
 
 void CService::setTransponderCode(int code)
@@ -263,32 +264,32 @@ void CService::setTransponderCode(int code)
     m_transponderCodeNode->setIntValue(code);
 }
 
-void CService::setTransponderMode(int mode) 
+void CService::setTransponderMode(int mode)
 {
     m_transponderModeNode->setIntValue(mode);
 }
 
-double CService::getFlapsDeployRatio() const 
-{ 
-	return m_flapsDeployRatioNode->getFloatValue();
+double CService::getFlapsDeployRatio() const
+{
+    return m_flapsDeployRatioNode->getFloatValue();
 }
 
-double CService::getGearDeployRatio() const 
-{ 
-	return m_gearDeployRatioNode->getFloatValue();
+double CService::getGearDeployRatio() const
+{
+    return m_gearDeployRatioNode->getFloatValue();
 }
 
-int CService::getNumberOfEngines() const 
+int CService::getNumberOfEngines() const
 {
     // TODO Use correct property
-	return 2; 
+    return 2;
 }
 
 std::vector<double> CService::getEngineN1Percentage() const
 {
     // TODO use correct engine numbers
     std::vector<double> list;
-    const auto          number = static_cast<unsigned int>(getNumberOfEngines());
+    const auto number = static_cast<unsigned int>(getNumberOfEngines());
     list.reserve(number);
     for (unsigned int engineNumber = 0; engineNumber < number; ++engineNumber) {
         list.push_back(fgGetDouble("/engine/engine/n1"));
@@ -296,9 +297,9 @@ std::vector<double> CService::getEngineN1Percentage() const
     return list;
 }
 
-double CService::getSpeedBrakeRatio() const 
-{ 
-	return m_speedBrakeDeployRatioNode->getFloatValue();
+double CService::getSpeedBrakeRatio() const
+{
+    return m_speedBrakeDeployRatioNode->getFloatValue();
 }
 
 double CService::getGroundElevation() const
@@ -315,7 +316,7 @@ std::string CService::getAircraftModelFilename() const
 
 std::string CService::getAircraftModelString() const
 {
-    std::string modelName   = getAircraftName();
+    std::string modelName = getAircraftName();
     std::string modelString = "FG " + modelName;
     return modelString;
 }
@@ -369,10 +370,10 @@ static const char* introspection_service = DBUS_INTROSPECT_1_0_XML_DOCTYPE_DECL_
 
 DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
 {
-    CDBusMessage        message(message_);
-    const std::string   sender     = message.getSender();
-    const dbus_uint32_t serial     = message.getSerial();
-    const bool          wantsReply = message.wantsReply();
+    CDBusMessage message(message_);
+    const std::string sender = message.getSender();
+    const dbus_uint32_t serial = message.getSerial();
+    const bool wantsReply = message.wantsReply();
 
     if (message.getInterfaceName() == DBUS_INTERFACE_INTROSPECTABLE) {
         if (message.getMethodName() == "Introspect") {
@@ -390,15 +391,15 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
             });
         } else if (message.getMethodName() == "getOwnAircraftSituationData") {
             queueDBusCall([=]() {
-                double       lat         = getLatitude();
-                double       lon         = getLongitude();
-                double       alt         = getAltitudeMSL();
-                double       gs          = getGroundSpeed();
-                double       pitch       = getPitch();
-                double       roll        = getRoll();
-                double       trueHeading = getTrueHeading();
-                double       pressAlt    = getPressAlt();
-                CDBusMessage reply       = CDBusMessage::createReply(sender, serial);
+                double lat = getLatitude();
+                double lon = getLongitude();
+                double alt = getAltitudeMSL();
+                double gs = getGroundSpeed();
+                double pitch = getPitch();
+                double roll = getRoll();
+                double trueHeading = getTrueHeading();
+                double pressAlt = getPressAlt();
+                CDBusMessage reply = CDBusMessage::createReply(sender, serial);
                 reply.beginArgumentWrite();
                 reply.appendArgument(lat);
                 reply.appendArgument(lon);
@@ -412,13 +413,13 @@ DBusHandlerResult CService::dbusMessageHandler(const CDBusMessage& message_)
             });
         } else if (message.getMethodName() == "getOwnAircraftVelocityData") {
             queueDBusCall([=]() {
-                double       velocityX         = getVelocityX();
-                double       velocityY         = getVelocityY();
-                double       velocityZ         = getVelocityZ();
-                double       pitchVelocity     = getPitchRate();
-                double       rollVelocity      = getRollRate();
-                double       yawVelocity       = getYawRate();
-                CDBusMessage reply       = CDBusMessage::createReply(sender, serial);
+                double velocityX = getVelocityX();
+                double velocityY = getVelocityY();
+                double velocityZ = getVelocityZ();
+                double pitchVelocity = getPitchRate();
+                double rollVelocity = getRollRate();
+                double yawVelocity = getYawRate();
+                CDBusMessage reply = CDBusMessage::createReply(sender, serial);
                 reply.beginArgumentWrite();
                 reply.appendArgument(velocityX);
                 reply.appendArgument(velocityY);

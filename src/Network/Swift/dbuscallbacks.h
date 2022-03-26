@@ -1,5 +1,5 @@
-// dbuscallbacks.h 
-// 
+// dbuscallbacks.h
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -23,42 +23,42 @@
 #include <dbus/dbus.h>
 #include <functional>
 
-namespace FGSwiftBus
+namespace FGSwiftBus {
+//! \cond PRIVATE
+template <typename T>
+class DBusAsyncCallbacks
 {
-    //! \cond PRIVATE
-    template <typename T>
-    class DBusAsyncCallbacks
+public:
+    DBusAsyncCallbacks() = default;
+    DBusAsyncCallbacks(const std::function<dbus_bool_t(T*)>& add,
+                       const std::function<void(T*)>& remove,
+                       const std::function<void(T*)>& toggled)
+        : m_addHandler(add), m_removeHandler(remove), m_toggledHandler(toggled)
     {
-    public:
-        DBusAsyncCallbacks() = default;
-        DBusAsyncCallbacks(const std::function<dbus_bool_t(T *)> &add,
-                           const std::function<void(T *)> &remove,
-                           const std::function<void(T *)> &toggled)
-            : m_addHandler(add), m_removeHandler(remove), m_toggledHandler(toggled)
-        { }
+    }
 
-        static dbus_bool_t add(T *watch, void *refcon)
-        {
-            return static_cast<DBusAsyncCallbacks *>(refcon)->m_addHandler(watch);
-        }
+    static dbus_bool_t add(T* watch, void* refcon)
+    {
+        return static_cast<DBusAsyncCallbacks*>(refcon)->m_addHandler(watch);
+    }
 
-        static void remove(T *watch, void *refcon)
-        {
-            return static_cast<DBusAsyncCallbacks *>(refcon)->m_removeHandler(watch);
-        }
+    static void remove(T* watch, void* refcon)
+    {
+        return static_cast<DBusAsyncCallbacks*>(refcon)->m_removeHandler(watch);
+    }
 
-        static void toggled(T *watch, void *refcon)
-        {
-            return static_cast<DBusAsyncCallbacks *>(refcon)->m_toggledHandler(watch);
-        }
+    static void toggled(T* watch, void* refcon)
+    {
+        return static_cast<DBusAsyncCallbacks*>(refcon)->m_toggledHandler(watch);
+    }
 
-    private:
-        std::function<dbus_bool_t(T *)> m_addHandler;
-        std::function<void(T *)> m_removeHandler;
-        std::function<void(T *)> m_toggledHandler;
-    };
-    //! \endcond
+private:
+    std::function<dbus_bool_t(T*)> m_addHandler;
+    std::function<void(T*)> m_removeHandler;
+    std::function<void(T*)> m_toggledHandler;
+};
+//! \endcond
 
-}
+} // namespace FGSwiftBus
 
 #endif // guard

@@ -1,5 +1,5 @@
 // plugin.h
-// 
+//
 // Copyright (C) 2019 - swift Project Community / Contributors (http://swift-project.org/)
 // Adapted to Flightgear by Lars Toenning <dev@ltoenning.de>
 //
@@ -31,44 +31,41 @@
 #define NOMINMAX
 #endif
 
+#include "config.h"
 #include "dbusconnection.h"
 #include "dbusdispatcher.h"
 #include "dbusserver.h"
-#include "config.h"
 #include <memory>
 #include <thread>
 
-namespace FGSwiftBus
-{
-    class CService;
-    class CTraffic;
-    class CWeather;
+namespace FGSwiftBus {
+class CService;
+class CTraffic;
 
-    /*!
+/*!
      * Main plugin class
      */
-    class CPlugin
-    {
-    public:
-        //! Constructor
-        CPlugin();
-        void startServer();
-        //! Destructor
-        ~CPlugin();
-        static float startServerDeferred(float, float, int, void* refcon);
-        void         fastLoop();
-		
-    private:
-        CDBusDispatcher m_dbusDispatcher;
-        std::unique_ptr<CDBusServer> m_dbusP2PServer;
-        std::shared_ptr<CDBusConnection> m_dbusConnection;
-        std::unique_ptr<CService> m_service;
-        std::unique_ptr<CTraffic> m_traffic;
+class CPlugin
+{
+public:
+    //! Constructor
+    CPlugin();
+    void startServer();
+    //! Destructor
+    ~CPlugin();
+    void fastLoop();
 
-        std::thread m_dbusThread;
-        bool m_isRunning = false;
-        bool m_shouldStop = false;
-    };
-}
+private:
+    CDBusDispatcher m_dbusDispatcher;
+    std::unique_ptr<CDBusServer> m_dbusP2PServer;
+    std::shared_ptr<CDBusConnection> m_dbusConnection;
+    std::unique_ptr<CService> m_service;
+    std::unique_ptr<CTraffic> m_traffic;
 
-#endif // guard
+    std::thread m_dbusThread;
+    bool m_isRunning = false;
+    bool m_shouldStop = false;
+};
+} // namespace FGSwiftBus
+
+#endif // BLACKSIM_FGSWIFTBUS_PLUGIN_H
