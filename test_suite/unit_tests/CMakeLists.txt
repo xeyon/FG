@@ -6,6 +6,7 @@ foreach( unit_test_category
         Input
         Main
         Navaids
+        Network
         Instrumentation
         Scripting
         AI
