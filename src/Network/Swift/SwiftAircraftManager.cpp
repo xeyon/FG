@@ -37,12 +37,12 @@ bool FGSwiftAircraftManager::addPlane(const std::string& callsign, const std::st
     return true;
 }
 
-void FGSwiftAircraftManager::updatePlanes(const std::vector<std::string>& callsigns, const std::vector<SGGeod>& positions, const std::vector<SGVec3d>& orientations, const std::vector<double>& groundspeeds, const std::vector<bool>& onGrounds)
+void FGSwiftAircraftManager::updatePlanes(const std::vector<SwiftPlaneUpdate>& updates)
 {
-    for (long unsigned int i = 0; i < callsigns.size(); i++) {
-        auto it = aircraftByCallsign.find(callsigns.at(i));
+    for (auto& update : updates) {
+        auto it = aircraftByCallsign.find(update.callsign);
         if (it != aircraftByCallsign.end()) {
-            it->second->updatePosition(positions.at(i), orientations.at(i), groundspeeds.at(i), true);
+            it->second->updatePosition(update.position, update.orientation, update.groundspeed, true);
         }
     }
 }

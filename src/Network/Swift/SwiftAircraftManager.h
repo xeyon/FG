@@ -15,6 +15,14 @@
 #ifndef FGSWIFTAIRCRAFTMANAGER_H
 #define FGSWIFTAIRCRAFTMANAGER_H
 
+struct SwiftPlaneUpdate {
+    std::string callsign;
+    SGGeod position;
+    SGVec3d orientation;
+    double groundspeed;
+    bool onGround;
+};
+
 class FGSwiftAircraftManager
 {
     using FGAISwiftAircraftPtr = SGSharedPtr<FGAISwiftAircraft>;
@@ -23,7 +31,7 @@ public:
     FGSwiftAircraftManager();
     ~FGSwiftAircraftManager();
     bool addPlane(const std::string& callsign, const std::string& modelString);
-    void updatePlanes(const std::vector<std::string>& callsigns, const std::vector<SGGeod>& positions, const std::vector<SGVec3d>& orientations, const std::vector<double>& groundspeeds, const std::vector<bool>& onGrounds);
+    void updatePlanes(const std::vector<SwiftPlaneUpdate>& updates);
     void getRemoteAircraftData(std::vector<std::string>& callsigns, std::vector<double>& latitudesDeg, std::vector<double>& longitudesDeg,
                                std::vector<double>& elevationsM, std::vector<double>& verticalOffsets) const;
     void removePlane(const std::string& callsign);

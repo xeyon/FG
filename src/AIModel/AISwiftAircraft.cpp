@@ -33,7 +33,7 @@ FGAISwiftAircraft::FGAISwiftAircraft(const std::string& callsign, const std::str
     _searchOrder = ModelSearchOrder::PREFER_AI;
 }
 
-void FGAISwiftAircraft::updatePosition(const SGGeod &position, const SGVec3<double> &orientation, double groundspeed, bool initPos)
+void FGAISwiftAircraft::updatePosition(const SGGeod &position, const SGVec3d &orientation, double groundspeed, bool initPos)
 {
     m_initPos = initPos;
     _setLatitude(position.getLatitudeDeg());

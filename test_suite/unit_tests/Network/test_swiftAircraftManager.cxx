@@ -61,7 +61,7 @@ void SwiftAircraftManagerTest::testAircraftManager()
     position.setLongitudeDeg(6.0);
     position.setElevationM(1024);
 
-    acm.updatePlanes({"SAS123"}, {position}, {SGVec3d(1.0, 2.0, 3.0)}, {200}, {false});
+    acm.updatePlanes({{"SAS123", position, SGVec3d(1.0, 2.0, 3.0), 200, false}});
     CPPUNIT_ASSERT_EQUAL(fgGetString("/ai/models/swift[3]/callsign"), std::string("SAS123"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("/ai/models/swift[3]/orientation/pitch-deg"), 1.0, 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("/ai/models/swift[3]/orientation/roll-deg"), 2.0, 0.1);
@@ -72,7 +72,7 @@ void SwiftAircraftManagerTest::testAircraftManager()
 
     position.setLatitudeDeg(20.0);
     position.setLongitudeDeg(4.0);
-    acm.updatePlanes({"SAS123"}, {position}, {SGVec3d(5.0, 6.0, 7.0)}, {400}, {false});
+    acm.updatePlanes({{"SAS123", position, SGVec3d(5.0, 6.0, 7.0), 400, false}});
     CPPUNIT_ASSERT_EQUAL(fgGetString("/ai/models/swift[3]/callsign"), std::string("SAS123"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("/ai/models/swift[3]/orientation/pitch-deg"), 5.0, 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("/ai/models/swift[3]/orientation/roll-deg"), 6.0, 0.1);
@@ -86,7 +86,7 @@ void SwiftAircraftManagerTest::testAircraftManager()
     acm.addPlane("DAL123", "PATH_TO_MODEL");
     position.setLatitudeDeg(-20.0);
     position.setLongitudeDeg(5.0);
-    acm.updatePlanes({"DAL123"}, {position}, {SGVec3d(1.0, 1.0, 1.0)}, {250}, {false});
+    acm.updatePlanes({{"DAL123", position, SGVec3d(1.0, 1.0, 1.0), 250, false}});
     CPPUNIT_ASSERT_EQUAL(fgGetString("/ai/models/swift[4]/callsign"), std::string("DAL123"));
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("/ai/models/swift[4]/orientation/pitch-deg"), 1.0, 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(fgGetDouble("/ai/models/swift[4]/orientation/roll-deg"), 1.0, 0.1);
