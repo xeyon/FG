@@ -208,7 +208,12 @@ int nr_gaussj(double **a, int n, double **b, int m)
                                         }
                                 }
                             else
-                                if (ipiv[k] > 1) return -1;
+                                if (ipiv[k] > 1) {
+                                    nr_free_ivector(ipiv,1 /*,n*/ );
+                                    nr_free_ivector(indxr,1 /*,n*/ );
+                                    nr_free_ivector(indxc,1 /*,n*/ );
+                                    return -1;
+                                }
                         }
             ++(ipiv[icol]);
 
@@ -228,7 +233,12 @@ int nr_gaussj(double **a, int n, double **b, int m)
                 }
             indxr[i] = irow;        /* We are now ready to divide the pivot row */
             indxc[i] = icol;        /* by the pivot element, a[irow][icol]      */
-            if (a[icol][icol] == 0.0) return -1;
+            if (fabs(a[icol][icol]) < 1E-8) {
+                nr_free_ivector(ipiv,1 /*,n*/ );
+                nr_free_ivector(indxr,1 /*,n*/ );
+                nr_free_ivector(indxc,1 /*,n*/ );
+                return -1;
+            }
             pivinv = 1.0/a[icol][icol];
             a[icol][icol] = 1.0;
             for (l=1;l<=n;l++) a[icol][l] *= pivinv;
