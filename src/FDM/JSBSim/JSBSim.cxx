@@ -367,7 +367,8 @@ FGJSBsim::FGJSBsim( double dt )
     crashed = false;
 
     mesh = new AircraftMesh(fgGetDouble("/fdm/jsbsim/metrics/bw-ft"),
-                            fgGetDouble("/fdm/jsbsim/metrics/cbarw-ft"));
+                            fgGetDouble("/fdm/jsbsim/metrics/cbarw-ft"),
+                            fdmex->GetModelName());
 
     // Trim once to initialize all output parameters
     FGTrim *fgtrim = new FGTrim(fdmex,tFull);

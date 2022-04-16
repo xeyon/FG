@@ -25,13 +25,14 @@
 
 #include <simgear/structure/SGSharedPtr.hxx>
 #include <simgear/math/SGVec3.hxx>
+#include <simgear/debug/logstream.hxx>
 
 #include "WakeMesh.hxx"
 extern "C" {
 #include "../LaRCsim/ls_matrix.h"
 }
 
-WakeMesh::WakeMesh(double _span, double _chord)
+WakeMesh::WakeMesh(double _span, double _chord, const std::string& aircraft_name)
     : nelm(10), span(_span), chord(_chord)
 {
     double y1 = -0.5*span;
@@ -59,7 +60,20 @@ WakeMesh::WakeMesh(double _span, double _chord)
     }
 
     // Compute the inverse matrix with the Gauss-Jordan algorithm
-    nr_gaussj(influenceMtx, nelm, 0, 0);
+    int ret = nr_gaussj(influenceMtx, nelm, nullptr, 0);
+    if (ret) {
+        // Something went wrong with the matrix inversion.
+
+        // 1. Nullify the influence matrix to disable the current aircraft wake.
+        for (int i=0; i < nelm; ++i) {
+            for (int j=0; j < nelm; ++j)
+                influenceMtx[i+1][j+1] = 0.0;
+        }
+        // 2. Report the issue in the log.
+        SG_LOG(SG_FLIGHT, SG_WARN,
+                "Failed to build wake mesh. " << aircraft_name << " ( span:"
+                << _span << ", chord:" << _chord << ") wake will be ignored.");
+    }
 }
 
 WakeMesh::~WakeMesh()

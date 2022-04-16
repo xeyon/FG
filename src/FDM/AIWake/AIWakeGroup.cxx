@@ -47,7 +47,8 @@ void AIWakeGroup::AddAI(FGAIAircraft* ai)
     if (_aiWakeData.find(id) == _aiWakeData.end()) {
         double span = perfData->wingSpan();
         double chord = perfData->wingChord();
-        _aiWakeData[id] = AIWakeData(new WakeMesh(span, chord));
+        _aiWakeData[id] = AIWakeData(new WakeMesh(span, chord,
+                                     std::string("AI:") + ai->_getName()));
 
         SG_LOG(SG_FLIGHT, SG_DEV_ALERT,
                "Created mesh for " << ai->_getName() << " ID: #" << id);

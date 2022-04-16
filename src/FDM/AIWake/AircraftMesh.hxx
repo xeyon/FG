@@ -32,7 +32,7 @@ class AIWakeGroup;
 
 class AircraftMesh : public WakeMesh {
 public:
-    AircraftMesh(double _span, double _chord);
+    AircraftMesh(double _span, double _chord, const std::string& name);
     void setPosition(const SGVec3d& pos, const SGQuatd& orient);
     SGVec3d GetForce(const AIWakeGroup& wg, const SGVec3d& vel, double rho);
     const SGVec3d& GetMoment(void) const { return moment; };

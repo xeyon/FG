@@ -37,8 +37,8 @@ extern "C" {
 #include "../LaRCsim/ls_matrix.h"
 }
 
-AircraftMesh::AircraftMesh(double _span, double _chord)
-    : WakeMesh(_span, _chord)
+AircraftMesh::AircraftMesh(double _span, double _chord, const std::string& name)
+    : WakeMesh(_span, _chord, name)
 {
     collPt.resize(nelm, SGVec3d::zeros());
     midPt.resize(nelm, SGVec3d::zeros());

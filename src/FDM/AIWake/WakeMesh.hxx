@@ -30,7 +30,7 @@ namespace FGTestApi { namespace PrivateAccessor { namespace FDM { class Accessor
 
 class WakeMesh : public SGReferenced {
 public:
-    WakeMesh(double _span, double _chord);
+    WakeMesh(double _span, double _chord, const std::string& aircraft_name);
     virtual ~WakeMesh();
     double computeAoA(double vel, double rho, double weight);
     SGVec3d getInducedVelocityAt(const SGVec3d& at) const;
