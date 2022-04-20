@@ -59,7 +59,7 @@ void AeroMeshTests::testLiftComputation()
 {
     double b = 10.0;
     double c = 2.0;
-    AircraftMesh_ptr mesh = new AircraftMesh(b, c);
+    AircraftMesh_ptr mesh = new AircraftMesh(b, c, "test");
     SGGeod geodPos = SGGeod::fromDeg(0.0, 0.0);
     SGVec3d pos;
     double vel = 100.;
@@ -127,7 +127,7 @@ void AeroMeshTests::testFourierLiftingLine()
 
     auto accessor = FGTestApi::PrivateAccessor::FDM::Accessor();
 
-    WakeMesh_ptr mesh = new WakeMesh(b, c);
+    WakeMesh_ptr mesh = new WakeMesh(b, c, "testMesh");
     int N = accessor.read_FDM_AIWake_WakeMesh_nelm(mesh);
     double **mtx = nr_matrix(1, N, 1, N);
     double **coef = nr_matrix(1, N, 1, 1);
@@ -192,7 +192,7 @@ void AeroMeshTests::testFrameTransformations()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(pos[1] * SG_METER_TO_FEET, loc(2), 1e-7);
     CPPUNIT_ASSERT_DOUBLES_EQUAL(pos[2] * SG_METER_TO_FEET, loc(3), 1e-7);
 
-    AircraftMesh_ptr mesh = new AircraftMesh(b, c);
+    AircraftMesh_ptr mesh = new AircraftMesh(b, c, "test");
     mesh->setPosition(pos, orient);
 
     FGQuaternion qJ(roll, pitch, yaw);

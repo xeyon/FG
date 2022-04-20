@@ -23,6 +23,8 @@
 #ifndef _FG_WAKEMESH_HXX
 #define _FG_WAKEMESH_HXX
 
+#include <string>
+
 #include "AeroElement.hxx"
 
 namespace FGTestApi { namespace PrivateAccessor { namespace FDM { class Accessor; } } }
