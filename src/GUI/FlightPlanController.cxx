@@ -310,8 +310,13 @@ void FlightPlanController::onRestore()
 
 QuantityValue FlightPlanController::cruiseAltitude() const
 {
-    if (_fp->cruiseFlightLevel() > 0)
+    if (_fp->cruiseFlightLevel() > 0) {
         return {Units::FlightLevel, _fp->cruiseFlightLevel()};
+    }
+
+    if (_fp->cruiseAltitudeM() > 0) {
+        return {Units::MetersMSL, _fp->cruiseAltitudeM()};
+    }
 
     return {Units::FeetMSL, _fp->cruiseAltitudeFt()};
 }
@@ -319,18 +324,28 @@ QuantityValue FlightPlanController::cruiseAltitude() const
 void FlightPlanController::setCruiseAltitude(QuantityValue alt)
 {
     const int ival = static_cast<int>(alt.value);
-    if (alt.unit == Units::FlightLevel) {
-        if (_fp->cruiseFlightLevel() == ival) {
-            return;
+    switch (alt.unit) {
+        case Units::FlightLevel: {
+            if (_fp->cruiseFlightLevel() == ival) {
+                return;
+            }
+            _fp->setCruiseFlightLevel(ival);
+            break;
         }
-
-        _fp->setCruiseFlightLevel(ival);
-    } else if (alt.unit == Units::FeetMSL) {
-        if (_fp->cruiseAltitudeFt() == ival) {
-            return;
+        case Units::FeetMSL: {
+            if (_fp->cruiseAltitudeFt() == ival) {
+                return;
+            }
+            _fp->setCruiseAltitudeFt(ival);
+            break;
         }
-
-        _fp->setCruiseAltitudeFt(ival);
+        case Units::MetersMSL: {
+            if (_fp->cruiseAltitudeM() == ival) {
+                return;
+            }
+            _fp->setCruiseAltitudeM(ival);
+            break;
+        }
     }
 
     emit infoChanged();
@@ -377,6 +392,10 @@ QuantityValue FlightPlanController::cruiseSpeed() const
 {
     if (_fp->cruiseSpeedMach() > 0.0) {
         return {Units::Mach, _fp->cruiseSpeedMach()};
+    }
+
+    if (_fp->cruiseSpeedKilometersPerHour() > 0) {
+        return {Units::KilometersPerHour, _fp->cruiseSpeedKilometersPerHour()};
     }
 
     return {Units::Knots, _fp->cruiseSpeedKnots()};
@@ -608,19 +627,33 @@ void FlightPlanController::setAlternate(QmlPositioned *apt)
 void FlightPlanController::setCruiseSpeed(QuantityValue speed)
 {
     qInfo() << Q_FUNC_INFO << speed.unit << speed.value;
-    if (speed.unit == Units::Mach) {
-        if (speed == QuantityValue(Units::Mach, _fp->cruiseSpeedMach())) {
-            return;
-        }
+    switch (speed.unit) {
+        case Units::Mach: {
+            if (speed == QuantityValue(Units::Mach, _fp->cruiseSpeedMach())) {
+                return;
+            }
 
-        _fp->setCruiseSpeedMach(speed.value);
-    } else if (speed.unit == Units::Knots) {
-        const int knotsVal = static_cast<int>(speed.value);
-        if (_fp->cruiseSpeedKnots() == knotsVal) {
-            return;
+            _fp->setCruiseSpeedMach(speed.value);
+            break;
         }
+        case Units::Knots: {
+            const int knotsVal = static_cast<int>(speed.value);
+            if (_fp->cruiseSpeedKnots() == knotsVal) {
+                return;
+            }
 
-        _fp->setCruiseSpeedKnots(knotsVal);
+            _fp->setCruiseSpeedKnots(knotsVal);
+            break;
+        }
+        case Units::KilometersPerHour: {
+            const int kmhVal = static_cast<int>(speed.value);
+            if (_fp->cruiseSpeedKilometersPerHour() == kmhVal) {
+                return;
+            }
+
+            _fp->setCruiseSpeedKilometersPerHour(kmhVal);
+            break;
+        }
     }
 
     emit infoChanged();

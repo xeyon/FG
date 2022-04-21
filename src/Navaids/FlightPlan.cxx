@@ -160,12 +160,16 @@ FlightPlanRef FlightPlan::clone(const string& newIdent, bool convertIntoFlightPl
       c->setCruiseFlightLevel(_cruiseFlightLevel);
   } else if (_cruiseAltitudeFt > 0) {
       c->setCruiseAltitudeFt(_cruiseAltitudeFt);
+  } else if (_cruiseAltitudeM > 0) {
+    c->setCruiseAltitudeM(_cruiseAltitudeM);
   }
 
   if (_cruiseAirspeedMach > 0) {
       c->setCruiseSpeedMach(_cruiseAirspeedMach);
   } else if (_cruiseAirspeedKnots > 0) {
       c->setCruiseSpeedKnots(_cruiseAirspeedKnots);
+  } else if (_cruiseAirspeedKph > 0) {
+    c->setCruiseSpeedKilometersPerHour(_cruiseAirspeedKph);
   }
 
   c->_didLoadFP = true; // set the loaded flag to give delegates a chance
@@ -314,8 +318,10 @@ void FlightPlan::clearAll()
 
     _cruiseAirspeedMach = 0.0;
     _cruiseAirspeedKnots = 0;
+    _cruiseAirspeedKph = 0;
     _cruiseFlightLevel = 0;
     _cruiseAltitudeFt = 0;
+    _cruiseAltitudeM = 0;
 
     clearLegs();
     unlockDelegates();
@@ -712,12 +718,12 @@ void FlightPlan::setEstimatedDurationMinutes(int mins)
 
 void FlightPlan::computeDurationMinutes()
 {
-    if ((_cruiseAirspeedMach < 0.01) && (_cruiseAirspeedKnots < 10)) {
+    if ((_cruiseAirspeedMach < 0.01) && (_cruiseAirspeedKnots < 10) && (_cruiseAirspeedKph < 10)) {
         SG_LOG(SG_AUTOPILOT, SG_WARN, "can't compute duration, no cruise speed set");
         return;
     }
 
-    if ((_cruiseAltitudeFt < 100) && (_cruiseFlightLevel < 10)) {
+    if ((_cruiseAltitudeFt < 100) && (_cruiseAltitudeM < 100) && (_cruiseFlightLevel < 10)) {
         SG_LOG(SG_AUTOPILOT, SG_WARN, "can't compute duration, no cruise altitude set");
         return;
     }
@@ -869,12 +875,16 @@ void FlightPlan::saveToProperties(SGPropertyNode* d) const
         d->setIntValue("cruise/flight-level", _cruiseFlightLevel);
     } else if (_cruiseAltitudeFt > 0) {
         d->setIntValue("cruise/altitude-ft", _cruiseAltitudeFt);
+    } else if (_cruiseAltitudeM > 0) {
+        d->setIntValue("cruise/altitude-m", _cruiseAltitudeM);
     }
     
     if (_cruiseAirspeedMach > 0.0) {
         d->setDoubleValue("cruise/mach", _cruiseAirspeedMach);
     } else if (_cruiseAirspeedKnots > 0) {
         d->setIntValue("cruise/knots", _cruiseAirspeedKnots);
+    } else if (_cruiseAirspeedKph > 0) {
+        d->setIntValue("cruise/kph", _cruiseAirspeedKph);
     }
     
     // route nodes
@@ -1260,12 +1270,16 @@ void FlightPlan::loadXMLRouteHeader(SGPropertyNode_ptr routeData)
           _cruiseFlightLevel = crs->getIntValue("flight-level");
       } else if (crs->hasChild("altitude-ft")) {
           _cruiseAltitudeFt = crs->getIntValue("altitude-ft");
+      } else if (crs->hasChild("altitude-m")) {
+          _cruiseAltitudeM = crs->getIntValue("altitude-m");
       }
 
       if (crs->hasChild("mach")) {
           _cruiseAirspeedMach = crs->getDoubleValue("mach");
       } else if (crs->hasChild("knots")) {
           _cruiseAirspeedKnots = crs->getIntValue("knots");
+      } else if (crs->hasChild("kph")) {
+          _cruiseAirspeedKph = crs->getIntValue("kph");
       }
   } // of cruise data loading
 }
@@ -2182,9 +2196,10 @@ ICAOFlightType FlightPlan::flightType() const
 void FlightPlan::setCruiseSpeedKnots(int kts)
 {
     lockDelegates();
+    _cruiseDataChanged = true;
     _cruiseAirspeedKnots = kts;
     _cruiseAirspeedMach = 0.0;
-    _cruiseDataChanged = true;
+    _cruiseAirspeedKph = 0;
     unlockDelegates();
 }
 
@@ -2197,8 +2212,9 @@ void FlightPlan::setCruiseSpeedMach(double mach)
 {
     lockDelegates();
     _cruiseDataChanged = true;
-    _cruiseAirspeedMach = mach;
     _cruiseAirspeedKnots = 0;
+    _cruiseAirspeedMach = mach;
+    _cruiseAirspeedKph = 0;
     unlockDelegates();
 }
 
@@ -2207,12 +2223,28 @@ double FlightPlan::cruiseSpeedMach() const
     return _cruiseAirspeedMach;
 }
 
+void FlightPlan::setCruiseSpeedKPH(int kph)
+{
+    lockDelegates();
+    _cruiseDataChanged = true;
+    _cruiseAirspeedKnots = 0;
+    _cruiseAirspeedMach = 0.0;
+    _cruiseAirspeedKph = kph;
+    unlockDelegates();
+}
+
+int FlightPlan::cruiseSpeedKPH() const
+{
+    return _cruiseAirspeedKph;
+}
+
 void FlightPlan::setCruiseFlightLevel(int flightLevel)
 {
     lockDelegates();
     _cruiseDataChanged = true;
-    _cruiseFlightLevel = flightLevel;
     _cruiseAltitudeFt = 0;
+    _cruiseAltitudeM = 0;
+    _cruiseFlightLevel = flightLevel;
     unlockDelegates();
 }
 
@@ -2226,6 +2258,7 @@ void FlightPlan::setCruiseAltitudeFt(int altFt)
     lockDelegates();
     _cruiseDataChanged = true;
     _cruiseAltitudeFt = altFt;
+    _cruiseAltitudeM = 0;
     _cruiseFlightLevel = 0;
     unlockDelegates();
 }
@@ -2233,6 +2266,21 @@ void FlightPlan::setCruiseAltitudeFt(int altFt)
 int FlightPlan::cruiseAltitudeFt() const
 {
     return _cruiseAltitudeFt;
+}
+
+void FlightPlan::setCruiseAltitudeM(int altM)
+{
+    lockDelegates();
+    _cruiseDataChanged = true;
+    _cruiseAltitudeFt = 0;
+    _cruiseAltitudeM = altM;
+    _cruiseFlightLevel = 0;
+    unlockDelegates();
+}
+
+int FlightPlan::cruiseAltitudeM() const
+{
+    return _cruiseAltitudeM;
 }
 
 void FlightPlan::forEachLeg(const LegVisitor& lv)

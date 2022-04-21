@@ -405,11 +405,17 @@ public:
     void setCruiseSpeedMach(double mach);
     double cruiseSpeedMach() const;
     
+    void setCruiseSpeedKPH(int kmh);
+    int cruiseSpeedKPH() const;
+
     void setCruiseFlightLevel(int flightLevel);
     int cruiseFlightLevel() const;
     
     void setCruiseAltitudeFt(int altFt);
     int cruiseAltitudeFt() const;
+
+    void setCruiseAltitudeM(int altM);
+    int cruiseAltitudeM() const;
     
   /**
    * abstract interface for creating delegates automatically when a
@@ -482,8 +488,10 @@ private:
     ICAOFlightRules _flightRules = ICAOFlightRules::VFR;
     int _cruiseAirspeedKnots = 0;
     double _cruiseAirspeedMach = 0.0;
+    int _cruiseAirspeedKph = 0;
     int _cruiseFlightLevel = 0;
     int _cruiseAltitudeFt = 0;
+    int _cruiseAltitudeM = 0;
     int _estimatedDuration = 0;
     double _maxFlyByTurnAngle = 90.0;
 

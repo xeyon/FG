@@ -649,10 +649,14 @@ static const char* flightplanGhostGetMember(naContext c, void* g, naRef field, n
         *out = naNum(fp->cruiseAltitudeFt());
     else if (!strcmp(fieldName, "cruiseFlightLevel"))
         *out = naNum(fp->cruiseFlightLevel());
+    else if (!strcmp(fieldName, "cruiseAltitudeM"))
+        *out = naNum(fp->cruiseAltitudeM());
     else if (!strcmp(fieldName, "cruiseSpeedKt"))
         *out = naNum(fp->cruiseSpeedKnots());
     else if (!strcmp(fieldName, "cruiseSpeedMach"))
         *out = naNum(fp->cruiseSpeedMach());
+    else if (!strcmp(fieldName, "cruiseSpeedKPH"))
+        *out = naNum(fp->cruiseSpeedKPH());
     else if (!strcmp(fieldName, "remarks"))
         *out = stringToNasal(c, fp->remarks());
     else if (!strcmp(fieldName, "callsign"))
@@ -960,10 +964,14 @@ static void flightplanGhostSetMember(naContext c, void* g, naRef field, naRef va
         fp->setFollowLegTrackToFixes(static_cast<bool>(value.num));
     } else if (!strcmp(fieldName, "cruiseAltitudeFt")) {
         fp->setCruiseAltitudeFt(static_cast<int>(value.num));
+    } else if (!strcmp(fieldName, "cruiseAltitudeM")) {
+        fp->setCruiseAltitudeM(static_cast<int>(value.num));
     } else if (!strcmp(fieldName, "cruiseFlightLevel")) {
         fp->setCruiseFlightLevel(static_cast<int>(value.num));
     } else if (!strcmp(fieldName, "cruiseSpeedKt")) {
         fp->setCruiseSpeedKnots(static_cast<int>(value.num));
+     } else if (!strcmp(fieldName, "cruiseSpeedKPH")) {
+        fp->setCruiseSpeedKPH(static_cast<int>(value.num));
     } else if (!strcmp(fieldName, "cruiseSpeedMach")) {
         fp->setCruiseSpeedMach(value.num);
     } else if (!strcmp(fieldName, "callsign")) {
