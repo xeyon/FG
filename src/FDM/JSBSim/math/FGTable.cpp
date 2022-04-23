@@ -158,7 +158,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
     std::cerr << el->ReadFrom()
               <<"  An unknown table type attribute is listed: " << call_type
               << endl;
-    throw TableException("Unknown table type.");
+    throw BaseException("Unknown table type.");
   }
 
   // Determine and store the lookup properties for this table unless this table
@@ -199,7 +199,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
       } else if (lookup_axis == string("table")) {
         lookupProperty[eTable] = node;
       } else if (!lookup_axis.empty()) {
-        throw TableException("Lookup table axis specification not understood: " + lookup_axis);
+        throw BaseException("Lookup table axis specification not understood: " + lookup_axis);
       } else { // assumed single dimension table; row lookup
         lookupProperty[eRow] = node;
       }
@@ -232,7 +232,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
       std::cerr << el->ReadFrom()
                 << "No independentVars found, and table is not marked as internal,"
                 << " nor is it a 3D table." << endl;
-      throw TableException("No independent variable found for table.");
+      throw BaseException("No independent variable found for table.");
     }
   }
   // end lookup property code
@@ -245,8 +245,16 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
   }
 
   for (i=0; i<tableData->GetNumDataLines(); i++) {
-    buf << tableData->GetDataLine(i) << string(" ");
+    string line = tableData->GetDataLine(i);
+    if (line.find_first_not_of("0123456789.-+eE \t\n") != string::npos) {
+      cerr << " In file " << tableData->GetFileName() << endl
+           << "   Illegal character found in line "
+           << tableData->GetLineNumber() + i + 1 << ": " << endl << line << endl;
+      throw BaseException("Illegal character");
+    }
+    buf << line << " ";
   }
+
   switch (dimension) {
   case 1:
     nRows = tableData->GetNumDataLines();
@@ -267,12 +275,12 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
       if (nCols < 2) {
         std::cerr << tableData->ReadFrom()
                   << "Not enough columns in table data" << endl;
-        throw TableException("Not enough columns in table data.");
+        throw BaseException("Not enough columns in table data.");
       }
     } else {
       std::cerr << tableData->ReadFrom()
                 << "Not enough rows in table data" << endl;
-      throw TableException("Not enough rows in the table data.");
+      throw BaseException("Not enough rows in the table data.");
     }
 
     Type = tt2D;
@@ -330,7 +338,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
         if (nameel != 0) std::cerr << " of table in " << nameel->GetAttributeValue("name");
         std::cerr << ":" << reset << endl
                   << "  " << Data[b][1] << "<=" << Data[b-1][1] << endl;
-        throw TableException("Breakpoint lookup is not monotonically increasing");
+        throw BaseException("Breakpoint lookup is not monotonically increasing");
       }
     }
   }
@@ -346,7 +354,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
         if (nameel != 0) std::cerr << " of table in " << nameel->GetAttributeValue("name");
         std::cerr << ":" << reset << endl
                   << "  " << Data[0][c] << "<=" << Data[0][c-1] << endl;
-        throw TableException("FGTable: column lookup is not monotonically increasing");
+        throw BaseException("FGTable: column lookup is not monotonically increasing");
       }
     }
   }
@@ -362,7 +370,7 @@ FGTable::FGTable(FGPropertyManager* propMan, Element* el,
         if (nameel != 0) std::cerr << " of table in " << nameel->GetAttributeValue("name");
         std::cerr << ":" << reset << endl
                   << "  " << Data[r][0] << "<=" << Data[r-1][0] << endl;
-        throw TableException("FGTable: row lookup is not monotonically increasing");
+        throw BaseException("FGTable: row lookup is not monotonically increasing");
       }
     }
   }
@@ -393,10 +401,10 @@ FGTable::~FGTable()
   // Untie the bound property so that it makes no further reference to this
   // instance of FGTable after the destruction is completed.
   if (!Name.empty() && !internal) {
-    string tmp = mkPropertyName(nullptr, "");
+    string tmp = PropertyManager->mkPropertyName(Name, false);
     FGPropertyNode* node = PropertyManager->GetNode(tmp);
-    if (node->isTied())
-      PropertyManager->Untie(tmp);
+    if (node && node->isTied())
+      PropertyManager->Untie(node);
   }
 
   if (nTables > 0) {
@@ -653,33 +661,26 @@ void FGTable::Print(void)
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-string FGTable::mkPropertyName(Element* el, const std::string& Prefix)
-{
-  if (!Prefix.empty()) {
-    if (is_number(Prefix)) {
-      if (Name.find("#") != string::npos) { // if "#" is found
-        Name = replace(Name, "#", Prefix);
-      } else {
-        cerr << el->ReadFrom()
-              << "Malformed table name with number: " << Prefix
-              << " and property name: " << Name
-              << " but no \"#\" sign for substitution." << endl;
-      }
-    } else {
-      Name = Prefix + "/" + Name;
-    }
-  }
-
-  return PropertyManager->mkPropertyName(Name, false);
-}
-
-//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 void FGTable::bind(Element* el, const string& Prefix)
 {
   typedef double (FGTable::*PMF)(void) const;
+
   if ( !Name.empty() && !internal) {
-    string tmp = mkPropertyName(el, Prefix);
+    if (!Prefix.empty()) {
+      if (is_number(Prefix)) {
+        if (Name.find("#") != string::npos) { // if "#" is found
+          Name = replace(Name, "#", Prefix);
+        } else {
+          cerr << el->ReadFrom()
+                << "Malformed table name with number: " << Prefix
+                << " and property name: " << Name
+                << " but no \"#\" sign for substitution." << endl;
+        }
+      } else {
+        Name = Prefix + "/" + Name;
+      }
+    }
+    string tmp = PropertyManager->mkPropertyName(Name, false);
 
     if (PropertyManager->HasNode(tmp)) {
       FGPropertyNode* _property = PropertyManager->GetNode(tmp);
@@ -689,7 +690,8 @@ void FGTable::bind(Element* el, const string& Prefix)
         throw("Failed to bind the property to an existing already tied node.");
       }
     }
-    PropertyManager->Tie( tmp, this, (PMF)&FGTable::GetValue);
+
+    PropertyManager->Tie(tmp, this, (PMF)&FGTable::GetValue);
   }
 }
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

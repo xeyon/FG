@@ -124,7 +124,7 @@ FGCondition::FGCondition(const string& test, FGPropertyManager* PropertyManager,
 
   Comparison = mComparison[conditional];
   if (Comparison == ecUndef) {
-      std::invalid_argument("JSBSim FGCondition: Comparison operator: \""+conditional
+    throw std::invalid_argument("JSBSim FGCondition: Comparison operator: \""+conditional
           +"\" does not exist.  Please check the conditional.");
   }
 }
