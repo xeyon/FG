@@ -68,6 +68,9 @@ FGFX::FGFX ( const std::string &refname, SGPropertyNode *props ) :
     _atc_volume = _props->getNode("sim/sound/atc/volume", true);
     _atc_ext = _props->getNode("sim/sound/atc/external-view", true);
 
+    _machwave_active = _props->getNode("sim/sound/machwave/active", true);
+    _machwave_volume = _props->getNode("sim/sound/machwave/offset-m", true);
+
     _smgr = globals->get_subsystem<FGSoundManager>();
     if (!_smgr) {
       return;
@@ -213,6 +216,9 @@ FGFX::update (double dt)
             else
                 _atc->suspend();
         }
+
+        _machwave_active->setBoolValue(_mInCone);
+        _machwave_volume->setFloatValue(_mOffset_m);
 
         set_volume( _volume->getDoubleValue() );
         resume();

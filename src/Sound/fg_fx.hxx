@@ -76,6 +76,8 @@ private:
     SGPropertyNode_ptr _atc_enabled;
     SGPropertyNode_ptr _atc_volume;
     SGPropertyNode_ptr _atc_ext;
+    SGPropertyNode_ptr _machwave_active;
+    SGPropertyNode_ptr _machwave_volume;
 };
 
 
