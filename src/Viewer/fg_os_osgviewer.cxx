@@ -18,6 +18,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+#ifdef __linux__
+    #include <sched.h>
+#endif
+
 #include <config.h>
 
 #include <algorithm>
@@ -354,12 +358,141 @@ void fgOSExit(int code)
 }
 SGTimeStamp _lastUpdate;
 
+static void ShowAffinities()
+{
+    #ifdef __linux__
+    char command[1024];
+    snprintf( command, sizeof( command), "for i in `ls /proc/%i/task/`; do taskset -p $i; done 1>&2", getpid());
+    SG_LOG(SG_VIEW, SG_ALERT, "Running: " << command);
+    system( command);
+    #endif
+}
+
+#ifdef __linux__
+static std::ostream& operator<< (std::ostream& out, const cpu_set_t& mask)
+{
+    out << "0x";
+    unsigned char* mask2 = (unsigned char*) &mask;
+    for (unsigned i=0; i<sizeof(mask); ++i)
+    {
+        char buffer[8];
+        snprintf(buffer, sizeof(buffer), "%02x", (unsigned) mask2[i]);
+        out << buffer;
+    }
+    return out;
+}
+#endif
+
+/* Listen to /sim/affinity-control and, on Linux only, responds to
+value='clear' and 'revert':
+
+    'clear'
+        Stores current affinities for all thread then resets all affinities so
+        that all threads can run on any cpu core.
+    'revert'
+        Restores thread affinities stored from previous 'clear'.
+*/
+struct AffinityControl : SGPropertyChangeListener
+{
+    AffinityControl()
+    {
+        m_node = globals->get_props()->getNode( "/sim/affinity-control", true /*create*/);
+        m_node->addChangeListener( this);
+    }
+    void valueChanged(SGPropertyNode* node) override
+    {
+        #ifdef __linux__
+        std::string s = m_node->getStringValue();
+        if (s == m_state)
+        {
+            SG_LOG(SG_VIEW, SG_ALERT, "Ignoring m_node=" << s << " because same as m_state.");
+        }
+        else if (s == "clear")
+        {
+            char buffer[64];
+            snprintf(buffer, sizeof(buffer), "/proc/%i/task", getpid());
+            SGPath path( buffer);
+            simgear::Dir dir( path);
+            m_thread_masks.clear();
+            simgear::PathList pids = dir.children(
+                    simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT
+                    );
+            for (SGPath path: pids)
+            {
+                std::string leaf = path.file();
+                int pid = atoi( leaf.c_str());
+                cpu_set_t   mask;
+                int e = sched_getaffinity( pid, sizeof(mask), &mask);
+                SG_LOG(SG_VIEW, SG_ALERT, "Called sched_getaffinity()"
+                        << " pid=" << pid
+                        << " => e=" << e
+                        << " mask=" << mask
+                        );
+                if (!e)
+                {
+                    m_thread_masks[ pid] = mask;
+                    memset(&mask, 255, sizeof(mask));
+                    e = sched_setaffinity( pid, sizeof(mask), &mask);
+                    SG_LOG(SG_VIEW, SG_ALERT, "Called sched_setaffinity()"
+                            << " pid=" << pid
+                            << " => e=" << e
+                            << " mask=" << mask
+                            );
+                    //assert(!e);
+                }
+            }
+            m_state = s;
+        }
+        else if (s == "revert")
+        {
+            for (auto it: m_thread_masks)
+            {
+                pid_t   pid = it.first;
+                cpu_set_t   mask = it.second;
+                int e = sched_setaffinity( pid, sizeof(mask), &mask);
+                SG_LOG(SG_VIEW, SG_ALERT, "Called sched_setaffinity()"
+                        << " pid=" << pid
+                        << " => e=" << e
+                        << " mask=" << mask
+                        );
+                //assert(!e);
+            }
+            m_thread_masks.clear();
+            m_state = s;
+        }
+        else
+        {
+            SG_LOG(SG_VIEW, SG_ALERT, "Unrecognised m_node=" << s);
+        }
+        #endif
+    }
+    SGPropertyNode_ptr          m_node;
+    std::string                 m_state;
+    #ifdef __linux__
+    std::map<int, cpu_set_t>    m_thread_masks;
+    #endif
+};
+
+
 int fgOSMainLoop()
 {
+    AffinityControl affinity_control;
     osgViewer::ViewerBase* viewer_base = globals->get_renderer()->getViewerBase();
     viewer_base->setReleaseContextAtEndOfFrameHint(false);
     if (!viewer_base->isRealized()) {
         viewer_base->realize();
+        std::string affinity = fgGetString("/sim/thread-cpu-affinity");
+        SG_LOG(SG_VIEW, SG_ALERT, "affinity=" << affinity);
+        if (affinity != "")
+        {
+            ShowAffinities();
+            if (affinity == "osg") {
+                SG_LOG(SG_VIEW, SG_ALERT, "Resetting affinity of current thread getpid()=" << getpid());
+                OpenThreads::Affinity affinity;
+                OpenThreads::SetProcessorAffinityOfCurrentThread( affinity);
+                ShowAffinities();
+            }
+        }
     }
 
     while (!viewer_base->done()) {

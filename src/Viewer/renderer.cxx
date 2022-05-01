@@ -479,9 +479,21 @@ FGRenderer::init( void )
         }
         else {
             composite_viewer = new osgViewer::CompositeViewer;
-            bool use_affinity = fgGetBool("/sim/thread-cpu-affinity", true);
-            SG_LOG(SG_GENERAL, SG_ALERT, "Calling composite_viewer->setUseConfigureAffinity() with use_affinity=" << use_affinity);
-            composite_viewer->setUseConfigureAffinity(use_affinity);
+            std::string affinity = fgGetString("/sim/thread-cpu-affinity");
+            SG_LOG(SG_GENERAL, SG_ALERT, "affinity=" << affinity);
+            bool osg_affinity_flag = true;
+            if (affinity == "") {}
+            else if (affinity == "none") {
+                osg_affinity_flag = false;
+            }
+            else if (affinity == "osg") {
+                /* This is handled elsewhere. */
+            }
+            else {
+                SG_LOG(SG_VIEW, SG_ALERT, "Unrecognised value for /sim/thread-cpu-affinity: " << affinity);
+            }
+            SG_LOG(SG_VIEW, SG_ALERT, "Calling composite_viewer->setUseConfigureAffinity() with flag=" << osg_affinity_flag);
+            composite_viewer->setUseConfigureAffinity(osg_affinity_flag);
         }
         
         // https://stackoverflow.com/questions/15207076/openscenegraph-and-multiple-viewers
