@@ -485,7 +485,7 @@ bool FGViewMgr::video_start(
         videoEncodingPopup(warning, 10);
     }
     
-    SG_LOG(SG_SYSTEMS, SG_ALERT, "Starting video encoding."
+    SG_LOG(SG_SYSTEMS, SG_ALERT, "Video encoding starting."
             << " codec=" << codec
             << " quality=" << quality
             << " speed=" << speed
@@ -493,9 +493,12 @@ bool FGViewMgr::video_start(
             << " path=" << path
             << " path_link=" << path_link
             );
+    bool log_sws_scale_stats = globals->get_props()->getNode("/sim/video/log_sws_scale_stats", true /*create*/)->getBoolValue();
     try
     {
-        _video_encoder.reset(new simgear::VideoEncoder(path.str(), codec, quality, speed, bitrate));
+        _video_encoder.reset(
+                new simgear::VideoEncoder(path.str(), codec, quality, speed, bitrate, log_sws_scale_stats)
+                );
     }
     catch (std::exception& e)
     {
@@ -513,7 +516,7 @@ void FGViewMgr::video_stop()
     {
         _video_encoder.reset();
         vidoEncodingUpdateStatus("");
-        videoEncodingPopup("Video encoding stopped", 5);
+        videoEncodingPopup("Video encoding stopped.", 5);
     }
     else
     {
