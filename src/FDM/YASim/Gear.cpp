@@ -335,8 +335,23 @@ bool gearCompression(
     Math::mul3( compression_distance, compression.unit, delta);
     Math::add3( S, delta, o_contact);
 
-    /* Check that <o_contact> is tyre_radius above ground. */
-    assert( fabs( Math::dot3( o_contact, ground) - (ground[3] - tyre_radius + bump_altitude)) < 0.001);
+    {
+        /* Verify that <o_contact> is tyre_radius above ground; this can fail
+        e.g. when resetting so for now we just output a diagnostic rather than
+        assert fail. */
+        //assert( fabs( Math::dot3( o_contact, ground) - (ground[3] - tyre_radius + bump_altitude)) < 0.001);
+        double s = Math::dot3( o_contact, ground) - (ground[3] - tyre_radius + bump_altitude);
+        if (fabs( s) > 0.001)
+        {
+            SG_LOG(SG_GENERAL, SG_ALERT, "<o_contact> is not tyre_radius above ground."
+                    << " o_contact=" << o_contact
+                    << " ground=" << ground
+                    << " tyre_radius=" << tyre_radius
+                    << " bump_altitude=" << bump_altitude
+                    << " s=" << s
+                    );
+        }
+    }
 
     /* Correct for tyre_radius - need to move o_contact a distance tyre_radius
     towards ground. */
@@ -345,8 +360,22 @@ bool gearCompression(
         Math::add3( o_contact, delta, o_contact);
     }
     
-    /* Check that <o_contact> is on ground. */
-    assert( fabs( Math::dot3( o_contact, ground) - (ground[3] + bump_altitude)) < 0.001);
+    {
+        /* Verify that <o_contact> is on ground; this can fail e.g. when resetting so for now we
+        just output a diagnostic rather than assert fail. */
+        //assert( fabs( Math::dot3( o_contact, ground) - (ground[3] + bump_altitude)) < 0.001);
+        double s = Math::dot3( o_contact, ground) - (ground[3] + bump_altitude);
+        if ( fabs( s) > 0.001)
+        {
+            SG_LOG(SG_GENERAL, SG_ALERT, "<o_contact> is not on ground."
+                    << " o_contact=" << o_contact
+                    << " ground=" << ground
+                    << " tyre_radius=" << tyre_radius
+                    << " bump_altitude=" << bump_altitude
+                    << " s=" << s
+                    );
+        }
+    }
     
     return true;
 }
