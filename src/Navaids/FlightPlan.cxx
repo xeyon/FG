@@ -169,7 +169,7 @@ FlightPlanRef FlightPlan::clone(const string& newIdent, bool convertIntoFlightPl
   } else if (_cruiseAirspeedKnots > 0) {
       c->setCruiseSpeedKnots(_cruiseAirspeedKnots);
   } else if (_cruiseAirspeedKph > 0) {
-    c->setCruiseSpeedKilometersPerHour(_cruiseAirspeedKph);
+    c->setCruiseSpeedKPH(_cruiseAirspeedKph);
   }
 
   c->_didLoadFP = true; // set the loaded flag to give delegates a chance

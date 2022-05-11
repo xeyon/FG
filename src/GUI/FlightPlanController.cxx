@@ -346,6 +346,9 @@ void FlightPlanController::setCruiseAltitude(QuantityValue alt)
             _fp->setCruiseAltitudeM(ival);
             break;
         }
+        default:
+            qWarning() << "Unsupported cruise altitude units" << alt.unit;
+            break;
     }
 
     emit infoChanged();
@@ -394,8 +397,8 @@ QuantityValue FlightPlanController::cruiseSpeed() const
         return {Units::Mach, _fp->cruiseSpeedMach()};
     }
 
-    if (_fp->cruiseSpeedKilometersPerHour() > 0) {
-        return {Units::KilometersPerHour, _fp->cruiseSpeedKilometersPerHour()};
+    if (_fp->cruiseSpeedKPH() > 0) {
+        return {Units::KilometersPerHour, _fp->cruiseSpeedKPH()};
     }
 
     return {Units::Knots, _fp->cruiseSpeedKnots()};
@@ -626,7 +629,6 @@ void FlightPlanController::setAlternate(QmlPositioned *apt)
 
 void FlightPlanController::setCruiseSpeed(QuantityValue speed)
 {
-    qInfo() << Q_FUNC_INFO << speed.unit << speed.value;
     switch (speed.unit) {
         case Units::Mach: {
             if (speed == QuantityValue(Units::Mach, _fp->cruiseSpeedMach())) {
@@ -647,13 +649,16 @@ void FlightPlanController::setCruiseSpeed(QuantityValue speed)
         }
         case Units::KilometersPerHour: {
             const int kmhVal = static_cast<int>(speed.value);
-            if (_fp->cruiseSpeedKilometersPerHour() == kmhVal) {
+            if (_fp->cruiseSpeedKPH() == kmhVal) {
                 return;
             }
 
-            _fp->setCruiseSpeedKilometersPerHour(kmhVal);
+            _fp->setCruiseSpeedKPH(kmhVal);
             break;
         }
+        default:
+            qWarning() << "Unsupported cruise speed units" << speed.unit;
+            break;
     }
 
     emit infoChanged();
