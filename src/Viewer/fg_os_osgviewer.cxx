@@ -19,50 +19,50 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #ifdef __linux__
-    #include <sched.h>
+#include <sched.h>
 #endif
 
 #include <config.h>
 
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <cstdlib>
 
 #include <simgear/compiler.h>
-#include <simgear/structure/exception.hxx>
-#include <simgear/debug/logstream.hxx>
 #include <simgear/debug/OsgIoCapture.hxx>
+#include <simgear/debug/logstream.hxx>
 #include <simgear/props/props_io.hxx>
+#include <simgear/structure/exception.hxx>
 
 #include <osg/Camera>
 #include <osg/GraphicsContext>
 #include <osg/Group>
 #include <osg/Matrixd>
-#include <osg/Viewport>
-#include <osg/Version>
 #include <osg/Notify>
+#include <osg/Version>
 #include <osg/View>
-#include <osgViewer/ViewerEventHandlers>
-#include <osgViewer/Viewer>
+#include <osg/Viewport>
 #include <osgViewer/GraphicsWindow>
+#include <osgViewer/Viewer>
+#include <osgViewer/ViewerEventHandlers>
 
-#include <Scenery/scenery.hxx>
-#include <Main/fg_os.hxx>
-#include <Main/fg_props.hxx>
-#include <Main/util.hxx>
-#include <Main/globals.hxx>
-#include "renderer.hxx"
 #include "CameraGroup.hxx"
 #include "FGEventHandler.hxx"
 #include "VRManager.hxx"
 #include "WindowBuilder.hxx"
 #include "WindowSystemAdapter.hxx"
+#include "renderer.hxx"
+#include <Main/fg_os.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 #include <Main/sentryIntegration.hxx>
+#include <Main/util.hxx>
+#include <Scenery/scenery.hxx>
 
 #if defined(SG_MAC)
-#  include <GUI/CocoaHelpers.h>
+#include <GUI/CocoaHelpers.h>
 #endif
 
 #if defined(SG_WINDOWS)
@@ -82,13 +82,13 @@ USE_OSGPLUGIN(pnm);
 USE_OSGPLUGIN(rgb);
 USE_OSGPLUGIN(tga);
 #ifdef OSG_JPEG_ENABLED
-  USE_OSGPLUGIN(jpeg);
+USE_OSGPLUGIN(jpeg);
 #endif
 #ifdef OSG_PNG_ENABLED
-  USE_OSGPLUGIN(png);
+USE_OSGPLUGIN(png);
 #endif
 #ifdef OSG_TIFF_ENABLED
-  USE_OSGPLUGIN(tiff);
+USE_OSGPLUGIN(tiff);
 #endif
 // Model formats
 USE_OSGPLUGIN(3ds);
@@ -111,75 +111,58 @@ using namespace osg;
 
 osg::ref_ptr<osgViewer::Viewer> viewer;
 
-static void setStereoMode( const char * mode )
+static void setStereoMode(const char* mode)
 {
     DisplaySettings::StereoMode stereoMode = DisplaySettings::QUAD_BUFFER;
     bool stereoOn = true;
 
-    if (strcmp(mode,"QUAD_BUFFER")==0)
-    {
+    if (strcmp(mode, "QUAD_BUFFER") == 0) {
         stereoMode = DisplaySettings::QUAD_BUFFER;
-    }
-    else if (strcmp(mode,"ANAGLYPHIC")==0)
-    {
+    } else if (strcmp(mode, "ANAGLYPHIC") == 0) {
         stereoMode = DisplaySettings::ANAGLYPHIC;
-    }
-    else if (strcmp(mode,"HORIZONTAL_SPLIT")==0)
-    {
+    } else if (strcmp(mode, "HORIZONTAL_SPLIT") == 0) {
         stereoMode = DisplaySettings::HORIZONTAL_SPLIT;
-    }
-    else if (strcmp(mode,"VERTICAL_SPLIT")==0)
-    {
+    } else if (strcmp(mode, "VERTICAL_SPLIT") == 0) {
         stereoMode = DisplaySettings::VERTICAL_SPLIT;
-    }
-    else if (strcmp(mode,"LEFT_EYE")==0)
-    {
+    } else if (strcmp(mode, "LEFT_EYE") == 0) {
         stereoMode = DisplaySettings::LEFT_EYE;
-    }
-    else if (strcmp(mode,"RIGHT_EYE")==0)
-    {
+    } else if (strcmp(mode, "RIGHT_EYE") == 0) {
         stereoMode = DisplaySettings::RIGHT_EYE;
-    }
-    else if (strcmp(mode,"HORIZONTAL_INTERLACE")==0)
-    {
+    } else if (strcmp(mode, "HORIZONTAL_INTERLACE") == 0) {
         stereoMode = DisplaySettings::HORIZONTAL_INTERLACE;
-    }
-    else if (strcmp(mode,"VERTICAL_INTERLACE")==0)
-    {
+    } else if (strcmp(mode, "VERTICAL_INTERLACE") == 0) {
         stereoMode = DisplaySettings::VERTICAL_INTERLACE;
-    }
-    else if (strcmp(mode,"CHECKERBOARD")==0)
-    {
+    } else if (strcmp(mode, "CHECKERBOARD") == 0) {
         stereoMode = DisplaySettings::CHECKERBOARD;
     } else {
         stereoOn = false;
     }
-    DisplaySettings::instance()->setStereo( stereoOn );
-    DisplaySettings::instance()->setStereoMode( stereoMode );
+    DisplaySettings::instance()->setStereo(stereoOn);
+    DisplaySettings::instance()->setStereoMode(stereoMode);
 }
 
-static const char * getStereoMode()
+static const char* getStereoMode()
 {
     DisplaySettings::StereoMode stereoMode = DisplaySettings::instance()->getStereoMode();
     bool stereoOn = DisplaySettings::instance()->getStereo();
-    if( !stereoOn ) return "OFF";
-    if( stereoMode == DisplaySettings::QUAD_BUFFER ) {
+    if (!stereoOn) return "OFF";
+    if (stereoMode == DisplaySettings::QUAD_BUFFER) {
         return "QUAD_BUFFER";
-    } else if( stereoMode == DisplaySettings::ANAGLYPHIC ) {
+    } else if (stereoMode == DisplaySettings::ANAGLYPHIC) {
         return "ANAGLYPHIC";
-    } else if( stereoMode == DisplaySettings::HORIZONTAL_SPLIT ) {
+    } else if (stereoMode == DisplaySettings::HORIZONTAL_SPLIT) {
         return "HORIZONTAL_SPLIT";
-    } else if( stereoMode == DisplaySettings::VERTICAL_SPLIT ) {
+    } else if (stereoMode == DisplaySettings::VERTICAL_SPLIT) {
         return "VERTICAL_SPLIT";
-    } else if( stereoMode == DisplaySettings::LEFT_EYE ) {
+    } else if (stereoMode == DisplaySettings::LEFT_EYE) {
         return "LEFT_EYE";
-    } else if( stereoMode == DisplaySettings::RIGHT_EYE ) {
+    } else if (stereoMode == DisplaySettings::RIGHT_EYE) {
         return "RIGHT_EYE";
-    } else if( stereoMode == DisplaySettings::HORIZONTAL_INTERLACE ) {
+    } else if (stereoMode == DisplaySettings::HORIZONTAL_INTERLACE) {
         return "HORIZONTAL_INTERLACE";
-    } else if( stereoMode == DisplaySettings::VERTICAL_INTERLACE ) {
+    } else if (stereoMode == DisplaySettings::VERTICAL_INTERLACE) {
         return "VERTICAL_INTERLACE";
-    } else if( stereoMode == DisplaySettings::CHECKERBOARD ) {
+    } else if (stereoMode == DisplaySettings::CHECKERBOARD) {
         return "CHECKERBOARD";
     }
     return "OFF";
@@ -211,17 +194,16 @@ public:
 
 void updateOSGNotifyLevel()
 {
-   }
+}
 
 void fgOSOpenWindow(bool stencil)
 {
     osg::setNotifyHandler(new NotifyLogger);
 
     auto composite_viewer = dynamic_cast<osgViewer::CompositeViewer*>(
-            globals->get_renderer()->getViewerBase()
-            );
-    if (0) {}
-    else if (composite_viewer) {
+        globals->get_renderer()->getViewerBase());
+    if (0) {
+    } else if (composite_viewer) {
         /* We are using CompositeViewer. */
         SG_LOG(SG_VIEW, SG_DEBUG, "Using CompositeViewer");
         osgViewer::ViewerBase* viewer = globals->get_renderer()->getViewerBase();
@@ -231,30 +213,30 @@ void fgOSOpenWindow(bool stencil)
         globals->get_renderer()->setView(view);
         assert(globals->get_renderer()->getView() == view);
         view->setDatabasePager(FGScenery::getPagerSingleton());
-        
+
         // https://www.mail-archive.com/osg-users@lists.openscenegraph.org/msg29820.html
         view->getDatabasePager()->setUnrefImageDataAfterApplyPolicy(true, false);
         osg::GraphicsContext::createNewContextID();
-        
+
         //viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
 
         std::string mode;
         mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
-        SG_LOG( SG_VIEW, SG_INFO, "mode=" << mode);
+        SG_LOG(SG_VIEW, SG_INFO, "mode=" << mode);
         if (mode == "AutomaticSelection")
-          viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
+            viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
         else if (mode == "CullDrawThreadPerContext")
-          viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
+            viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
         else if (mode == "DrawThreadPerContext")
-          viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
+            viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
         else if (mode == "CullThreadPerCameraDrawThreadPerContext")
-          viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
+            viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
         else
-          viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
-        
+            viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+
         WindowBuilder::initWindowBuilder(stencil);
         CameraGroup::buildDefaultGroup(view);
-        
+
         FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
         WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
         if (wsa->windows.size() != 1) {
@@ -267,8 +249,7 @@ void fgOSOpenWindow(bool stencil)
         // The viewer won't start without some root.
         view->setSceneData(new osg::Group);
         globals->get_renderer()->setView(view);
-    }
-    else {
+    } else {
         /* Not using CompositeViewer. */
         SG_LOG(SG_VIEW, SG_DEBUG, "Not CompositeViewer.");
         SG_LOG(SG_VIEW, SG_DEBUG, "Creating osgViewer::Viewer");
@@ -278,20 +259,20 @@ void fgOSOpenWindow(bool stencil)
         std::string mode;
         mode = fgGetString("/sim/rendering/multithreading-mode", "SingleThreaded");
         flightgear::addSentryTag("osg-thread-mode", mode);
-        
+
         if (mode == "AutomaticSelection")
-          viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
+            viewer->setThreadingModel(osgViewer::Viewer::AutomaticSelection);
         else if (mode == "CullDrawThreadPerContext")
-          viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
+            viewer->setThreadingModel(osgViewer::Viewer::CullDrawThreadPerContext);
         else if (mode == "DrawThreadPerContext")
-          viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
+            viewer->setThreadingModel(osgViewer::Viewer::DrawThreadPerContext);
         else if (mode == "CullThreadPerCameraDrawThreadPerContext")
-          viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
+            viewer->setThreadingModel(osgViewer::Viewer::CullThreadPerCameraDrawThreadPerContext);
         else
-          viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
+            viewer->setThreadingModel(osgViewer::Viewer::SingleThreaded);
         WindowBuilder::initWindowBuilder(stencil);
         CameraGroup::buildDefaultGroup(viewer.get());
-        
+
         FGEventHandler* manipulator = globals->get_renderer()->getEventHandler();
         WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
         if (wsa->windows.size() != 1) {
@@ -306,7 +287,7 @@ void fgOSOpenWindow(bool stencil)
         globals->get_renderer()->setView(viewer.get());
     }
 }
-SGPropertyNode* simHost = 0, *simFrameCount, *simTotalHostTime, *simFrameResetCount, *frameWait;
+SGPropertyNode *simHost = 0, *simFrameCount, *simTotalHostTime, *simFrameResetCount, *frameWait;
 void fgOSResetProperties()
 {
     SGPropertyNode* osgLevel = fgGetNode("/sim/rendering/osg-notify-level", true);
@@ -327,16 +308,16 @@ void fgOSResetProperties()
         fgSetInt("/sim/startup/ysize", guiViewport->height());
     }
 
-    DisplaySettings * displaySettings = DisplaySettings::instance();
-    fgTie("/sim/rendering/osg-displaysettings/split-stereo-autoadjust-aspect-ratio", displaySettings, &DisplaySettings::getSplitStereoAutoAdjustAspectRatio, &DisplaySettings::setSplitStereoAutoAdjustAspectRatio );
-    fgTie("/sim/rendering/osg-displaysettings/eye-separation", displaySettings, &DisplaySettings::getEyeSeparation, &DisplaySettings::setEyeSeparation );
-    fgTie("/sim/rendering/osg-displaysettings/screen-distance", displaySettings, &DisplaySettings::getScreenDistance, &DisplaySettings::setScreenDistance );
-    fgTie("/sim/rendering/osg-displaysettings/screen-width", displaySettings, &DisplaySettings::getScreenWidth, &DisplaySettings::setScreenWidth );
-    fgTie("/sim/rendering/osg-displaysettings/screen-height", displaySettings, &DisplaySettings::getScreenHeight, &DisplaySettings::setScreenHeight );
-    fgTie("/sim/rendering/osg-displaysettings/stereo-mode", getStereoMode, setStereoMode );
-    fgTie("/sim/rendering/osg-displaysettings/double-buffer", displaySettings, &DisplaySettings::getDoubleBuffer, &DisplaySettings::setDoubleBuffer );
-    fgTie("/sim/rendering/osg-displaysettings/depth-buffer", displaySettings, &DisplaySettings::getDepthBuffer, &DisplaySettings::setDepthBuffer );
-    fgTie("/sim/rendering/osg-displaysettings/rgb", displaySettings, &DisplaySettings::getRGB, &DisplaySettings::setRGB );
+    DisplaySettings* displaySettings = DisplaySettings::instance();
+    fgTie("/sim/rendering/osg-displaysettings/split-stereo-autoadjust-aspect-ratio", displaySettings, &DisplaySettings::getSplitStereoAutoAdjustAspectRatio, &DisplaySettings::setSplitStereoAutoAdjustAspectRatio);
+    fgTie("/sim/rendering/osg-displaysettings/eye-separation", displaySettings, &DisplaySettings::getEyeSeparation, &DisplaySettings::setEyeSeparation);
+    fgTie("/sim/rendering/osg-displaysettings/screen-distance", displaySettings, &DisplaySettings::getScreenDistance, &DisplaySettings::setScreenDistance);
+    fgTie("/sim/rendering/osg-displaysettings/screen-width", displaySettings, &DisplaySettings::getScreenWidth, &DisplaySettings::setScreenWidth);
+    fgTie("/sim/rendering/osg-displaysettings/screen-height", displaySettings, &DisplaySettings::getScreenHeight, &DisplaySettings::setScreenHeight);
+    fgTie("/sim/rendering/osg-displaysettings/stereo-mode", getStereoMode, setStereoMode);
+    fgTie("/sim/rendering/osg-displaysettings/double-buffer", displaySettings, &DisplaySettings::getDoubleBuffer, &DisplaySettings::setDoubleBuffer);
+    fgTie("/sim/rendering/osg-displaysettings/depth-buffer", displaySettings, &DisplaySettings::getDepthBuffer, &DisplaySettings::setDepthBuffer);
+    fgTie("/sim/rendering/osg-displaysettings/rgb", displaySettings, &DisplaySettings::getRGB, &DisplaySettings::setRGB);
 
 #ifdef ENABLE_OSGXR
     fgSetBool("/sim/vr/built", true);
@@ -364,23 +345,22 @@ SGTimeStamp _lastUpdate;
 
 static void ShowAffinities()
 {
-    #ifdef __linux__
+#ifdef __linux__
     char command[1024];
-    snprintf( command, sizeof( command), "for i in `ls /proc/%i/task/`; do taskset -p $i; done 1>&2", getpid());
+    snprintf(command, sizeof(command), "for i in `ls /proc/%i/task/`; do taskset -p $i; done 1>&2", getpid());
     SG_LOG(SG_VIEW, SG_ALERT, "Running: " << command);
-    system( command);
-    #endif
+    system(command);
+#endif
 }
 
 #ifdef __linux__
-static std::ostream& operator<< (std::ostream& out, const cpu_set_t& mask)
+static std::ostream& operator<<(std::ostream& out, const cpu_set_t& mask)
 {
     out << "0x";
-    unsigned char* mask2 = (unsigned char*) &mask;
-    for (unsigned i=0; i<sizeof(mask); ++i)
-    {
+    unsigned char* mask2 = (unsigned char*)&mask;
+    for (unsigned i = 0; i < sizeof(mask); ++i) {
         char buffer[8];
-        snprintf(buffer, sizeof(buffer), "%02x", (unsigned) mask2[i]);
+        snprintf(buffer, sizeof(buffer), "%02x", (unsigned)mask2[i]);
         out << buffer;
     }
     return out;
@@ -396,85 +376,64 @@ value='clear' and 'revert':
     'revert'
         Restores thread affinities stored from previous 'clear'.
 */
-struct AffinityControl : SGPropertyChangeListener
-{
+struct AffinityControl : SGPropertyChangeListener {
     AffinityControl()
     {
-        m_node = globals->get_props()->getNode( "/sim/affinity-control", true /*create*/);
-        m_node->addChangeListener( this);
+        m_node = globals->get_props()->getNode("/sim/affinity-control", true /*create*/);
+        m_node->addChangeListener(this);
     }
     void valueChanged(SGPropertyNode* node) override
     {
-        #ifdef __linux__
+#ifdef __linux__
         std::string s = m_node->getStringValue();
-        if (s == m_state)
-        {
+        if (s == m_state) {
             SG_LOG(SG_VIEW, SG_ALERT, "Ignoring m_node=" << s << " because same as m_state.");
-        }
-        else if (s == "clear")
-        {
+        } else if (s == "clear") {
             char buffer[64];
             snprintf(buffer, sizeof(buffer), "/proc/%i/task", getpid());
-            SGPath path( buffer);
-            simgear::Dir dir( path);
+            SGPath path(buffer);
+            simgear::Dir dir(path);
             m_thread_masks.clear();
             simgear::PathList pids = dir.children(
-                    simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT
-                    );
-            for (SGPath path: pids)
-            {
+                simgear::Dir::TYPE_DIR | simgear::Dir::NO_DOT_OR_DOTDOT);
+            for (SGPath path : pids) {
                 std::string leaf = path.file();
-                int pid = atoi( leaf.c_str());
-                cpu_set_t   mask;
-                int e = sched_getaffinity( pid, sizeof(mask), &mask);
+                int pid = atoi(leaf.c_str());
+                cpu_set_t mask;
+                int e = sched_getaffinity(pid, sizeof(mask), &mask);
                 SG_LOG(SG_VIEW, SG_ALERT, "Called sched_getaffinity()"
-                        << " pid=" << pid
-                        << " => e=" << e
-                        << " mask=" << mask
-                        );
-                if (!e)
-                {
-                    m_thread_masks[ pid] = mask;
+                                              << " pid=" << pid << " => e=" << e << " mask=" << mask);
+                if (!e) {
+                    m_thread_masks[pid] = mask;
                     memset(&mask, 255, sizeof(mask));
-                    e = sched_setaffinity( pid, sizeof(mask), &mask);
+                    e = sched_setaffinity(pid, sizeof(mask), &mask);
                     SG_LOG(SG_VIEW, SG_ALERT, "Called sched_setaffinity()"
-                            << " pid=" << pid
-                            << " => e=" << e
-                            << " mask=" << mask
-                            );
+                                                  << " pid=" << pid << " => e=" << e << " mask=" << mask);
                     //assert(!e);
                 }
             }
             m_state = s;
-        }
-        else if (s == "revert")
-        {
-            for (auto it: m_thread_masks)
-            {
-                pid_t   pid = it.first;
-                cpu_set_t   mask = it.second;
-                int e = sched_setaffinity( pid, sizeof(mask), &mask);
+        } else if (s == "revert") {
+            for (auto it : m_thread_masks) {
+                pid_t pid = it.first;
+                cpu_set_t mask = it.second;
+                int e = sched_setaffinity(pid, sizeof(mask), &mask);
                 SG_LOG(SG_VIEW, SG_ALERT, "Called sched_setaffinity()"
-                        << " pid=" << pid
-                        << " => e=" << e
-                        << " mask=" << mask
-                        );
+                                              << " pid=" << pid << " => e=" << e << " mask=" << mask);
                 //assert(!e);
             }
             m_thread_masks.clear();
             m_state = s;
-        }
-        else
-        {
+        } else {
             SG_LOG(SG_VIEW, SG_ALERT, "Unrecognised m_node=" << s);
         }
-        #endif
+#endif
     }
-    SGPropertyNode_ptr          m_node;
-    std::string                 m_state;
-    #ifdef __linux__
-    std::map<int, cpu_set_t>    m_thread_masks;
-    #endif
+    SGPropertyNode_ptr m_node;
+    std::string m_state;
+#ifdef __linux__
+    std::map<int, cpu_set_t> m_thread_masks;
+#endif
 };
 
 
@@ -487,13 +446,12 @@ int fgOSMainLoop()
         viewer_base->realize();
         std::string affinity = fgGetString("/sim/thread-cpu-affinity");
         SG_LOG(SG_VIEW, SG_ALERT, "affinity=" << affinity);
-        if (affinity != "")
-        {
+        if (affinity != "") {
             ShowAffinities();
             if (affinity == "osg") {
                 SG_LOG(SG_VIEW, SG_ALERT, "Resetting affinity of current thread getpid()=" << getpid());
                 OpenThreads::Affinity affinity;
-                OpenThreads::SetProcessorAffinityOfCurrentThread( affinity);
+                OpenThreads::SetProcessorAffinityOfCurrentThread(affinity);
                 ShowAffinities();
             }
         }
@@ -501,18 +459,14 @@ int fgOSMainLoop()
 
     while (!viewer_base->done()) {
         fgIdleHandler idleFunc = globals->get_renderer()->getEventHandler()->getIdleHandler();
-        if (idleFunc)
-        {
+        if (idleFunc) {
             _lastUpdate.stamp();
             (*idleFunc)();
-            if (fgGetBool("/sim/position-finalized", false))
-            {
-                if (simHost && simFrameCount && simTotalHostTime && simFrameResetCount)
-                {
+            if (fgGetBool("/sim/position-finalized", false)) {
+                if (simHost && simFrameCount && simTotalHostTime && simFrameResetCount) {
                     int curFrameCount = simFrameCount->getIntValue();
                     double totalSimTime = simTotalHostTime->getDoubleValue();
-                    if (simFrameResetCount->getBoolValue())
-                    {
+                    if (simFrameResetCount->getBoolValue()) {
                         curFrameCount = 0;
                         totalSimTime = 0;
                         simFrameResetCount->setBoolValue(false);
@@ -521,8 +475,7 @@ int fgOSMainLoop()
                     double idle_wait = 0;
                     if (frameWait)
                         idle_wait = frameWait->getDoubleValue();
-                    if (lastSimFrame_ms > 0)
-                    {
+                    if (lastSimFrame_ms > 0) {
                         totalSimTime += lastSimFrame_ms - idle_wait;
                         simTotalHostTime->setDoubleValue(totalSimTime);
                         curFrameCount++;
@@ -536,7 +489,7 @@ int fgOSMainLoop()
 #ifdef ENABLE_OSGXR
         VRManager::instance()->update();
 #endif
-        viewer_base->frame( globals->get_sim_time_sec() );
+        viewer_base->frame(globals->get_sim_time_sec());
     }
 
     flightgear::addSentryBreadcrumb("main loop exited", "info");
@@ -547,7 +500,7 @@ int fgGetKeyModifiers()
 {
     FGRenderer* r = globals->get_renderer();
     if (!r || !r->getEventHandler()) { // happens during shutdown
-      return 0;
+        return 0;
     }
 
     return r->getEventHandler()->getCurrentModifiers();
@@ -566,7 +519,7 @@ void fgOSInit(int* argc, char** argv)
 #if defined(SG_MAC)
     cocoaRegisterTerminateHandler();
 #endif
-    
+
     globals->get_renderer()->init();
     WindowSystemAdapter::setWSA(new WindowSystemAdapter);
 }
@@ -607,9 +560,8 @@ void fgOSFullScreen()
      * The other windows should use fixed setup from the camera.xml file anyway. */
     osgViewer::GraphicsWindow* window = windows[0];
 
-    osg::GraphicsContext::WindowingSystemInterface    *wsi = osg::GraphicsContext::getWindowingSystemInterface();
-    if (wsi == NULL)
-    {
+    osg::GraphicsContext::WindowingSystemInterface* wsi = osg::GraphicsContext::getWindowingSystemInterface();
+    if (wsi == NULL) {
         SG_LOG(SG_VIEW, SG_ALERT, "ERROR: No WindowSystemInterface available. Cannot toggle window fullscreen.");
         return;
     }
@@ -637,11 +589,8 @@ void fgOSFullScreen()
     //bool isFullScreen = x == 0 && y == 0 && width == (int)screenWidth && height == (int)screenHeight;
     bool isFullScreen = !window->getWindowDecoration();
 
-    SG_LOG(SG_VIEW, SG_DEBUG, "Toggling fullscreen. Previous window rectangle ("
-           << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen
-           << ", number of screens: " << wsi->getNumScreens());
-    if (isFullScreen)
-    {
+    SG_LOG(SG_VIEW, SG_DEBUG, "Toggling fullscreen. Previous window rectangle (" << x << ", " << y << ") x (" << width << ", " << height << "), fullscreen: " << isFullScreen << ", number of screens: " << wsi->getNumScreens());
+    if (isFullScreen) {
         // limit x,y coordinates and window size to screen area
         if (previous_x + previous_width > (int)screenWidth)
             previous_x = 0;
@@ -653,9 +602,7 @@ void fgOSFullScreen()
         y = previous_y;
         width = previous_width;
         height = previous_height;
-    }
-    else
-    {
+    } else {
         // remember previous setting
         previous_x = x;
         previous_y = y;
@@ -690,34 +637,34 @@ static void setMouseCursor(osgViewer::GraphicsWindow* gw, int cursor)
     mouseCursor = osgViewer::GraphicsWindow::InheritCursor;
     if (cursor == MOUSE_CURSOR_NONE)
         mouseCursor = osgViewer::GraphicsWindow::NoCursor;
-    else if(cursor == MOUSE_CURSOR_POINTER)
+    else if (cursor == MOUSE_CURSOR_POINTER)
 #ifdef SG_MAC
         // osgViewer-Cocoa lacks RightArrowCursor, use Left
         mouseCursor = osgViewer::GraphicsWindow::LeftArrowCursor;
 #else
         mouseCursor = osgViewer::GraphicsWindow::RightArrowCursor;
 #endif
-    else if(cursor == MOUSE_CURSOR_WAIT)
+    else if (cursor == MOUSE_CURSOR_WAIT)
         mouseCursor = osgViewer::GraphicsWindow::WaitCursor;
-    else if(cursor == MOUSE_CURSOR_CROSSHAIR)
+    else if (cursor == MOUSE_CURSOR_CROSSHAIR)
         mouseCursor = osgViewer::GraphicsWindow::CrosshairCursor;
-    else if(cursor == MOUSE_CURSOR_LEFTRIGHT)
+    else if (cursor == MOUSE_CURSOR_LEFTRIGHT)
         mouseCursor = osgViewer::GraphicsWindow::LeftRightCursor;
-    else if(cursor == MOUSE_CURSOR_TOPSIDE)
+    else if (cursor == MOUSE_CURSOR_TOPSIDE)
         mouseCursor = osgViewer::GraphicsWindow::TopSideCursor;
-    else if(cursor == MOUSE_CURSOR_BOTTOMSIDE)
+    else if (cursor == MOUSE_CURSOR_BOTTOMSIDE)
         mouseCursor = osgViewer::GraphicsWindow::BottomSideCursor;
-    else if(cursor == MOUSE_CURSOR_LEFTSIDE)
+    else if (cursor == MOUSE_CURSOR_LEFTSIDE)
         mouseCursor = osgViewer::GraphicsWindow::LeftSideCursor;
-    else if(cursor == MOUSE_CURSOR_RIGHTSIDE)
+    else if (cursor == MOUSE_CURSOR_RIGHTSIDE)
         mouseCursor = osgViewer::GraphicsWindow::RightSideCursor;
-    else if(cursor == MOUSE_CURSOR_TOPLEFT)
+    else if (cursor == MOUSE_CURSOR_TOPLEFT)
         mouseCursor = osgViewer::GraphicsWindow::TopLeftCorner;
-    else if(cursor == MOUSE_CURSOR_TOPRIGHT)
+    else if (cursor == MOUSE_CURSOR_TOPRIGHT)
         mouseCursor = osgViewer::GraphicsWindow::TopRightCorner;
-    else if(cursor == MOUSE_CURSOR_BOTTOMLEFT)
+    else if (cursor == MOUSE_CURSOR_BOTTOMLEFT)
         mouseCursor = osgViewer::GraphicsWindow::BottomLeftCorner;
-    else if(cursor == MOUSE_CURSOR_BOTTOMRIGHT)
+    else if (cursor == MOUSE_CURSOR_BOTTOMRIGHT)
         mouseCursor = osgViewer::GraphicsWindow::BottomRightCorner;
 
     gw->setCursor(mouseCursor);
