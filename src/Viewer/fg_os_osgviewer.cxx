@@ -65,6 +65,10 @@
 #  include <GUI/CocoaHelpers.h>
 #endif
 
+#if defined(SG_WINDOWS)
+#include <process.h> // _getpid()
+#endif
+
 // Static linking of OSG needs special macros
 #ifdef OSG_LIBRARY_STATIC
 #include <osgDB/Registry>
