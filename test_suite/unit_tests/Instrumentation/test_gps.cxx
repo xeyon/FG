@@ -1463,7 +1463,7 @@ void GPSTests::testRadialIntercept()
     
     FGTestApi::writeFlightPlanToKML(fp);
     
-// position slightly before BUNAX
+    // position slightly before BUNAX
     SGGeod initPos = fp->pointAlongRoute(2, -3.0);
     
     // takes the place of the Nasal delegates
@@ -1501,32 +1501,93 @@ void GPSTests::testRadialIntercept()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(185, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
     FGTestApi::runForTime(30.0);
     
-// repeat but with fly-by enabled
-  gpsNode->setBoolValue("config/enable-fly-by", true);
+    // repeat but with fly-by enabled
+    gpsNode->setBoolValue("config/enable-fly-by", true);
     gpsNode->setStringValue("command", "obs");
   
     FGTestApi::setPositionAndStabilise(initPos);
-      pilot->resetAtPosition(initPos);
-  fp->setCurrentIndex(2);
+    pilot->resetAtPosition(initPos);
+    fp->setCurrentIndex(2);
     gpsNode->setStringValue("command", "leg");
 
-  CPPUNIT_ASSERT_EQUAL(string{"BUNAX"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+    CPPUNIT_ASSERT_EQUAL(string{"BUNAX"}, string{gpsNode->getStringValue("wp/wp[1]/ID")});
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(312, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
 
 
-  pilot->setCourseTrue(fp->legAtIndex(2)->courseDeg());
-  pilot->flyGPSCourse(gps);
+    pilot->setCourseTrue(fp->legAtIndex(2)->courseDeg());
+    pilot->flyGPSCourse(gps);
   
-  ok = FGTestApi::runForTimeWithCheck(600.0, [fp]() {
-      return fp->currentIndex() == 4;
-  });
-  CPPUNIT_ASSERT(ok);
+    ok = FGTestApi::runForTimeWithCheck(600.0, [fp]() {
+        return fp->currentIndex() == 4;
+    });
+    CPPUNIT_ASSERT(ok);
   
-  // flying to BEBEV now
-  CPPUNIT_ASSERT_DOUBLES_EQUAL(185, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
-  FGTestApi::runForTime(30.0);
+    // flying to BEBEV now
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(185, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+    FGTestApi::runForTime(30.0);
 }
 
+void GPSTests::testSWIFT8()
+{
+    FGTestApi::setUp::logPositionToKML("gps_swift8");
+
+    auto rm = globals->get_subsystem<FGRouteMgr>();
+    auto fp = FlightPlan::create();
+    rm->setFlightPlan(fp);
+       
+    FGTestApi::setUp::populateFPWithoutNasal(fp, "YBCS", "15", "YBTL", "25", "SWIFT");
+    
+    auto hdgToAlt_400 = new HeadingToAltitude(fp, "(400)", 150);
+    hdgToAlt_400->setAltitude(400, RESTRICT_AT);
+    fp->insertWayptAtIndex(hdgToAlt_400, 1);
+	
+    SGGeod pos = SGGeod::fromDeg(145.743889,-16.850028);
+    auto intc = new RadialIntercept(fp, "(INTC)", pos, 30, 80);
+    fp->insertWayptAtIndex(intc, 2);
+	
+    auto hdgToAlt_4000 = new HeadingToAltitude(fp, "(4000)", 80);
+    hdgToAlt_4000->setAltitude(4000, RESTRICT_AT);
+    fp->insertWayptAtIndex(hdgToAlt_4000, 3);
+	
+    FGTestApi::writeFlightPlanToKML(fp);
+	
+    // position slightly before INTC
+    SGGeod initPos = fp->pointAlongRoute(1, -1);
+    
+    // takes the place of the Nasal delegates
+    auto testDelegate = new TestFPDelegate;
+    testDelegate->thePlan = fp;
+    CPPUNIT_ASSERT(rm->activate());
+    fp->addDelegate(testDelegate);
+    auto gps = setupStandardGPS();
+    
+    FGTestApi::setPositionAndStabilise(initPos);
+    
+    auto gpsNode = globals->get_props()->getNode("instrumentation/gps");
+    gpsNode->setBoolValue("config/delegate-sequencing", true);
+    gpsNode->setBoolValue("config/enable-fly-by", false);
+    gpsNode->setStringValue("command", "leg");
+
+    fp->setCurrentIndex(1);
+	
+    auto pilot = SGSharedPtr<FGTestApi::TestPilot>(new FGTestApi::TestPilot);
+    pilot->resetAtPosition(initPos);
+    pilot->setCourseTrue(fp->legAtIndex(1)->courseDeg());
+    pilot->setSpeedKts(200);
+    pilot->setTargetAltitudeFtMSL(6000);
+    pilot->flyGPSCourse(gps);
+    
+    bool ok = FGTestApi::runForTimeWithCheck(600.0, [fp]() {
+        return fp->currentIndex() == 4;
+    });
+    CPPUNIT_ASSERT(ok);
+	
+    FGTestApi::runForTime(600.0);
+	
+    // Flying to SWIFT
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(149, gpsNode->getDoubleValue("wp/leg-true-course-deg"), 1.0);
+    FGTestApi::runForTime(30.0);
+}
 
 void GPSTests::testDMEIntercept()
 {
