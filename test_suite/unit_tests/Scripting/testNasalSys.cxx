@@ -147,7 +147,7 @@ void NasalSysTests::testCommands()
     CPPUNIT_ASSERT(ok);
 
     errors = nasalSys->getAndClearErrorList();
-    CPPUNIT_ASSERT_EQUAL(0UL, errors.size());
+    CPPUNIT_ASSERT_EQUAL(0UL, (unsigned long) errors.size());
 
     // should fail, command is removed
     ok = globals->get_commands()->execute("do-foo", args);

@@ -24,7 +24,6 @@
 #include <iostream>
 #include <cstring>
 #include <memory>
-#include <unistd.h>
 
 #include <simgear/math/sg_geodesy.hxx>
 #include <simgear/math/SGGeod.hxx>

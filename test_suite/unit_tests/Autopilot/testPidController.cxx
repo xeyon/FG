@@ -13,8 +13,6 @@
 #include <simgear/math/sg_random.hxx>
 #include <simgear/props/props_io.hxx>
 
-#include <unistd.h>
-
 // Set up function for each test.
 void PidControllerTests::setUp()
 {

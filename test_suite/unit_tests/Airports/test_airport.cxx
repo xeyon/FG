@@ -24,7 +24,6 @@
 #include <iostream>
 #include <cstring>
 #include <memory>
-#include <unistd.h>
 
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
@@ -71,7 +70,7 @@ void AirportTests::testAirport()
 {
     FGAirportRef departureAirport = FGAirport::getByIdent("YSSY");
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Must have correct id", (std::string)"YSSY", departureAirport->getId());
-    CPPUNIT_ASSERT_EQUAL_MESSAGE("Must have runways", (uint)6, departureAirport->numRunways());
+    CPPUNIT_ASSERT_EQUAL_MESSAGE("Must have runways", (unsigned int) 6, departureAirport->numRunways());
     CPPUNIT_ASSERT_EQUAL_MESSAGE("Must have runway 16R", true, departureAirport->hasRunwayWithIdent("16R"));
         
     int length = 3962;

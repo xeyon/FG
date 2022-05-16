@@ -23,7 +23,6 @@
 
 #include <cstring>
 #include <memory>
-#include <unistd.h>
 
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 #include "test_suite/FGTestApi/TestDataLogger.hxx"
