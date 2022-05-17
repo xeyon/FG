@@ -1120,7 +1120,12 @@ void FGNasalSys::init()
         initNasalFlightPlan(_globals, _context);
         initNasalPositioned_cppbind(_globals, _context);
         initNasalAircraft(_globals, _context);
+
+#if !defined (BUILDING_TESTSUITE)
+        // on Linux, clipboard init crashes in headless mode (DISPLAY no set)
+        // so don't do this for testing.
         NasalClipboard::init(this);
+#endif
         initNasalCanvas(_globals, _context);
         initNasalCondition(_globals, _context);
         initNasalHTTP(_globals, _context);
