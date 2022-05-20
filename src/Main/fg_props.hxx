@@ -850,22 +850,5 @@ fgTie (const char * name, T * obj, int index,
            "Failed to tie property " << name << " to indexed object methods");
 }
 
-
-class FGMakeUpperCase : public SGPropertyChangeListener {
-public:
-    void valueChanged(SGPropertyNode *node) {
-        if (node->getType() != simgear::props::STRING)
-            return;
-
-        std::string value = node->getStringValue();
-        std::string value_orig = value;
-        std::transform(value.begin(), value.end(), value.begin(), ::toupper);
-        if (value != value_orig) {
-            node->setStringValue(value);
-        }
-    }
-};
-
-
 #endif // __FG_PROPS_HXX
 

@@ -1446,7 +1446,7 @@ fgOptScenario( const char *arg )
 static int
 fgOptAirport( const char *arg )
 {
-    fgSetString("/sim/presets/airport-id", arg );
+    fgSetString("/sim/presets/airport-id", simgear::strutils::uppercase({arg}) );
     fgSetBool("/sim/presets/airport-requested", true );
     return FG_OPTIONS_OK;
 }
@@ -1454,7 +1454,7 @@ fgOptAirport( const char *arg )
 static int
 fgOptRunway( const char *arg )
 {
-    fgSetString("/sim/presets/runway", arg );
+    fgSetString("/sim/presets/runway", simgear::strutils::uppercase({arg}) );
     fgSetBool("/sim/presets/runway-requested", true );
     return FG_OPTIONS_OK;
 }

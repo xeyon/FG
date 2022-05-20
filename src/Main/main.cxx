@@ -485,25 +485,6 @@ void fgInitSecureMode()
                               SGPropertyNode::PROTECTED);
 }
 
-static void upper_case_property(const char *name)
-{
-    using namespace simgear;
-    SGPropertyNode *p = fgGetNode(name, false);
-    if (!p) {
-        p = fgGetNode(name, true);
-        p->setStringValue("");
-    } else {
-        props::Type t = p->getType();
-        if (t == props::NONE || t == props::UNSPECIFIED)
-            p->setStringValue("");
-        else
-            assert(t == props::STRING);
-    }
-    SGPropertyChangeListener* muc = new FGMakeUpperCase;
-    globals->addListenerToCleanup(muc);
-    p->addChangeListener(muc);
-}
-
 // this hack is needed to avoid weird viewport sizing within OSG on Windows.
 // still required as of March 2017, sad times.
 // see for example https://sourceforge.net/p/flightgear/codetickets/1958/
@@ -687,9 +668,6 @@ int fgMainInit( int argc, char **argv )
     globals->set_channel_options_list( col );
 
     fgValidatePath(globals->get_fg_home(), false);  // initialize static variables
-    upper_case_property("/sim/presets/airport-id");
-    upper_case_property("/sim/presets/runway");
-    upper_case_property("/sim/tower/airport-id");
 
     if (showLauncher) {
         // to minimise strange interactions when launcher and config files
