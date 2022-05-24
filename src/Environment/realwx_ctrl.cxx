@@ -282,8 +282,8 @@ void BasicRealWxController::init()
     checkNearbyMetar();
     update(0); // fetch data ASAP
     
-    globals->get_event_mgr()->addTask("checkNearbyMetar", this,
-                                      &BasicRealWxController::checkNearbyMetar, 10 );
+    globals->get_event_mgr()->addTask("checkNearbyMetar",
+                                      [this](){ this->checkNearbyMetar(); }, 10 );
 }
 
 void BasicRealWxController::reinit()

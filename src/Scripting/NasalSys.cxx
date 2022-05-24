@@ -174,9 +174,9 @@ public:
 
     _isRunning = true;
     if (_singleShot) {
-      globals->get_event_mgr()->addEvent(_name, this, &TimerObj::invoke, _interval, _isSimTime);
+      globals->get_event_mgr()->addEvent(_name, [this](){ this->invoke(); }, _interval, _isSimTime);
     } else {
-      globals->get_event_mgr()->addTask(_name, this, &TimerObj::invoke,
+      globals->get_event_mgr()->addTask(_name, [this](){ this->invoke(); },
                                         _interval, _interval /* delay */,
                                         _isSimTime);
     }
@@ -1708,7 +1708,7 @@ void FGNasalSys::setTimer(naContext c, int argc, naRef* args)
     NasalTimer* t = new NasalTimer(handler, this);
     _nasalTimers.push_back(t);
     globals->get_event_mgr()->addEvent(name,
-                                       t, &NasalTimer::timerExpired,
+                                       [t](){ t->timerExpired(); },
                                        delta.num, simtime);
 }
 

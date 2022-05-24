@@ -527,7 +527,7 @@ namespace
             FGRenderer *renderer = globals->get_renderer();
             renderer->resize(_xsize, _ysize);
             globals->get_event_mgr()->addTask("SnapShotTimer",
-                    this, &GUISnapShotOperation::timerExpired,
+                    [this](){ this->timerExpired(); },
                     0.1, false);
         }
 

@@ -8,6 +8,7 @@
 #include <simgear/compiler.h>
 #include <simgear/timing/timestamp.hxx>
 #include <simgear/misc/strutils.hxx>
+#include <simgear/structure/callback.hxx>
 
 #include "FGPUIDialog.hxx" // for GUI_ID
 
@@ -62,8 +63,8 @@ public:
   
   void ensureRowVisible(int row);
   
-  void setUpdateCallback(SGCallback* cb);
-  void setScrollCallback(SGCallback* cb);
+  void setUpdateCallback(simgear::Callback cb);
+  void setScrollCallback(simgear::Callback cb);
   
   /**
    * Abstract interface for waypoint source
@@ -80,7 +81,7 @@ public:
     virtual flightgear::FlightPlan* flightplan() const = 0;
     
   // update notifications
-    virtual void setUpdateCallback(SGCallback* cb) = 0;
+    virtual void setUpdateCallback(simgear::Callback cb) = 0;
   
   // editing operations
     virtual void deleteAt(unsigned int index) = 0;
@@ -143,8 +144,8 @@ private:
 
   bool _showLatLon;
   Model* _model;
-  SGCallback* _updateCallback;
-  SGCallback* _scrollCallback;
+  simgear::Callback _updateCallback;
+  simgear::Callback _scrollCallback;
  
   SGTimeStamp _blinkTimer;
   bool _blink;

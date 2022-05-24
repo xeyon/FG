@@ -75,8 +75,8 @@ void FGLight::init () {
     _sky_tbl = std::make_unique<SGInterpTable>( sky_path );
 
     // update all solar system body positions of interest
-    globals->get_event_mgr()->addTask("updateObjects", this,
-                            &FGLight::updateObjects, 0.5 );
+    globals->get_event_mgr()->addTask("updateObjects",
+        [this](){ this->updateObjects(); }, 0.5 );
 }
 
 

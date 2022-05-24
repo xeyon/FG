@@ -149,8 +149,8 @@ SGSubsystem::InitStatus FGEnvironmentMgr::incrementalInit()
   if (r == INIT_DONE) {
     fgClouds->Init();
     _multiplayerListener = new FGEnvironmentMgrMultiplayerListener(this);
-    globals->get_event_mgr()->addTask("updateClosestAirport", this,
-                                      &FGEnvironmentMgr::updateClosestAirport, 10 );
+    globals->get_event_mgr()->addTask("updateClosestAirport",
+        [this](){ this->updateClosestAirport(); }, 10 );
   }
 
   return r;

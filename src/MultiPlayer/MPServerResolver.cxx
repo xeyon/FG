@@ -198,6 +198,6 @@ MPServerResolver::run ()
   }
 
   // Relinguish control, call me back on the next frame
-  globals->get_event_mgr ()->addEvent ("MPServerResolver_update", this, &MPServerResolver::run, .0);
+  globals->get_event_mgr ()->addEvent ("MPServerResolver_update", [this](){ this->run(); }, .0);
 }
 
