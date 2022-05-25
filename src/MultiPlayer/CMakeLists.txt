@@ -14,6 +14,7 @@ set(HEADERS
 	MPServerResolver.hxx
 	mpirc.hxx
 	cpdlc.hxx
+	mpmessages.hxx
 	)
     	
 flightgear_component(MultiPlayer "${SOURCES}" "${HEADERS}")
