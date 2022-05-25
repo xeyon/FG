@@ -690,7 +690,6 @@ int fgMainInit( int argc, char **argv )
     upper_case_property("/sim/presets/airport-id");
     upper_case_property("/sim/presets/runway");
     upper_case_property("/sim/tower/airport-id");
-    upper_case_property("/autopilot/route-manager/input");
 
     if (showLauncher) {
         // to minimise strange interactions when launcher and config files
