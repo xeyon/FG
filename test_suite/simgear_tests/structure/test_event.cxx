@@ -64,7 +64,7 @@ public:
         if (!global_eventManager)
             return;
 
-        global_eventManager->addTask(_name, this, &FakeNasalTimer::invoke,
+        global_eventManager->addTask(_name, [this](){ this->invoke(); },
                                      interval, interval /* delay */, false);
 
         _expectedTime = global_realTime + interval;
