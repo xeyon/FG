@@ -692,6 +692,7 @@ clearLocation ()
     fgSetString("/sim/presets/parkpos", "");
     fgSetString("/sim/presets/carrier-position", "");
     fgSetString("/sim/presets/fix", "");
+    fgSetString("/sim/presets/tacan-id", "");
 }
 
 /*
@@ -802,6 +803,14 @@ fgOptLat( const char *arg )
     clearLocation();
     fgSetDouble("/sim/presets/latitude-deg", parse_degree( arg ));
     fgSetDouble("/position/latitude-deg", parse_degree( arg ));
+    return FG_OPTIONS_OK;
+}
+
+static int
+fgOptTACAN(const char* arg)
+{
+    clearLocation();
+    fgSetString("/sim/presets/tacan-id", arg);
     return FG_OPTIONS_OK;
 }
 
@@ -1842,6 +1851,7 @@ struct OptionDesc {
     {"carrier",                      true,  OPTION_FUNC,   "", false, "", fgOptCarrier },
     {"carrier-position",             true,  OPTION_FUNC,   "", false, "", fgOptCarrierPos },
     {"fix",                          true,  OPTION_FUNC,   "", false, "", fgOptFIX },
+    {"tacan",                        true,  OPTION_FUNC,   "", false, "", fgOptTACAN },
     {"offset-distance",              true,  OPTION_DOUBLE, "/sim/presets/offset-distance-nm", false, "", 0 },
     {"offset-azimuth",               true,  OPTION_DOUBLE, "/sim/presets/offset-azimuth-deg", false, "", 0 },
     {"lon",                          true,  OPTION_FUNC,   "", false, "", fgOptLon },

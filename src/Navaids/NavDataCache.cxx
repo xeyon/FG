@@ -2873,8 +2873,11 @@ NavDataCache::ThreadedGUISearch::ThreadedGUISearch(const std::string& term, bool
         sql = "SELECT rowid FROM positioned WHERE name LIKE '%" + term
                 + "%' AND (type >= 1 AND type <= 3)";
     } else {
+        // types are hard-coded here becuase this is only used by NavaidSearchModel
+        // in ther launcher. We would ideally use a TypeFilter but that would
+        // mean loading each positioned to filter them, which is inefficient.
         sql = "SELECT rowid FROM positioned WHERE name LIKE '%" + term
-                + "%' AND ((type >= 1 AND type <= 3) OR ((type >= 9 AND type <= 11))) ";
+                + "%' AND ((type >= 1 AND type <= 3) OR ((type >= 9 AND type <= 11)) OR (type=18 AND name LIKE '% TACAN') ) ";
     }
     sqlite3_prepare_v2(d->db, sql.c_str(), sql.length(), &d->query, NULL);
 

@@ -13,6 +13,7 @@
         <file alias="airport-icon">assets/airport-icon.png</file>
         <file alias="airport-tower-icon">assets/airport-tower-icon.png</file>
         <file alias="vor-dme-icon">assets/vor-dme-icon.png</file>
+        <file alias="tacan-icon">assets/tacan-icon.png</file>
         <file alias="seaport-tower-icon">assets/seaport-tower-icon.png</file>
         <file alias="ndb-small-icon">assets/ndb-small-icon.png</file>
         <file alias="ndb-large-icon">assets/ndb-large-icon.png</file>

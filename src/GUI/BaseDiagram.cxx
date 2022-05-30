@@ -260,6 +260,11 @@ public:
         addType(FGPositioned::NDB);
         addType(FGPositioned::VOR);
 
+        // this doesn't work, since the cache does not actually contain TACAN entries
+        // addType(FGPositioned::TACAN);
+        // instead we look for DMEs and filter on the name
+        addType(FGPositioned::DME);
+
         if (aircraft == LauncherController::Helicopter) {
             addType(FGPositioned::HELIPAD);
         }
@@ -273,16 +278,24 @@ public:
         addType(FGPositioned::AIRPORT);
     }
 
-    virtual bool pass(FGPositioned* aPos) const
+    bool pass(FGPositioned* aPos) const override
     {
         bool ok = TypeFilter::pass(aPos);
 
-        if (ok && (aPos->type() == FGPositioned::FIX)) {
+        const auto ty = aPos->type();
+        if (ok && (ty == FGPositioned::FIX)) {
             // ignore fixes which end in digits
             if (aPos->ident().length() > 4 && isdigit(aPos->ident()[3]) && isdigit(aPos->ident()[4])) {
                 return false;
             }
         }
+
+        if (ok && (ty == FGPositioned::DME)) {
+            if (!simgear::strutils::ends_with(aPos->name(), "TACAN")) {
+                return false;
+            }
+        }
+
         return ok;
     }
 };
@@ -814,6 +827,11 @@ QPixmap BaseDiagram::iconForPositioned(const FGPositionedRef& pos,
             return QPixmap(":/vor-dme-icon");
 
         return QPixmap(":/vor-icon");
+
+    // our filter only passes DMEs which are TACANs, so this is correct,
+    // until we actually record TACANs in the NavCache
+    case FGPositioned::DME:
+        return QPixmap(":/tacan-icon");
 
     case FGPositioned::AIRPORT:
         return iconForAirport(static_cast<FGAirport*>(pos.ptr()), options);

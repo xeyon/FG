@@ -571,9 +571,18 @@ void LocationController::restoreLocation(QVariantMap l)
             const SGGeod vicinity = SGGeod::fromDeg(l.value("vicinity-lon").toDouble(),
                                                     l.value("vicinity-lat").toDouble());
 
-            FGPositioned::TypeFilter filter({FGPositioned::Type::NDB, FGPositioned::Type::VOR,
-                                             FGPositioned::Type::FIX, FGPositioned::Type::WAYPOINT});
-            m_location = FGPositioned::findClosestWithIdent(ident, vicinity, &filter);
+            // special-case TACANs so we don't get an ambiguity on VORTACs, where
+            // there would be a double hit on any ident
+            const auto isTacan = l.value("location-is-tacan").toBool();
+            if (isTacan) {
+                FGPositioned::TypeFilter filter(FGPositioned::Type::DME);
+                m_location = FGPositioned::findClosestWithIdent(ident, vicinity, &filter);
+            } else {
+                FGPositioned::TypeFilter filter({FGPositioned::Type::NDB, FGPositioned::Type::VOR,
+                                                 FGPositioned::Type::FIX, FGPositioned::Type::WAYPOINT});
+                m_location = FGPositioned::findClosestWithIdent(ident, vicinity, &filter);
+            }
+
             m_baseQml->setInner(m_location);
         } else if (l.contains("location-lat")) {
             m_locationIsLatLon = true;
@@ -680,6 +689,11 @@ QVariantMap LocationController::saveLocation() const
             }
         } else { // not an aiport, must be a navaid
             locationSet.insert("location-navaid", QString::fromStdString(m_location->ident()));
+            if (m_location->type() == FGPositioned::DME) {
+                // so we don't get ambiguous on VORTACs, explicity mark TACANs
+                // otherwise every VORTAC would be ambiguous
+                locationSet.insert("location-is-tacan", true);
+            }
             locationSet.insert("vicinity-lat", m_location->geod().getLatitudeDeg());
             locationSet.insert("vicinity-lon", m_location->geod().getLongitudeDeg());
 
@@ -714,11 +728,23 @@ void LocationController::setLocationProperties()
 {
     SGPropertyNode_ptr presets = fgGetNode("/sim/presets", true);
 
-    QStringList props = QStringList() << "vor-id" << "fix" << "ndb-id" <<
-        "runway-requested" << "navaid-id" << "offset-azimuth-deg" <<
-        "offset-distance-nm" << "glideslope-deg" <<
-        "speed-set" << "on-ground" << "airspeed-kt" <<
-        "airport-id" << "runway" << "parkpos" << "carrier" << "carrier-position";
+    QStringList props = QStringList() << "vor-id"
+                                      << "fix"
+                                      << "ndb-id"
+                                      << "tacan-id"
+                                      << "runway-requested"
+                                      << "navaid-id"
+                                      << "offset-azimuth-deg"
+                                      << "offset-distance-nm"
+                                      << "glideslope-deg"
+                                      << "speed-set"
+                                      << "on-ground"
+                                      << "airspeed-kt"
+                                      << "airport-id"
+                                      << "runway"
+                                      << "parkpos"
+                                      << "carrier"
+                                      << "carrier-position";
 
     Q_FOREACH(QString s, props) {
         SGPropertyNode* c = presets->getChild(s.toStdString());
@@ -835,6 +861,12 @@ void LocationController::setLocationProperties()
             case FGPositioned::FIX:
                 fgSetString("/sim/presets/fix", m_location->ident());
                 break;
+
+            // assume if a DME was selected, it was actually a TACAN
+            case FGPositioned::DME:
+                fgSetString("/sim/presets/tacan-id", m_location->ident());
+                break;
+
             default:
                 break;
         }
@@ -1031,6 +1063,11 @@ void LocationController::onCollectConfig()
             case FGPositioned::FIX:
                  m_config->setArg("fix", m_location->ident());
                 break;
+
+            case FGPositioned::DME:
+                m_config->setArg("tacan", m_location->ident());
+                break;
+
             default:
                 break;
         }
@@ -1162,6 +1199,9 @@ QString LocationController::description() const
             navaidType = QString("VOR"); break;
         case FGPositioned::NDB:
             navaidType = QString("NDB"); break;
+        case FGPositioned::DME:
+            navaidType = QString("TACAN");
+            break;
         case FGPositioned::FIX:
             return tr("%2 waypoint %1").arg(ident).arg(offsetDesc);
         default:

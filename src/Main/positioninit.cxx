@@ -596,6 +596,7 @@ bool initPosition()
   string carrier = fgGetString("/sim/presets/carrier");
   string parkpos = fgGetString("/sim/presets/parkpos");
   string fix = fgGetString("/sim/presets/fix");
+  const auto tacan = fgGetString("/sim/presets/tacan-id");
 
   // the launcher sets this to precisely identify a navaid
   PositionedID navaidId = fgGetInt("/sim/presets/navaid-id");
@@ -696,6 +697,14 @@ bool initPosition()
     if ( fgSetPosFromFix( fix, navaidId ) ) {
       set_pos = true;
     }
+  }
+
+  if (!set_pos & !tacan.empty()) {
+      // we don't record TACANs in the NavCache right now, instead we
+      // record DMEs, some of which have TACAN in the name.
+      if (fgSetPosFromNAV(tacan, 0.0, FGPositioned::DME, navaidId)) {
+          set_pos = true;
+      }
   }
 
   if ( !set_pos ) {

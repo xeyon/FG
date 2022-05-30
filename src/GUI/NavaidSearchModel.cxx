@@ -116,6 +116,7 @@ public:
             addType(FGPositioned::VOR);
             addType(FGPositioned::FIX);
             addType(FGPositioned::NDB);
+            addType(FGPositioned::DME); // see custom pass() impl below
         }
 
         addType(FGPositioned::AIRPORT);
@@ -136,6 +137,21 @@ public:
             addType(FGPositioned::HELIPORT);
             addType(FGPositioned::SEAPORT);
         }
+    }
+
+    bool pass(FGPositioned* aPos) const override
+    {
+        bool ok = TypeFilter::pass(aPos);
+        const auto ty = aPos->type();
+
+        // filter only DMEs which are TACANs, until we have real TACANs in the DB
+        if (ok && (ty == FGPositioned::DME)) {
+            if (!simgear::strutils::ends_with(aPos->name(), "TACAN")) {
+                return false;
+            }
+        }
+
+        return ok;
     }
 };
 
