@@ -76,12 +76,12 @@ public:
     void setTime_sec    (double ts ) { time_sec    = ts;  };
     void setTrackLength (double tl ) { trackLength = tl;  };
     void setTime        (const std::string& tme) { time        = tme; };
-    void setLights (bool beacon, bool cabin, bool ldg, bool nav, bool strobe, bool taxi) { 
+    void setLights (bool beacon, bool cabin, bool ldg, bool nav, bool strobe, bool taxi) {
       beacon_light = beacon;
-      cabin_light = cabin; 
-      landing_light = ldg; 
-      nav_light = nav; 
-      strobe_light = strobe; 
+      cabin_light = cabin;
+      landing_light = ldg;
+      nav_light = nav;
+      strobe_light = strobe;
       taxi_light = taxi; };
 
     //                                      beacon cabin  ldg    nav    strobe taxi
@@ -156,7 +156,7 @@ public:
      */
    static FGAIFlightPlan* createDummyUserPlan();
    /**
-    
+
      @brief read a flight-plan from a file.
      All current contents of the flight-plan are replaxced, and the current waypoint is reset to the beginning
      */
@@ -191,7 +191,7 @@ public:
   bool createPushBack(FGAIAircraft *, bool, FGAirport*, double radius, const std::string&, const std::string&, const std::string&);
   bool createTakeOff(FGAIAircraft *, bool, FGAirport *, const SGGeod& pos, double speed, const std::string& flightType);
 
-  void setLeg(int val) { 
+  void setLeg(int val) {
     SG_LOG(SG_AI, SG_BULK, "Set Leg " << leg);
     leg = val;
   }
@@ -211,7 +211,7 @@ public:
   bool isActive(time_t time) {return time >= this->getStartTime();}
 
   void incrementLeg() {
-    SG_LOG(SG_AI, SG_BULK, "Increment Leg " << leg); 
+    SG_LOG(SG_AI, SG_BULK, "Increment Leg " << leg);
     leg++;
   };
 
@@ -265,8 +265,8 @@ private:
 
   void createPushBackFallBack(FGAIAircraft *, bool, FGAirport*, double radius, const std::string&, const std::string&, const std::string&);
   bool createClimb(FGAIAircraft *, bool, FGAirport *, FGAirport* arrival, double, double, const std::string&);
-  bool createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, double, double, double, double, const std::string&);
-  bool createDescent(FGAIAircraft *, FGAirport *,  double latitude, double longitude, double speed, double alt,const std::string&, double distance);
+  bool createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, const SGGeod& current, double, double, const std::string&);
+  bool createDescent(FGAIAircraft *, FGAirport *, const SGGeod& current, double speed, double alt,const std::string&, double distance);
   bool createLanding(FGAIAircraft *, FGAirport *, const std::string&);
   bool createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints();
@@ -276,6 +276,7 @@ private:
 
   /**Create an arc flightplan around a center from startAngle to endAngle.*/
   void createArc(FGAIAircraft *ac, const SGGeod& center, int startAngle, int endAngle, int increment, int radius, double aElev, double aSpeed, const char* pattern);
+  void createLine(FGAIAircraft *ac, const SGGeod& startPoint, double azimuth, double dist, double dAlt, double vDescent);
   bool createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
   void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);

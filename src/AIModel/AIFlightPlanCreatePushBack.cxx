@@ -43,7 +43,7 @@ using std::string;
 
 // TODO: Use James Turner's createOnGround functions.
 bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
-                                    bool firstFlight, 
+                                    bool firstFlight,
                                     FGAirport *dep,
                                     double radius,
                                     const string& fltType,
@@ -53,7 +53,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
     double vTaxi = ac->getPerformance()->vTaxi();
     double vTaxiBackward = vTaxi * (-2.0/3.0);
     double vTaxiReduced  = vTaxi * (2.0/3.0);
-    
+
     // Active runway can be conditionally set by ATC, so at the start of a new flight, this
     // must be reset.
     activeRunway.clear();
@@ -113,7 +113,6 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
           // This will be a parking from a previous leg which still contains the forward speed
           waypoints.back()->setSpeed(vTaxiBackward);
         }
-                
 
         while (route.next(node, &rte))
         {
@@ -144,7 +143,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         ac->setTaxiClearanceRequest(false);
         double az2 = 0.0;
 
-        FGTaxiSegment* pushForwardSegment = dep->groundNetwork()->findSegmentByHeading(parking, parking->getHeading()); 
+        FGTaxiSegment* pushForwardSegment = dep->groundNetwork()->findSegmentByHeading(parking, parking->getHeading());
 
         if (!pushForwardSegment) {
             // there aren't any routes for this parking, so create a simple segment straight ahead for 2 meters based on the parking heading
@@ -162,7 +161,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         }
 
         lastNodeVisited = pushForwardSegment->getEnd();
-        double distance = pushForwardSegment->getLength();        
+        double distance = pushForwardSegment->getLength();
 
         double parkingHeading = parking->getHeading();
 
@@ -171,7 +170,7 @@ bool FGAIFlightPlan::createPushBack(FGAIAircraft *ac,
         if (waypoints.size() == 0) {
           pushBackWaypoint( createOnGround(ac, parking->getName(), parking->geod(), dep->getElevation(), vTaxiReduced));
         }
-// Make sure we have at least three WPs         
+// Make sure we have at least three WPs
         int numSegments = distance>15?(distance/5.0):3;
         for (int i = 1; i < numSegments; i++) {
             SGGeod pushForwardPt;

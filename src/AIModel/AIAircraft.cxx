@@ -267,8 +267,10 @@ void FGAIAircraft::ClimbTo(double alt_ft ) {
 
 
 void FGAIAircraft::TurnTo(double heading) {
-    if( fabs(heading) < 0.1 ) {
-        SG_LOG(SG_AI, SG_WARN, getCallSign() << "|Heading reset to zero");
+    const double headingDiff = SGMiscd::normalizePeriodic(-180, 180, heading-tgt_heading);
+
+    if (fabs(heading) < 0.1 && fabs(headingDiff) > 1) {
+        SG_LOG(SG_AI, SG_WARN, getCallSign() << "|Heading reset to zero " << tgt_heading << " " << headingDiff << " at " << getGeodPos());
     }
     tgt_heading = heading;
     // SG_LOG(SG_AI, SG_BULK, "Turn tgt_heading to " << tgt_heading);
@@ -414,9 +416,6 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         if (next && !curr->contains("END") && !curr->contains("PushBackPointlegend")) {
             SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Setting Leaddistance");
             fp->setLeadDistance(tgt_speed, tgt_heading, curr, next);
-        } else {
-        // If we are ending in a parking
-            fp->setLeadDistance(1);
         }
 
         // Calculate a target altitude for any leg in which at least one waypoint is in the air.
@@ -484,13 +483,14 @@ double FGAIAircraft::calcVerticalSpeed(double vert_ft, double dist_m, double spe
 
 void FGAIAircraft::clearATCController()
 {
-    if (controller) {
+    if (controller && !getDie()) {
+        //If we are dead we are automatically erased
         controller->signOff(getID());
     }
 
-    controller = 0;
-    prevController = 0;
-    towerController = 0;
+    controller = nullptr;
+    prevController = nullptr;
+    towerController = nullptr;
 }
 
 bool FGAIAircraft::isBlockedBy(FGAIAircraft* other) {
@@ -716,7 +716,8 @@ void FGAIAircraft::announcePositionToController() {
         break;
     }
 
-    if ((controller != prevController) && (prevController != 0)) {
+    if ((controller != prevController) && prevController && !getDie()) {
+        //If we are dead we are automatically erased
         prevController->signOff(getID());
     }
     prevController = controller;
@@ -846,8 +847,6 @@ void FGAIAircraft::handleFirstWaypoint() {
     // If we are ending in a parking
     if (next && !curr->contains("END") && !curr->contains("PushBackPointlegend")) {
         fp->setLeadDistance(speed, hdg, curr, next);
-    } else {
-        fp->setLeadDistance(1);
     }
 
     if (curr->getCrossat() > -1000.0) //use a calculated descent/climb rate
@@ -1111,9 +1110,6 @@ void FGAIAircraft::controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next) {
         if (next) {
             if (!curr->contains("END") && !curr->contains("PushBackPointlegend")) {
                 fp->setLeadDistance(speed, tgt_heading, curr, next);
-            } else {
-            // If we are ending in a parking the heading will be a
-                fp->setLeadDistance(1);
             }
         }
     }
@@ -1377,20 +1373,20 @@ void FGAIAircraft::handleATCRequests(double dt)
     //TODO implement NullController for having no ATC to save the conditionals
     if (controller) {
         controller->updateAircraftInformation(getID(),
-                                              pos.getLatitudeDeg(),
-                                              pos.getLongitudeDeg(),
+                                              pos,
                                               hdg,
                                               speed,
-                                              altitude_ft, dt);
+                                              altitude_ft,
+                                              dt);
         processATC(controller->getInstruction(getID()));
     }
     if (towerController) {
         towerController->updateAircraftInformation(getID(),
-                                              pos.getLatitudeDeg(),
-                                              pos.getLongitudeDeg(),
+                                              pos,
                                               hdg,
                                               speed,
-                                              altitude_ft, dt);
+                                              altitude_ft,
+                                              dt);
     }
 }
 
@@ -1450,19 +1446,19 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
 
         double verticalDistance  = ((altitude_ft - 2000.0) - trafficRef->getArrivalAirport()->getElevation()) *SG_FEET_TO_METER;
         double descentTimeNeeded = verticalDistance / descentRate;
-        double distanceCovered   = descentSpeed * descentTimeNeeded;
+        double distanceCoveredByDescent   = descentSpeed * descentTimeNeeded;
 
         if (tracked) {
-            SG_LOG(SG_AI, SG_DEBUG, "Checking for end of cruise stage for :" << trafficRef->getCallSign());
-            SG_LOG(SG_AI, SG_DEBUG, "Descent rate      : " << descentRate);
-            SG_LOG(SG_AI, SG_DEBUG, "Descent speed     : " << descentSpeed);
-            SG_LOG(SG_AI, SG_DEBUG, "VerticalDistance  : " << verticalDistance << ". Altitude : " << altitude_ft << ". Elevation " << trafficRef->getArrivalAirport()->getElevation());
-            SG_LOG(SG_AI, SG_DEBUG, "DecentTimeNeeded  : " << descentTimeNeeded);
-            SG_LOG(SG_AI, SG_DEBUG, "DistanceCovered   : " << distanceCovered);
+            SG_LOG(SG_AI, SG_BULK, "Checking for end of cruise stage for :" << trafficRef->getCallSign());
+            SG_LOG(SG_AI, SG_BULK, "Descent rate      : " << descentRate);
+            SG_LOG(SG_AI, SG_BULK, "Descent speed     : " << descentSpeed);
+            SG_LOG(SG_AI, SG_BULK, "VerticalDistance  : " << verticalDistance << ". Altitude : " << altitude_ft << ". Elevation " << trafficRef->getArrivalAirport()->getElevation());
+            SG_LOG(SG_AI, SG_BULK, "DecentTimeNeeded  : " << descentTimeNeeded);
+            SG_LOG(SG_AI, SG_BULK, "DistanceCovered   : " << distanceCoveredByDescent);
         }
 
-        distance = distanceCovered;
-        if (dist < distanceCovered) {
+        distance = distanceCoveredByDescent;
+        if (dist < distanceCoveredByDescent) {
             SG_LOG(SG_AI, SG_BULK, "End Of Cruise");
             return true;
         } else {
@@ -1603,6 +1599,7 @@ void FGAIAircraft::dumpCSVHeader(std::unique_ptr<sg_ofstream> &o) {
     (*o) << "Index\t";
     (*o) <<  "Lat\t";
     (*o) <<  "Lon\t";
+    (*o) <<  "Alt\t";
     (*o) <<  "Callsign\t";
     (*o) <<  "headingDiff\t";
     (*o) <<  "headingChangeRate\t";
@@ -1638,7 +1635,7 @@ void FGAIAircraft::dumpCSVHeader(std::unique_ptr<sg_ofstream> &o) {
     (*o) <<  "no_roll\t";
     (*o) <<  "roll\t";
     (*o) <<  "repositioned\t";
-    (*o) <<  "stuckCounter";
+    (*o) <<  "stuckCounter\t";
     (*o) <<  endl;
 }
 
@@ -1649,6 +1646,7 @@ void FGAIAircraft::dumpCSV(std::unique_ptr<sg_ofstream> &o, int lineIndex) {
     (*o) <<  setprecision(12);
     (*o) <<  this->getGeodPos().getLatitudeDeg() << "\t";
     (*o) <<  this->getGeodPos().getLongitudeDeg() << "\t";
+    (*o) <<  this->getGeodPos().getElevationFt() << "\t";
     (*o) <<  this->getCallSign() << "\t";
     (*o) <<  headingDiff << "\t";
     (*o) <<  headingChangeRate << "\t";
@@ -1710,7 +1708,7 @@ void FGAIAircraft::dumpCSV(std::unique_ptr<sg_ofstream> &o, int lineIndex) {
     (*o) <<  this->onGround() << "\t";
     (*o) <<  roll << "\t";
     (*o) <<  repositioned << "\t";
-    (*o) <<  stuckCounter;
+    (*o) <<  stuckCounter << "\t";
     (*o) <<  endl;
 }
 

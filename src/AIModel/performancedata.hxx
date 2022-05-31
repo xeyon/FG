@@ -6,7 +6,7 @@ class SGPropertyNode;
 
 /**
 Data storage for aircraft performance data. This is used to properly simulate the flight of AIAircrafts.
- 
+
 	@author Thomas F�rster <t.foerster@biologie.hu-berlin.de>
 */
 class PerformanceData
@@ -35,6 +35,7 @@ public:
     double maximumBankAngle() const { return _maxbank; };
     double acceleration() const { return _acceleration; };
     double deceleration() const { return _deceleration; };
+    double brakeDeceleration() const { return _brakeDeceleration; };
     double vTaxi() const { return _vTaxi; };
     double vTakeoff() const { return _vTakeOff; };
     double vClimb() const { return _vClimb; };
@@ -57,6 +58,7 @@ public:
 private:
     double _acceleration;
     double _deceleration;
+    double _brakeDeceleration;
     double _climbRate;
     double _descentRate;
     double _vRotate;

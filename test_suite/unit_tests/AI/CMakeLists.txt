@@ -8,6 +8,7 @@ set(TESTSUITE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/test_TrafficMgr.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_groundnet.cxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_submodels.cxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_VectorMath.cxx
     PARENT_SCOPE
 )
 
@@ -19,5 +20,6 @@ set(TESTSUITE_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/test_TrafficMgr.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_groundnet.hxx
     ${CMAKE_CURRENT_SOURCE_DIR}/test_submodels.hxx
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_VectorMath.hxx
     PARENT_SCOPE
 )

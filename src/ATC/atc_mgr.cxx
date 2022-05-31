@@ -85,16 +85,16 @@ void FGATCManager::postinit()
     FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
     auto userAircraft = aiManager->getUserAircraft();
     string callsign = userAircraft->getCallSign();
-    
+
     double aircraftRadius = 40; // note that this is currently hardcoded to a one-size-fits all JumboJet value. Should change later.
-    
+
     // In case a destination is not set yet, make it equal to the current airport
     if (destination.empty()) {
         destination = curAirport;
     }
 
     // NEXT UP: Create a traffic schedule and fill that with appropriate information. This we can use for flight planning.
-    // Note that these are currently only defaults. 
+    // Note that these are currently only defaults.
 	userAircraftTrafficRef.reset(new FGAISchedule);
     userAircraftTrafficRef->setFlightType("gate");
 
@@ -104,7 +104,7 @@ void FGATCManager::postinit()
 	userAircraftScheduledFlight->initializeAirports();
 	userAircraftScheduledFlight->setFlightRules("IFR");
 	userAircraftScheduledFlight->setCallSign(callsign);
-    
+
     userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
     std::unique_ptr<FGAIFlightPlan> fp ;
     userAircraft->setTrafficRef(userAircraftTrafficRef.get());
@@ -129,7 +129,7 @@ void FGATCManager::postinit()
                     fgSetString("/sim/presets/parkpos", pk.parking()->getName());
                 }
             }
-            
+
             if (!pk.isValid()) {
                 FGParkingList pkl(dcs->getParkings(true, "gate"));
                 if (!pkl.empty()) {
@@ -143,7 +143,7 @@ void FGATCManager::postinit()
         } else if (!parking.empty()) {
             pk = dcs->getAvailableParkingByName(parking);
         }
-      
+
         if (pk.isValid()) {
             dcs->setParkingAvailable(pk.parking(), false);
             fp.reset(new FGAIFlightPlan);
@@ -173,8 +173,8 @@ void FGATCManager::postinit()
                 return;
             }
 
-            
-            
+
+
         } else if (!runway.empty()) {
             // on a runway
 
@@ -201,7 +201,7 @@ void FGATCManager::postinit()
             fp.reset(FGAIFlightPlan::createDummyUserPlan());
             userAircraft->FGAIBase::setFlightPlan(std::move(fp));
             controller = nullptr;
-            
+
             initSucceeded = true; // should be false?
             return;
         }
@@ -222,7 +222,7 @@ void FGATCManager::postinit()
         fp->setLeg(leg);
         userAircraft->FGAIBase::setFlightPlan(std::move(fp));
     }
-    
+
     if (controller) {
         FGAIFlightPlan* plan = userAircraft->GetFlightPlan();
         const int routeIndex = (plan && plan->getCurrentWaypoint()) ? plan->getCurrentWaypoint()->getRouteIndex() : 0;
@@ -254,7 +254,7 @@ void FGATCManager::shutdown()
 void FGATCManager::reposition()
 {
     prevController = controller = nullptr;
-    
+
 // remove any parking assignment form the user flight-plan, so it's
 // available again. postinit() will recompute a new value if required
     FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
@@ -301,12 +301,12 @@ update.  On first update, delta time will be 0.
 */
 void FGATCManager::update ( double time ) {
     // SG_LOG(SG_ATC, SG_BULK, "ATC update code is running at time: " << time);
-    
+
     // Test code: let my virtual co-pilot handle ATC
     FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
     FGAIAircraft* user_ai_ac = aiManager->getUserAircraft();
     FGAIFlightPlan *fp = user_ai_ac->GetFlightPlan();
-    
+
     // Update destination
     string result = _routeManagerDestinationAirportNode->getStringValue();
 
@@ -316,7 +316,7 @@ void FGATCManager::update ( double time ) {
 		userAircraftScheduledFlight->initializeAirports();
 		userAircraftTrafficRef->clearAllFlights();
 		userAircraftTrafficRef->assign(userAircraftScheduledFlight.get());
-        
+
         auto userAircraft = aiManager->getUserAircraft();
         userAircraft->setTrafficRef(userAircraftTrafficRef.get());
     }
@@ -328,12 +328,12 @@ void FGATCManager::update ( double time ) {
         //SG_LOG(SG_ATC, SG_DEBUG, "Setting intentions");
         // This indicates that we have run out of waypoints: Im future versions, the
         // user should be able to select a new route, but for now just shut down the
-        // system. 
+        // system.
         if (size < 3) {
             return;
         }
 #if 0
-        // Test code: Print how far we're progressing along the taxi route. 
+        // Test code: Print how far we're progressing along the taxi route.
         SG_LOG(SG_ATC, SG_DEBUG, "Size of waypoint queue " << size);
         for (int i = 0; i < size; i++) {
             int val = fp->getRouteIndex(i);
@@ -347,9 +347,9 @@ void FGATCManager::update ( double time ) {
 #endif
     }
     if (fp) {
-        SG_LOG(SG_ATC, SG_DEBUG, "Currently at leg : " << fp->getLeg());
+        SG_LOG(SG_ATC, SG_DEBUG, "User aircraft currently at leg : " << fp->getLeg());
     }
-    
+
     // Call getATCController method; returns what FGATCController presently controls the user aircraft
     // - e.g. FGStartupController
     controller = user_ai_ac->getATCController();
@@ -365,15 +365,14 @@ void FGATCManager::update ( double time ) {
         // update aircraft information (simulates transponder)
 
         controller->updateAircraftInformation(user_ai_ac->getID(),
-                                              user_ai_ac->_getLatitude(),
-                                              user_ai_ac->_getLongitude(),
+                                              user_ai_ac->getGeodPos(),
                                               user_ai_ac->_getHeading(),
                                               user_ai_ac->getSpeed(),
                                               user_ai_ac->getAltitude(), time);
 
         //string airport = fgGetString("/sim/presets/airport-id");
-        //FGAirport *apt = FGAirport::findByIdent(airport); 
-        // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading. 
+        //FGAirport *apt = FGAirport::findByIdent(airport);
+        // AT this stage we should update the flightplan, so that waypoint incrementing is conducted as well as leg loading.
 
         // Ground network visibility:
         // a) check to see if the message to toggle visibility was called
@@ -387,7 +386,7 @@ void FGATCManager::update ( double time ) {
             networkVisible = !networkVisible;
             trans_num->setIntValue(-1);
         }
-        
+
         // stop rendering the old controller's groundnetwork
         if ((controller != prevController) && (prevController)) {
             prevController->render(false);

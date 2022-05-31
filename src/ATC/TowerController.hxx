@@ -57,7 +57,7 @@ public:
     void             signOff(int id);
     bool             hasInstruction(int id);
     FGATCInstruction getInstruction(int id);
-    virtual void             updateAircraftInformation(int id, double lat, double lon,
+    virtual void             updateAircraftInformation(int id, SGGeod geod,
             double heading, double speed, double alt, double dt);
 
     virtual void render(bool);

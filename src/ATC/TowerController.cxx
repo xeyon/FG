@@ -125,7 +125,7 @@ void FGTowerController::announcePosition(int id,
     }
 }
 
-void FGTowerController::updateAircraftInformation(int id, double lat, double lon,
+void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
         double heading, double speed, double alt,
         double dt)
 {
@@ -143,7 +143,7 @@ void FGTowerController::updateAircraftInformation(int id, double lat, double lon
 
     // Update the position of the current aircraft
     FGTrafficRecord& current = *i;
-    current.setPositionAndHeading(lat, lon, heading, speed, alt);
+    current.setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
 
     // see if we already have a clearance record for the currently active runway
     // NOTE: dd. 2011-08-07: Because the active runway has been constructed in the announcePosition function, we may safely assume that is

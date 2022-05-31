@@ -92,7 +92,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
     // if the aircraft is the first arrival, add to the vector and return eta directly
     if (estimatedArrivalTimes.empty()) {
         estimatedArrivalTimes.push_back(eta);
-        SG_LOG(SG_ATC, SG_DEBUG, "Checked eta slots, using" << eta);
+        SG_LOG(SG_ATC, SG_DEBUG, "Checked eta slots, using " << eta);
         return eta;
     } else {
         // First check the already assigned slots to see where we need to fit the flight in
@@ -317,9 +317,9 @@ bool FGTrafficRecord::isDead() const {
 bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
 {
     bool result = false;
-    SG_LOG(SG_ATC, SG_BULK, "Start check 1");
-    if (currentPos == other.currentPos) {
-        SG_LOG(SG_ATC, SG_BULK, ": Check Position and intentions: we are on the same taxiway; Index = " << currentPos);
+    SG_LOG(SG_ATC, SG_BULK, getCallsign() << "|checkPositionAndIntentions");
+    if (currentPos == other.currentPos && getId() != other.getId() ) {
+        SG_LOG(SG_ATC, SG_BULK, getCallsign() << "|Check Position and intentions: " << other.getCallsign() << " we are on the same taxiway; Index = " << currentPos);
         result = true;
     }
     //  else if (! other.intentions.empty())
@@ -333,7 +333,7 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
     //     result = true;
     //       }
     else if (! intentions.empty()) {
-        SG_LOG(SG_ATC, SG_BULK, "Start check 3");
+        SG_LOG(SG_ATC, SG_BULK, getCallsign() << "|Itentions " << intentions.size());
         intVecIterator i = intentions.begin();
         //while (!((i == intentions.end()) || ((*i) == other.currentPos)))
         while (i != intentions.end()) {
@@ -343,11 +343,10 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
             i++;
         }
         if (i != intentions.end()) {
-            SG_LOG(SG_ATC, SG_BULK, ": Check Position and intentions: .other.current matches Index = " << (*i));
+            SG_LOG(SG_ATC, SG_BULK, getCallsign() << "| Check Position and intentions: " << other.getCallsign()<< " matches Index = " << (*i));
             result = true;
         }
     }
-    SG_LOG(SG_ATC, SG_BULK, "Done!");
     return result;
 }
 

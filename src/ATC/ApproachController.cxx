@@ -104,7 +104,7 @@ void FGApproachController::announcePosition(int id,
     }
 }
 
-void FGApproachController::updateAircraftInformation(int id, double lat, double lon,
+void FGApproachController::updateAircraftInformation(int id, SGGeod geod,
         double heading, double speed, double alt,
         double dt)
 {
@@ -117,14 +117,16 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
         SG_LOG(SG_ATC, SG_ALERT,
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
-        i->setPositionAndHeading(lat, lon, heading, speed, alt);
+        i->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
         current = i;
-        SG_LOG(SG_ATC, SG_BULK, "ApproachController: checking for speed");
         if(current->getAircraft()) {
             //FIXME No call to aircraft! -> set instruction
             time_t time_diff =
                 current->getAircraft()->
                 checkForArrivalTime(string("final001"));
+            if (time_diff != 0) {
+                SG_LOG(SG_ATC, SG_BULK, current->getCallsign() << "|ApproachController: checking for speed " << time_diff);
+            }
             if (time_diff > 15) {
                 current->setSpeedAdjustment(current->getAircraft()->
                                             getPerformance()->vDescent() *
@@ -144,7 +146,6 @@ void FGApproachController::updateAircraftInformation(int id, double lat, double 
             } else {
                 current->clearSpeedAdjustment();
             }
-
         }
         //current->setSpeedAdjustment(current->getAircraft()->getPerformance()->vDescent() + time_diff);
     }

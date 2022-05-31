@@ -53,18 +53,18 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
 
   SGGeoc dep(SGGeoc::fromDegM(deplon, deplat, 100.0));
   SGGeoc arr(SGGeoc::fromDegM(arrlon, arrlat, 100.0));
-  
+
   SGVec3d a = SGVec3d::fromGeoc(dep);
   SGVec3d nb = normalize(SGVec3d::fromGeoc(arr));
   SGVec3d na = normalize(a);
-  
+
   SGVec3d _cross = cross(nb, na);
 
   double angle = acos(dot(na, nb));
   const double angleStep = 0.05 * SG_DEGREES_TO_RADIANS;
   tmpNode = 0;
   for (double ang = 0.0; ang < angle; ang += angleStep)
-  {  
+  {
       SGQuatd q = SGQuatd::fromAngleAxis(ang, _cross);
       SGGeod geod = SGGeod::fromCart(q.transform(a));
 
@@ -72,7 +72,7 @@ void FGAIFlightPlan::evaluateRoutePart(double deplat,
       tmpNode = globals->get_airwaynet()->findNearestNode(geod);
 
       FGNode* node = globals->get_airwaynet()->findNode(tmpNode);
-    
+
       if ((tmpNode != prevNode) && (SGGeodesy::distanceM(geod, node->getPosition()) < 25000)) {
         nodes.push_back(tmpNode);
       }
@@ -173,7 +173,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
       SGWayPoint arr  (arr->getLongitude(),
                arr->getLatitude(),
                alt);
-      
+
       double crse, crsDiff;
       double dist;
       first.CourseAndDistance(arr,   &course, &distance);
@@ -190,7 +190,7 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
       // in our flight plan:
       // 1) current waypoint is less then 100 miles away OR
       // 2) curren waypoint is ahead of us, at any distance
-      SG_LOG(SG_AI, SG_BULK, " Distance : " << dist << " : Course diff " << crsDiff 
+      SG_LOG(SG_AI, SG_BULK, " Distance : " << dist << " : Course diff " << crsDiff
            << " crs to dest : " << course
            << " crs to wpt  : " << crse);
       if ((dist > 20.0) && (crsDiff > 90.0))
@@ -280,19 +280,27 @@ void FGAIFlightPlan::createCruise(bool firstFlight, FGAirport *dep,
  * CreateCruise
  * initialize the Aircraft at the parking location
  *
- * Note that this is the original version that does not 
+ * Note that this is the original version that does not
  * do any dynamic route computation.
  ******************************************************************/
-bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep, 
-                  FGAirport *arr, double latitude, 
-                  double longitude, double speed, 
+bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport *dep,
+                  FGAirport *arr,
+                  const SGGeod& current,
+                  double speed,
                   double alt, const string& fltType)
 {
   double vCruise = ac->getPerformance()->vCruise();
   FGAIWaypoint *wpt;
-  wpt = createInAir(ac, "Cruise", SGGeod::fromDeg(longitude, latitude), alt, vCruise);
-  pushBackWaypoint(wpt); 
-  
+  //FIXME usually that will be "before" the next WP
+  wpt = createInAir(ac, "Cruise", current, alt, vCruise);
+  if (waypoints.size() == 0) {
+    pushBackWaypoint(wpt);
+    SG_LOG(SG_AI, SG_DEBUG, "Cruise spawn " << ac->getCallSign());
+  } else {
+    SG_LOG(SG_AI, SG_DEBUG, "Cruise start " << ac->getCallSign());
+  }
+  //
+
   const string& rwyClass = getRunwayClassFromTrafficType(fltType);
   double heading = ac->getTrafficRef()->getCourse();
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
@@ -303,12 +311,13 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   FGRunway* rwy = arr->getRunwayByIdent(activeRunway);
   assert( rwy != NULL );
   // begin descent 110km out
-  SGGeod beginDescentPoint     = rwy->pointOnCenterline(0);
-  SGGeod secondaryDescentPoint = rwy->pointOnCenterline(-10000);
-  
+  double distanceOut = arr->getDynamics()->getApproachController()->getRunway(rwy->name())->getApproachDistance();    //12 * SG_NM_TO_METER;
+  SGGeod beginDescentPoint     = rwy->pointOnCenterline(-2*distanceOut);
+  SGGeod secondaryDescentPoint = rwy->pointOnCenterline(0);
+
   wpt = createInAir(ac, "BOD", beginDescentPoint,  alt, vCruise);
-  pushBackWaypoint(wpt); 
+  pushBackWaypoint(wpt);
   wpt = createInAir(ac, "BOD2", secondaryDescentPoint, alt, vCruise);
-  pushBackWaypoint(wpt); 
+  pushBackWaypoint(wpt);
   return true;
 }

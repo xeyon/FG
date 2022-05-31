@@ -23,6 +23,7 @@ set(SOURCES
 	performancedata.cxx
 	performancedb.cxx
 	submodel.cxx
+	VectorMath.cxx
 	)
 
 set(HEADERS
@@ -46,6 +47,7 @@ set(HEADERS
 	performancedata.hxx
 	performancedb.hxx
 	submodel.hxx
+	VectorMath.cxx
 	)
 
 # Add sources if swift support is enabled
@@ -53,6 +55,5 @@ if(ENABLE_SWIFT)
 	list(APPEND HEADERS AISwiftAircraft.h)
 	list(APPEND SOURCES AISwiftAircraft.cpp)
 endif()
-    		
+
 flightgear_component(AIModel "${SOURCES}" "${HEADERS}")
-	

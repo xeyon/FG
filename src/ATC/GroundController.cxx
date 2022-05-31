@@ -173,7 +173,7 @@ bool FGGroundController::checkTransmissionState(int minState, int maxState, Traf
     return false;
 }
 
-void FGGroundController::updateAircraftInformation(int id, double lat, double lon,
+void FGGroundController::updateAircraftInformation(int id, SGGeod geod,
         double heading, double speed, double alt,
         double dt)
 {
@@ -193,7 +193,7 @@ void FGGroundController::updateAircraftInformation(int id, double lat, double lo
         return;
     }
 
-    i->setPositionAndHeading(lat, lon, heading, speed, alt);
+    i->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
     TrafficVectorIterator current = i;
 
     setDt(getDt() + dt);
@@ -206,10 +206,10 @@ void FGGroundController::updateAircraftInformation(int id, double lat, double lo
     //  setDt(0);
     current->clearResolveCircularWait();
     current->setWaitsForId(0);
-    checkSpeedAdjustment(id, lat, lon, heading, speed, alt);
+    checkSpeedAdjustment(id, geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
     bool needsTaxiClearance = current->getAircraft()->getTaxiClearanceRequest();
     if (!needsTaxiClearance) {
-        checkHoldPosition(id, lat, lon, heading, speed, alt);
+        checkHoldPosition(id, geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
         //if (checkForCircularWaits(id)) {
         //    i->setResolveCircularWait();
         //}
@@ -307,7 +307,10 @@ void FGGroundController::checkSpeedAdjustment(int id, double lat,
             for (TrafficVectorIterator i =
                         towerController->getActiveTraffic().begin();
                     i != towerController->getActiveTraffic().end(); i++) {
-                SG_LOG(SG_ATC, SG_BULK, "Comparing " << current->getId() << " and " << i->getId());
+                if( current->getId() == i->getId()) {
+                    continue;
+                }
+                SG_LOG(SG_ATC, SG_BULK, "Comparing " << current->getCallsign() << " and " << i->getCallsign());
                 SGGeod other = i->getPos();
                 SGGeodesy::inverse(curr, other, course, az2, dist);
                 bearing = fabs(heading - course);

@@ -74,7 +74,7 @@ public:
     virtual void announcePosition(int id, FGAIFlightPlan *intendedRoute, int currentRoute,
                                   double lat, double lon, double hdg, double spd, double alt,
                                   double radius, int leg, FGAIAircraft *aircraft);
-    virtual void updateAircraftInformation(int id, double lat, double lon, double heading, double speed, double alt, double dt);
+    virtual void updateAircraftInformation(int id, SGGeod geod, double heading, double speed, double alt, double dt);
 
     bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
                                 AtcMsgDir msgDir);

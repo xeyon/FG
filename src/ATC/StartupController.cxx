@@ -138,7 +138,7 @@ bool FGStartupController::checkTransmissionState(int st, time_t now, time_t star
     return false;
 }
 
-void FGStartupController::updateAircraftInformation(int id, double lat, double lon,
+void FGStartupController::updateAircraftInformation(int id, SGGeod geod,
         double heading, double speed, double alt,
         double dt)
 {
@@ -151,7 +151,7 @@ void FGStartupController::updateAircraftInformation(int id, double lat, double l
                "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
         return;
     } else {
-        i->setPositionAndHeading(lat, lon, heading, speed, alt);
+        i->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
         current = i;
     }
     setDt(getDt() + dt);

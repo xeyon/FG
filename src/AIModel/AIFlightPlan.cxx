@@ -132,11 +132,11 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename) :
 
 
 // This is a modified version of the constructor,
-// Which not only reads the waypoints from a 
+// Which not only reads the waypoints from a
 // Flight plan file, but also adds the current
 // Position computed by the traffic manager, as well
 // as setting speeds and altitude computed by the
-// traffic manager. 
+// traffic manager.
 FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
                                const std::string& p,
                                double course,
@@ -197,7 +197,7 @@ void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
   time_t now = globals->get_time_params()->get_cur_time();
   time_t timeDiff = now-start;
   leg = 1;
-  
+
   if ((timeDiff > 60) && (timeDiff < 1500))
     leg = 2;
   //else if ((timeDiff >= 1200) && (timeDiff < 1500)) {
@@ -213,9 +213,9 @@ void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
    leg = 5;
    */
 
-    SG_LOG(SG_AI, SG_BULK, "Route from " << dep->getId() << " to " << arr->getId() <<
+    SG_LOG(SG_AI, SG_DEBUG, "Route from " << dep->getId() << " to " << arr->getId() <<
            ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
-    
+
   wpt_iterator = waypoints.begin();
   bool dist = 0;
   isValid = create(ac, dep, arr, leg, alt, speed, lat, lon,
@@ -386,7 +386,7 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
       ++wpt_iterator;
     }
     // Calculate the angle of the next turn.
-    if (wpt_iterator == waypoints.end()) 
+    if (wpt_iterator == waypoints.end())
         return;
     if (wpt_iterator == waypoints.begin())
         return;
@@ -402,9 +402,9 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
     if ((previousWP->getSpeed() > 0 && nextWP->getSpeed() < 0) ||
         (previousWP->getSpeed() < 0 && nextWP->getSpeed() > 0)) {
       nextTurnAngle += 180;
-      SG_LOG(SG_AI, SG_BULK, "Add 180 to turn angle pushback end");       
+      SG_LOG(SG_AI, SG_BULK, "Add 180 to turn angle pushback end");
     }
-    SG_LOG(SG_AI, SG_BULK, "Calculated next turn angle " << nextTurnAngle << " " << previousWP->getName() << " " << currentWP->getName() << " Previous Speed " << previousWP->getSpeed() << " Next Speed " << nextWP->getSpeed()); 
+    SG_LOG(SG_AI, SG_BULK, "Calculated next turn angle " << nextTurnAngle << " " << previousWP->getName() << " " << currentWP->getName() << " Previous Speed " << previousWP->getSpeed() << " Next Speed " << nextWP->getSpeed());
 }
 
 void FGAIFlightPlan::DecrementWaypoint()
@@ -433,8 +433,10 @@ double FGAIFlightPlan::getDistanceToGo(double lat, double lon, FGAIWaypoint* wp)
 
 // sets distance in feet from a lead point to the current waypoint
 // basically a catch radius, that triggers the advancement of WPs
-void FGAIFlightPlan::setLeadDistance(double speed, double bearing, 
-                                     FGAIWaypoint* current, FGAIWaypoint* next){
+void FGAIFlightPlan::setLeadDistance(double speed,
+                                     double bearing,
+                                     FGAIWaypoint* current,
+                                     FGAIWaypoint* next){
   double turn_radius_m;
   // Handle Ground steering
   // At a turn rate of 30 degrees per second, it takes 12 seconds to do a full 360 degree turn
@@ -462,10 +464,10 @@ void FGAIFlightPlan::setLeadDistance(double speed, double bearing,
   double outbound = getBearing(current, next);
   leadInAngle = fabs(inbound - outbound);
   if (leadInAngle > 180.0) leadInAngle = 360.0 - leadInAngle;
-  //if (leadInAngle < 30.0) // To prevent lead_dist from getting so small it is skipped 
+  //if (leadInAngle < 30.0) // To prevent lead_dist from getting so small it is skipped
   //  leadInAngle = 30.0;
-  
-  //lead_distance_ft = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS); 
+
+  //lead_distance_ft = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS);
 
   double lead_distance_m = turn_radius_m * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
   lead_distance_ft = lead_distance_m * SG_METER_TO_FEET;
@@ -509,7 +511,7 @@ void FGAIFlightPlan::deleteWaypoints()
   wpt_iterator = waypoints.begin();
 }
 
-// Delete all waypoints except the last, 
+// Delete all waypoints except the last,
 // which we will recycle as the first waypoint in the next leg;
 void FGAIFlightPlan::resetWaypoints()
 {

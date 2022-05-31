@@ -22,6 +22,7 @@ PerformanceData* PerformanceData::getDefaultData()
 PerformanceData::PerformanceData() :
   _acceleration(4.0),
   _deceleration(2.0),
+  _brakeDeceleration(20.0),
   _climbRate(3000.0),
   _descentRate(1500.0),
   _vRotate(150.0),
@@ -44,6 +45,7 @@ PerformanceData::PerformanceData() :
 PerformanceData::PerformanceData(PerformanceData* clone) :
   _acceleration(clone->_acceleration),
   _deceleration(clone->_deceleration),
+  _brakeDeceleration(clone->_brakeDeceleration),
   _climbRate(clone->_climbRate),
   _descentRate(clone->_descentRate),
   _vRotate(clone->_vRotate),
@@ -77,6 +79,7 @@ void PerformanceData::initFromProps(SGPropertyNode *db_node)
 // read the values, using the existing values as defaults
   _acceleration = db_node->getDoubleValue("acceleration-kts-hour", _acceleration);
   _deceleration = db_node->getDoubleValue("deceleration-kts-hour", _deceleration);
+  _brakeDeceleration = db_node->getDoubleValue("brake-deceleration-kts-hour", _brakeDeceleration);
 
   _climbRate = readRenamedProp(db_node, {"climb-rate-fpm", "climbrate-fpm"}, _climbRate);
   _descentRate = readRenamedProp(db_node, {"descent-rate-fpm", "decentrate-fpm"}, _descentRate);
@@ -115,11 +118,11 @@ double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double d
             // deceleration performance is better due to wheel brakes.
             double brakePower = 0;
             if (maxBrakes) {
-                brakePower = 3;
+                brakePower = 2;
             } else {
-                brakePower = BRAKE_SETTING;
+                brakePower = 1;
             }
-            speed -= brakePower * _deceleration * dt;
+            speed -= brakePower * _brakeDeceleration * dt;
         } else {
             speed -= _deceleration * dt;
         }
@@ -134,7 +137,7 @@ double PerformanceData::actualSpeed(FGAIAircraft* ac, double tgt_speed, double d
 
 double PerformanceData::decelerationOnGround() const
 {
-  return _deceleration * BRAKE_SETTING;
+  return _brakeDeceleration;
 }
 
 double PerformanceData::actualBankAngle(FGAIAircraft* ac, double tgt_roll, double dt) {

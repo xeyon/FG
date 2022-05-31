@@ -104,7 +104,7 @@ public:
                                   double lat, double lon,
                                   double hdg, double spd, double alt, double radius, int leg,
                                   FGAIAircraft *aircraft) = 0;
-    virtual void             updateAircraftInformation(int id, double lat, double lon,
+    virtual void             updateAircraftInformation(int id, SGGeod geod,
             double heading, double speed, double alt, double dt) = 0;
 
     void signOff(int id);

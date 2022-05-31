@@ -372,8 +372,9 @@ void FGATCController::signOff(int id)
 {
     TrafficVectorIterator i = searchActiveTraffic(id);
     if (i == activeTraffic.end()) {
+        // Dead traffic should never reach here
         SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN);
+               "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN << " list " << activeTraffic.empty());
         return;
     }
     activeTraffic.erase(i);
@@ -445,6 +446,9 @@ void FGATCController::eraseDeadTraffic()
 {
     auto it = std::remove_if(activeTraffic.begin(), activeTraffic.end(), [](const FGTrafficRecord& traffic)
     {
+        if (traffic.isDead()) {
+            SG_LOG(SG_ATC, SG_DEBUG, "Remove dead " << traffic.getId() << " " << traffic.isDead());
+        }
         return traffic.isDead();
     });
     activeTraffic.erase(it, activeTraffic.end());
