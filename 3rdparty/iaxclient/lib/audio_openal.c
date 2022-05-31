@@ -246,9 +246,15 @@ int openal_destroy(struct iaxc_audio_driver *d)
 {
     struct openal_priv_data* priv = (struct openal_priv_data*)(d->priv);
 
+
     alcCaptureStop(priv->in_dev);
     alcCaptureCloseDevice(priv->in_dev);
     alDeleteSources(1, &priv->source);
+
+    // FlightGear: added by James to avoid a warning from OpenAL-soft
+    // when we destroy the context in SGSoundMgr_OpenAL: since we
+    // genBuffers below, we should balance that out.
+    alDeleteBuffers(priv->num_buffers, priv->buffers);
 
     return 0;
 }
