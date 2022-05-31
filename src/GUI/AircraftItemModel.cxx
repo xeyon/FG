@@ -36,10 +36,10 @@
 #include <simgear/package/Install.hxx>
 
 // FlightGear
-#include <Main/globals.hxx>
-
-#include "QmlAircraftInfo.hxx"
 #include "FavouriteAircraftData.hxx"
+#include "QmlAircraftInfo.hxx"
+#include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
 
 using namespace simgear::pkg;
 
@@ -76,6 +76,7 @@ protected:
     {
         QModelIndex mi(indexForPackage(aInstall->package()));
         m_model->dataChanged(mi, mi);
+        flightgear::addSentryBreadcrumb("Aircraft install started:" + aInstall->package()->qualifiedId(), "info");
     }
 
     void installProgress(InstallRef aInstall, unsigned int bytes, unsigned int total) override
@@ -92,10 +93,12 @@ protected:
         m_model->dataChanged(mi, mi);
 
         if ((aReason != USER_CANCELLED) && (aReason != STATUS_SUCCESS)) {
+            flightgear::addSentryBreadcrumb("Aircraft install failed:" + aInstall->package()->qualifiedId(), "info");
             m_model->installFailed(mi, aReason);
         }
 
         if (aReason == STATUS_SUCCESS) {
+            flightgear::addSentryBreadcrumb("Aircraft install succeeded:" + aInstall->package()->qualifiedId(), "info");
             m_model->installSucceeded(mi);
         }
 

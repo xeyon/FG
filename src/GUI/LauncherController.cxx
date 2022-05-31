@@ -339,7 +339,7 @@ void LauncherController::restoreAircraft()
 
 void LauncherController::doRun()
 {
-    flightgear::addSentryBreadcrumb("Launcher: fly!", "info");
+    flightgear::addSentryBreadcrumb("Launcher: fly!:" + m_selectedAircraft.toString().toStdString(), "info");
     flightgear::Options* opt = flightgear::Options::sharedInstance();
     m_config->reset();
     m_config->collect();
@@ -348,6 +348,8 @@ void LauncherController::doRun()
 
     QVariant locSet = m_location->saveLocation();
     m_locationHistory->insert(locSet);
+
+    flightgear::addSentryBreadcrumb("acft path:" + m_selectedAircraftInfo->pathOnDisk().toStdString(), "info");
 
     // aircraft paths
     QSettings settings;
