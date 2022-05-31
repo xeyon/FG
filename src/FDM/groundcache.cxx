@@ -702,6 +702,10 @@ FGGroundCache::get_agl(double t, const SGVec3d& pt, SGVec3d& contact,
                        SGVec3d& normal, SGVec3d& linearVel, SGVec3d& angularVel,
                        simgear::BVHNode::Id& id, const simgear::BVHMaterial*& material)
 {
+    if (isNaN(pt)) {
+        throw sg_range_exception("FGGroundCache::get_agl: NaN position input");
+    }
+
 #ifdef GROUNDCACHE_DEBUG
     SGTimeStamp t0 = SGTimeStamp::now();
 #endif
