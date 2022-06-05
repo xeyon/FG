@@ -413,52 +413,56 @@ bool FGViewMgr::video_start(
             << " bitrate=" << bitrate
             );
     globals->get_props()->setIntValue("/sim/video/error", 0);
-    std::string name = name_in;
-    std::string codec = codec_in;
     
-    std::string name_link = std::string("fgvideo-") + fgGetString("/sim/aircraft");
+    std::string name;
+    std::string name_link;
     
-    if (name == "")
+    if (name_in == "")
     {
-        /* Use a default name containing current date and time. */
+        /* Use a default name containing aircraft-name, current date and time
+        and the configured video container. */
         time_t calendar_time = time(NULL);
         struct tm* local_tm = localtime(&calendar_time);
-        char buffer[256];
-        strftime(buffer, sizeof(buffer), "-%Y%m%d-%H%M%S", local_tm);
-        name = name_link + buffer;
-    }
-    size_t dot = name.find(".");
-    if (dot == std::string::npos)
-    {
-        /* No suffix specified. We need one because it determines the video
-        container format. */
-        std::string container = fgGetString("/sim/video/container", "mpeg");
-        name += "." + container;
-        name_link += "." + container;
+        char time_string[256];
+        strftime(time_string, sizeof(time_string), "-%Y%m%d-%H%M%S", local_tm);
+        
+        std::string suffix = "." + fgGetString("/sim/video/container", "mpeg");
+        
+        name = std::string("fgvideo-") + fgGetString("/sim/aircraft");
+        name_link = name + suffix;
+        name += time_string + suffix;
     }
     else
     {
-        // Give link the same suffix.
-        name_link += name.substr(dot);
+        /* We assume <name_in> already has the desired suffix. We leave
+        name_link empty so we don't attempt to create a link. */
+        name = name_in;
     }
-    SGPath  path = SGPath(fgGetString("/sim/video/directory"));
-    SGPath  path_link = path;
+    
+    std::string codec = codec_in;
+    
+    string directory = fgGetString("/sim/video/directory");
+    SGPath  path = SGPath(directory);
     path.append(name);
     if (path.exists())
     {
         videoEncodingError("Video encoding failure, output file already exists: " + path.str());
         return false;
     }
-    path_link.append(name_link);
-    path_link.remove();
-    bool ok = path_link.makeLink(path.file());
-    if (!ok)
+    SGPath  path_link;
+    if (name_link != "")
     {
-        SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to create link "
-                << path_link.c_str() << " => " << path.file()
-                );
+        path_link = SGPath(directory);
+        path_link.append(name_link);
+        path_link.remove();
+        bool ok = path_link.makeLink(path.file());
+        if (!ok)
+        {
+            SG_LOG(SG_SYSTEMS, SG_ALERT, "Failed to create link "
+                    << path_link.c_str() << " => " << path.file()
+                    );
+        }
     }
-    
     if (codec == "")    codec = fgGetString("/sim/video/codec");
     if (quality == -1)  quality = fgGetDouble("/sim/video/quality");
     if (speed == -1)    speed = fgGetDouble("/sim/video/speed");

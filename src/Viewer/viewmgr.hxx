@@ -97,9 +97,16 @@ public:
     // Start video encoding of main window.
     //
     //  name
-    //      Name of output file or "" to generate a name containing current
-    //      date and time and /sim/video/container. List of supported
-    //      containers can be found with 'ffmpeg -formats'.
+    //      If "", we generate a name containing aircraft name, date and
+    //      time and with suffix /sim/video/container, and we also create a
+    //      softlink with the same name excluding date and time. Both names are
+    //      converted into paths by prepending with /sim/video/directory.
+    //
+    //      Otherwise we prepend with /sim/video/directory, and do not create
+    //      a softlink. In this case, <name> should end with a name that is a
+    //      recognised video container, such as '.mp4'.
+    //
+    //      List of supported containers can be found with 'ffmpeg -formats'.
     //  codec_name
     //      Name of codec or "" to use /sim/video/codec. Passed to
     //      avcodec_find_encoder_by_name(). List of supported codecs can be
