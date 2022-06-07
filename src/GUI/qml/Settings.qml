@@ -348,6 +348,29 @@ Item {
                         setIfDefault: true
                     },
 
+                    SettingsComboBox {
+                        id: terraSyncDnsMode
+                        label: qsTr("TerraSync DNS Server")
+                        description: qsTr("Select the DNS server used for TerraSync lookup.")
+                        advanced: true
+                        choices: [qsTr("Default"), qsTr("Google"), qsTr("Custom DNS Server") ]
+                        defaultIndex: 0
+                        readonly property bool isGoogle: selectedIndex == 1
+                        readonly property bool isCustom: selectedIndex == 2
+                        keywords: ["terrasync", "dns", "network", "download", "scenery"]
+                        setting: "terrasync-dns-mode"
+                    },
+
+                    SettingLineEdit {
+                        id: terraSyncCustomDns
+                        hidden: !terraSyncDnsMode.isCustom
+                        label: qsTr("Custom DNS Server")
+                        advanced: true
+                        description: qsTr("Enter a custom DNS server IP address, for example '8.8.8.8'")
+                       // validation: RegExpValidator { regExp: /[\d]{1,7}[\s]*x[\s]*[\d]{1,7}$/ }
+                        suggestedWidthString: "255.255.255.255"
+                        setting: "terrasync-dns-custom-server"
+                    },
 
                     SettingPathChooser {
                         id: downloadDir
@@ -387,6 +410,13 @@ Item {
                     // only permitted to occurr once, and we set it via other means;
                     // on startup via runLauncherDialog, and if it changes, via
                     // LauncherMainWindow::downloadDirChanged
+
+                    if (terraSyncDnsMode.isCustom) {
+                        _config.setProperty("/sim/terrasync/dns-server", terraSyncCustomDns.value);
+                    } else if (terraSyncDnsMode.isGoogle) {
+                        // DNSClient.cxx handles this as a special value
+                        _config.setProperty("/sim/terrasync/dns-server", "google");
+                    }
                 }
 
                 summary: terrasync.checked ? "scenery downloads;" : ""
