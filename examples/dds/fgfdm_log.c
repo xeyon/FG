@@ -162,9 +162,9 @@ int main()
       printf("=== [fgfdm_log] Received : ");
       printf("GUI Message:\n");
       printf(" version: %i\n", gui->version);
-      printf(" tuned_freq: %lf\n", gui->longitude);
-      printf(" nav_radial: %lf\n", gui->latitude);
-      printf("    dist_nm: %lf\n", gui->altitude);
+      printf(" tuned_freq: %lf\n", gui->tuned_freq);
+      printf(" nav_radial: %lf\n", gui->nav_radial);
+      printf("    dist_nm: %lf\n", gui->dist_nm);
     }
 
     rc = dds_take(fdm_reader, samples, infos, 1, 1);
