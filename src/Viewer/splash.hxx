@@ -25,8 +25,15 @@
 #ifndef _SPLASH_HXX
 #define _SPLASH_HXX
 
+#include <config.h>
+
 #include <osg/Group>
 #include <osgText/Text>
+
+#ifdef ENABLE_OSGXR
+#include <osgXR/CompositionLayerQuad>
+#include <osgXR/Swapchain>
+#endif
 
 #include <simgear/props/props.hxx>
 #include <simgear/timing/timestamp.hxx>
@@ -117,6 +124,13 @@ private:
     osg::ref_ptr<osg::Camera> _splashQuadCamera;
 
      std::vector<ImageItem> _imageItems;
+
+#ifdef ENABLE_OSGXR
+    // Splash as OpenXR composition layer
+    osg::ref_ptr<osgXR::Swapchain> _splashSwapchain;
+    osg::ref_ptr<osgXR::CompositionLayerQuad> _splashLayer;
+#endif
+
     std::vector<TextItem> _items;
     
     SGTimeStamp _splashStartTime;
