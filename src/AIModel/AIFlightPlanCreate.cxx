@@ -117,10 +117,20 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                " this is probably an internal program error");
         break;
     }
-    wpt_iterator = waypoints.begin() + currWpt;
     //don't  increment leg right away, but only once we pass the actual last waypoint that was created.
     // to do so, mark the last waypoint with a special status flag
     if (retVal) {
+        if (waypoints.empty()) {
+            SG_LOG(SG_AI, SG_WARN, ac->getCallSign() << "|AIFlightPlan::create() Leg "  << legNr <<
+                " created empty waypoints." );
+            return retVal;
+        }
+        wpt_iterator = waypoints.begin() + currWpt;
+        if (waypoints.back()->getName().size()==0) {
+            SG_LOG(SG_AI, SG_WARN, ac->getCallSign() <<
+                " Empty wpt name");
+
+        }
         waypoints.back()->setName( waypoints.back()->getName() + string("legend"));
         // "It's pronounced Leg-end" (Roger Glover (Deep Purple): come Hell or High Water DvD, 1993)
     }
@@ -1029,8 +1039,10 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         ac->resetPositionFromFlightPlan();
     }
 
-    SG_LOG(SG_AI, SG_BULK, "Setting Node " << waypoints[1]->getName() << " to a leg end");
-    waypoints[1]->setName( (waypoints[1]->getName() + string("legend")));
+    if (!waypoints.empty()) {
+        SG_LOG(SG_AI, SG_BULK, "Setting Node " << waypoints.back()->getName() << " to a leg end");
+        waypoints.back()->setName( (waypoints.back()->getName() + string("legend")));
+    }
 
     return true;
 }

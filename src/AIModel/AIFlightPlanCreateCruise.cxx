@@ -287,7 +287,8 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
                   FGAirport *arr,
                   const SGGeod& current,
                   double speed,
-                  double alt, const string& fltType)
+                  double alt,
+                  const string& fltType)
 {
   double vCruise = ac->getPerformance()->vCruise();
   FGAIWaypoint *wpt;
@@ -305,7 +306,8 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   double heading = ac->getTrafficRef()->getCourse();
   arr->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway, heading);
   if (!arr->hasRunwayWithIdent(activeRunway)) {
-      return false;
+    SG_LOG(SG_AI, SG_WARN, ac->getCallSign() << " cruise to" << arr->getId() << activeRunway << " not active");
+    return false;
   }
 
   FGRunway* rwy = arr->getRunwayByIdent(activeRunway);

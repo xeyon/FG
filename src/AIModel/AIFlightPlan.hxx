@@ -32,21 +32,21 @@
 class SGPath;
 
 class FGAIWaypoint {
-private:
-   std::string name;
-   SGGeod pos;
-   double speed;
-   double crossat;
-   bool finished;
-   bool gear_down;
-   double flaps;
+  private:
+    std::string name = "unnamed";
+    SGGeod pos;
+    double speed = 0.0;
+    double crossat = 0.0;
+    bool finished = false;
+    bool gear_down = true;
+    double flaps = 0.0;
     double spoilers = 0.0;
     double speedbrakes = 0.0;
-   bool on_ground;
+    bool on_ground;
     int routeIndex;  // For AI/ATC purposes;
-   double time_sec;
-   double trackLength; // distance from previous FGAIWaypoint (for AI purposes);
-   std::string time;
+    double time_sec;
+    double trackLength = 0.0; // distance from previous FGAIWaypoint (for AI purposes);
+    std::string time;
 
     bool beacon_light = false;
     bool landing_light = false;
@@ -55,7 +55,7 @@ private:
     bool taxi_light = false;
     bool cabin_light = false;
 
-public:
+  public:
     FGAIWaypoint();
     virtual ~FGAIWaypoint() {};
 
@@ -99,7 +99,7 @@ public:
 
     bool contains(const std::string& name);
 
-    const std::string& getName() { return name;        };
+    const std::string& getName() { return name;   };
     const SGGeod& getPos () { return pos;         };
     double getLatitude   ();
     double getLongitude  ();

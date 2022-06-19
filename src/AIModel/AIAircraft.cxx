@@ -348,7 +348,11 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         }
     }
     if (!curr) {
-        SG_LOG(SG_AI, SG_WARN, "No current WP" << next->getName());
+        if (!next) {
+            SG_LOG(SG_AI, SG_WARN, getCallSign() << "|No more WPs");
+        } else {
+            SG_LOG(SG_AI, SG_WARN, getCallSign() << "|No current WP" << next->getName());
+        }
         return;
     }
 
@@ -1016,6 +1020,8 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
 
     if (!( dep && arr))
         return false;
+    if (!prev)
+        return false;
 
     // This waypoint marks the fact that the aircraft has passed the initial taxi
     // departure waypoint, so it can release the parking.
@@ -1471,16 +1477,24 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
 
 void FGAIAircraft::resetPositionFromFlightPlan()
 {
+    if (fp->empty()) {
+        return;
+    }
     // the one behind you
-    FGAIWaypoint* prev = 0;
+    FGAIWaypoint* prev = nullptr;
     // the one ahead
-    FGAIWaypoint* curr = 0;
+    FGAIWaypoint* curr = nullptr;
     // the next plus 1
-    FGAIWaypoint* next = 0;
+    FGAIWaypoint* next = nullptr;
 
     prev = fp->getPreviousWaypoint();
     curr = fp->getCurrentWaypoint();
     next = fp->getNextWaypoint();
+
+    if (curr==nullptr || next==nullptr) {
+        SG_LOG(SG_AI, SG_WARN, getCallSign() << "|Repositioned without curr/next");
+        return;
+    }
 
     setLatitude(prev->getLatitude());
     setLongitude(prev->getLongitude());

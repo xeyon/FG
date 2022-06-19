@@ -548,6 +548,9 @@ void FGAIFlightPlan::addWaypoint(FGAIWaypoint* wpt)
 
 void FGAIFlightPlan::pushBackWaypoint(FGAIWaypoint *wpt)
 {
+  if (!wpt) {
+    SG_LOG(SG_AI, SG_WARN, "Null WPT added");
+  }
   size_t pos = wpt_iterator - waypoints.begin();
   if (waypoints.size()>0) {
       double dist = SGGeodesy::distanceM( waypoints.back()->getPos(), wpt->getPos());
@@ -587,9 +590,12 @@ double FGAIFlightPlan::checkTrackLength(const string& wptName) const {
     wpt_vector_iterator wptvec = waypoints.begin();
     ++wptvec;
     ++wptvec;
-    while ((wptvec != waypoints.end()) && (!((*wptvec)->contains(wptName)))) {
-           trackDistance += (*wptvec)->getTrackLength();
-           ++wptvec;
+    while ((wptvec != waypoints.end())) {
+      if (*wptvec!=nullptr && (!((*wptvec)->contains(wptName)))) {
+        break;
+      }
+      trackDistance += (*wptvec)->getTrackLength();
+      ++wptvec;
     }
     if (wptvec == waypoints.end()) {
         trackDistance = 0; // name not found

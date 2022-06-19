@@ -306,7 +306,7 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunwayExit(const SGGeod & aGeod,
         if (aRunway) {
             double headingTowardsExit = SGGeodesy::courseDeg(aGeod, (*it)->geod());
             double diff = fabs(aRunway->headingDeg() - headingTowardsExit);
-            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit " << aRunway->headingDeg() << " " 
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit " << aRunway->headingDeg() << " "
               << " Diff : " << diff << " " << (*it)->getIndex());
             if (diff > 10) {
                 // Only ahead
@@ -345,13 +345,13 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunwayExit(const SGGeod & aGeod,
         if (aRunway) {
             double headingTowardsExit = SGGeodesy::courseDeg(aGeod, (*it)->geod());
             double diff = fabs(aRunway->headingDeg() - headingTowardsExit);
-            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExitFallback1 " << aRunway->headingDeg() << " " 
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExitFallback1 " << aRunway->headingDeg() << " "
               << " Diff : " << diff << " " << (*it)->getIndex());
             if (diff > 10) {
                 // Only ahead
                 continue;
             }
-        }    
+        }
         if (localDistanceSqr < d) {
             SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExitFallback1 " << localDistanceSqr);
             d = localDistanceSqr;
@@ -483,10 +483,10 @@ FGTaxiRoute FGGroundNetwork::findShortestRoute(FGTaxiNode* start, FGTaxiNode* en
 
     if (searchData[end].score == HUGE_VAL) {
         // no valid route found
-        if (fullSearch) {
+        if (fullSearch && start && end) {
             SG_LOG(SG_GENERAL, SG_ALERT,
-                   "Failed to find route from waypoint " << start << " to "
-                   << end << " at " << parent->getId());
+                   "Failed to find route from waypoint " << start->getIndex() << " to "
+                   << end->getIndex() << " at " << parent->getId());
         }
 
         return FGTaxiRoute();
