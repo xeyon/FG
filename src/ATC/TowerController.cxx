@@ -197,22 +197,31 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
     int clearanceId = rwy->getCleared();
     if (clearanceId) {
         if (id == clearanceId) {
+            SG_LOG(SG_ATC, SG_BULK, "Unset Hold " << clearanceId << " for " << rwy->getRunwayName());
             current.setHoldPosition(false);
+        } else {
+            SG_LOG(SG_ATC, SG_WARN, "Not cleared " << id << " " << clearanceId);
         }
     } else {
         if (current.getAircraft() == rwy->getFirstAircraftInDepartureQueue()) {
+            SG_LOG(SG_ATC, SG_BULK,
+               "Cleared " << current.getAircraft()->getCallSign() << " for " << rwy->getRunwayName() << " Id " << id);
             rwy->setCleared(id);
             auto ac = rwy->getFirstOfStatus(1);
-            if (ac)
+            if (ac) {
                 ac->setTakeOffStatus(2);
                 // transmit takeoff clearacne? But why twice?
+            }
+        } else {
+            SG_LOG(SG_ATC, SG_BULK,
+               "Not cleared " << current.getAircraft()->getCallSign() << " " << rwy->getFirstAircraftInDepartureQueue()->getCallSign());
         }
     }
 }
 
-
 void FGTowerController::signOff(int id)
 {
+    SG_LOG(SG_ATC, SG_BULK, "Signing off " << id << " from Tower");
     // ensure we don't modify activeTraffic during destruction
     if (_isDestroying)
         return;
@@ -232,6 +241,7 @@ void FGTowerController::signOff(int id)
                                  });
 
     if (runwayIt != activeRunways.end()) {
+        SG_LOG(SG_ATC, SG_BULK, "Cleared " << id << " from " << runwayIt->getRunwayName() );
         runwayIt->setCleared(0);
         runwayIt->updateDepartureQueue();
     } else {

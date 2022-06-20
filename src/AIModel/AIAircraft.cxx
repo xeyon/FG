@@ -388,7 +388,9 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
         }
 
         prev = fp->getPreviousWaypoint();
-        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Previous WP \t" << prev->getName() << "\t" << prev->getPos());
+        if (prev) {
+            SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Previous WP \t" << prev->getName() << "\t" << prev->getPos());
+        }
         curr = fp->getCurrentWaypoint();
         if (curr) {
             SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Current WP \t" << curr->getName() << "\t" << curr->getPos());
@@ -701,7 +703,10 @@ void FGAIAircraft::announcePositionToController() {
     case AILeg::TAKEOFF:              //Take off tower controller
         if (trafficRef->getDepartureAirport()->getDynamics()) {
             controller = trafficRef->getDepartureAirport()->getDynamics()->getTowerController();
-            towerController = 0;
+            if (towerController) {
+                SG_LOG(SG_AI, SG_BULK, " : " << controller->getName() << "#" << towerController->getName() << (controller != towerController));
+            }
+            towerController = nullptr;
         } else {
             SG_LOG(SG_AI, SG_BULK, "Error: Could not find Dynamics at airport : " << trafficRef->getDepartureAirport()->getId());
         }
@@ -716,6 +721,9 @@ void FGAIAircraft::announcePositionToController() {
             controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
         break;
     default:
+        if(prevController) {
+            SG_LOG(SG_AI, SG_BULK, "Will be signing off from " << prevController->getName());
+        }
         controller = nullptr;
         break;
     }

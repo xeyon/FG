@@ -107,7 +107,7 @@ public:
     virtual void             updateAircraftInformation(int id, SGGeod geod,
             double heading, double speed, double alt, double dt) = 0;
 
-    void signOff(int id);
+    virtual void signOff(int id);
     bool hasInstruction(int id);
     FGATCInstruction getInstruction(int id);
 

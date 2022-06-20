@@ -92,12 +92,12 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
     // if the aircraft is the first arrival, add to the vector and return eta directly
     if (estimatedArrivalTimes.empty()) {
         estimatedArrivalTimes.push_back(eta);
-        SG_LOG(SG_ATC, SG_DEBUG, "Checked eta slots, using " << eta);
+        SG_LOG(SG_ATC, SG_DEBUG, getRunwayName() << "Checked eta slots, using " << eta);
         return eta;
     } else {
         // First check the already assigned slots to see where we need to fit the flight in
         TimeVectorIterator i = estimatedArrivalTimes.begin();
-        SG_LOG(SG_ATC, SG_DEBUG, "Checking eta slots " << eta << ": ");
+        SG_LOG(SG_ATC, SG_DEBUG, getRunwayName() << " Checking eta slots " << eta << " : " << estimatedArrivalTimes.size() << " Timediff " << (eta - globals->get_time_params()->get_cur_time()));
 
         // is this needed - just a debug output?
         for (i = estimatedArrivalTimes.begin();
@@ -208,7 +208,7 @@ void ActiveRunway::printDepartureQueue()
 
 }
 
-/* Fetch the first aircraft in the departure cue with a certain status */
+/* Fetch the first aircraft in the departure queue with a certain status */
 SGSharedPtr<FGAIAircraft>ActiveRunway::getFirstOfStatus(int stat) const
 {
     auto it = std::find_if(departureQueue.begin(), departureQueue.end(), [stat](const SGSharedPtr<FGAIAircraft>& acft) {
