@@ -3,10 +3,18 @@ find_package(OpenGL REQUIRED)
 find_package(OpenSceneGraph REQUIRED COMPONENTS osgViewer osgUtil)
 find_package(OpenXR REQUIRED)
 
+# Old OpenXR SDK versions don't find Threads but Threads::Threads is an
+# INTERFACE link library of openxr_loader, so do so explicitly
+if(OpenXR_VERSION VERSION_LESS 1.0.14)
+    find_package(Threads REQUIRED)
+endif()
+
 # Public header files
 set(osgXR_HEADERS
     include/osgXR/Action
     include/osgXR/ActionSet
+    include/osgXR/CompositionLayer
+    include/osgXR/CompositionLayerQuad
     include/osgXR/Export
     include/osgXR/InteractionProfile
     include/osgXR/Manager
@@ -14,7 +22,9 @@ set(osgXR_HEADERS
     include/osgXR/MirrorSettings
     include/osgXR/OpenXRDisplay
     include/osgXR/Settings
+    include/osgXR/SubImage
     include/osgXR/Subaction
+    include/osgXR/Swapchain
     include/osgXR/View
     include/osgXR/osgXR
 )
@@ -29,6 +39,7 @@ set(osgXR_SRCS
     OpenXR/Instance.cpp
     OpenXR/InteractionProfile.cpp
     OpenXR/Path.cpp
+    OpenXR/Quirks.cpp
     OpenXR/Session.cpp
     OpenXR/Space.cpp
     OpenXR/Swapchain.cpp
@@ -39,6 +50,8 @@ set(osgXR_SRCS
     XRRealizeOperation.cpp
     Action.cpp
     ActionSet.cpp
+    CompositionLayer.cpp
+    CompositionLayerQuad.cpp
     FrameStore.cpp
     InteractionProfile.cpp
     Manager.cpp
@@ -47,6 +60,7 @@ set(osgXR_SRCS
     OpenXRDisplay.cpp
     Settings.cpp
     Subaction.cpp
+    Swapchain.cpp
     View.cpp
     osgXR.cpp
     projection.cpp

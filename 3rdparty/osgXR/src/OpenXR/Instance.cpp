@@ -260,9 +260,15 @@ Instance::InitResult Instance::init(const char *appName, uint32_t appVersion)
     if (XR_FAILED(res))
     {
         OSG_WARN << "Failed to create OpenXR instance: " << res << std::endl;
-        if (res == XR_ERROR_INSTANCE_LOST)
+        switch (res)
+        {
+        case XR_ERROR_RUNTIME_UNAVAILABLE:
+        case XR_ERROR_RUNTIME_FAILURE: // Monado returns this when not running
             return INIT_LATER;
-        return INIT_FAIL;
+
+        default:
+            return INIT_FAIL;
+        }
     }
 
     // Log the runtime properties
@@ -275,6 +281,7 @@ Instance::InitResult Instance::init(const char *appName, uint32_t appVersion)
                  << "\" version " << XR_VERSION_MAJOR(_properties.runtimeVersion)
                  << "." << XR_VERSION_MINOR(_properties.runtimeVersion)
                  << "." << XR_VERSION_PATCH(_properties.runtimeVersion) << std::endl;
+        _quirks.probe(this);
     }
 
     // Get extension functions

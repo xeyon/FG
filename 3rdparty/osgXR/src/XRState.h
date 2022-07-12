@@ -25,11 +25,13 @@
 #include <osg/ref_ptr>
 
 #include <osgXR/ActionSet>
+#include <osgXR/CompositionLayer>
 #include <osgXR/InteractionProfile>
 #include <osgXR/Settings>
 #include <osgXR/Subaction>
 #include <osgXR/View>
 
+#include <list>
 #include <memory>
 #include <vector>
 
@@ -61,12 +63,17 @@ class XRState : public OpenXR::EventHandler
                 XRSwapchain(XRState *state,
                             osg::ref_ptr<OpenXR::Session> session,
                             const OpenXR::System::ViewConfiguration::View &view,
-                            int64_t chosenSwapchainFormat,
-                            int64_t chosenDepthSwapchainFormat,
+                            int64_t chosenRGBAFormat,
+                            int64_t chosenDepthFormat,
                             GLenum fallbackDepthFormat);
 
                 // GL context must be current (for XRFramebuffer)
                 virtual ~XRSwapchain();
+
+                void setForcedAlpha(float alpha = -1.0f)
+                {
+                    _forcedAlpha = alpha;
+                }
 
                 void incNumDrawPasses(unsigned int num = 1)
                 {
@@ -95,6 +102,8 @@ class XRState : public OpenXR::EventHandler
 
                 XRState *_state;
                 FrameStampedVector<osg::ref_ptr<XRFramebuffer> > _imageFramebuffers;
+
+                float _forcedAlpha;
 
                 /// Number of expected draw passes.
                 unsigned int _numDrawPasses;
@@ -320,7 +329,9 @@ class XRState : public OpenXR::EventHandler
 
         VRState getProbingState() const
         {
-            return _probing ? VRSTATE_SYSTEM : VRSTATE_DISABLED;
+            if (_instance.valid() && _instance->getQuirk(OpenXR::QUIRK_AVOID_DESTROY_INSTANCE))
+                return _probing ? VRSTATE_SYSTEM : VRSTATE_DISABLED;
+            return VRSTATE_DISABLED;
         }
 
         void setViewer(osgViewer::ViewerBase *viewer)
@@ -390,6 +401,12 @@ class XRState : public OpenXR::EventHandler
         /// Arrange reinit as needed of action setup.
         void syncActionSetup();
 
+        /// Add a composition layer
+        void addCompositionLayer(CompositionLayer::Private *layer);
+
+        /// Remove a composition layer
+        void removeCompositionLayer(CompositionLayer::Private *layer);
+
         /// Find whether state has changed since last call, and reset.
         bool checkAndResetStateChanged();
 
@@ -426,6 +443,7 @@ class XRState : public OpenXR::EventHandler
                                 const osg::Matrixd& view);
 
         void initialDrawCallback(osg::RenderInfo &renderInfo);
+        void releaseGLObjects(osg::State *state);
         void swapBuffersImplementation(osg::GraphicsContext* gc);
 
         inline osg::ref_ptr<OpenXR::CompositionLayerProjection> getProjectionLayer()
@@ -467,6 +485,50 @@ class XRState : public OpenXR::EventHandler
         {
             return _xrViews[viewIndex]->getSwapchain()->getOsgTexture(stamp);
         }
+
+        /**
+         * Choose an RGBA swapchain format.
+         * @param bestRGBBits               Desired number of combined RGB bits.
+         * @param bestAlphaBits             Desired number of alpha bits.
+         * @param preferredRGBEncodingMask  Mask of preferred RGB encodings (see
+         *                                  Settings::Encoding).
+         * @param allowedRGBEncodingMask    Mask of allowed RGB encodings (see
+         *                                  Settings::Encoding).
+         * @return The chosen OpenGL swapchain format.
+         */
+        int64_t chooseRGBAFormat(unsigned int bestRGBBits,
+                                 unsigned int bestAlphaBits,
+                                 uint32_t preferredRGBEncodingMask,
+                                 uint32_t allowedRGBEncodingMask) const;
+        /**
+         * Choose a fallback depth / stencil format for use if the OpenXR
+         * runtime doesn't support depth swapchains.
+         * @param bestDepthBits              Desired number of depth bits.
+         * @param bestStencilBits            Desired number of stencil bits.
+         * @param preferredDepthEncodingMask Mask of preferred depth encodings
+         *                                   (see Settings::Encoding).
+         * @param allowedDepthEncodingMask   Mask of allowed depth encodings
+         *                                   (see Settings::Encoding).
+         * @return The chosen fallback OpenGL depth / stencil format.
+         */
+        GLenum chooseFallbackDepthFormat(unsigned int bestDepthBits,
+                                         unsigned int bestStencilBits,
+                                         uint32_t preferredDepthEncodingMask,
+                                         uint32_t allowedDepthEncodingMask) const;
+        /**
+         * Choose a depth / stencil swapchain format for submission to OpenXR.
+         * @param bestDepthBits              Desired number of depth bits.
+         * @param bestStencilBits            Desired number of stencil bits.
+         * @param preferredDepthEncodingMask Mask of preferred depth encodings
+         *                                   (see Settings::Encoding).
+         * @param allowedDepthEncodingMask   Mask of allowed depth encodings
+         *                                   (see Settings::Encoding).
+         * @return The chosen OpenGL depth / stencil swapchain format.
+         */
+        int64_t chooseDepthFormat(unsigned int bestDepthBits,
+                                  unsigned int bestStencilBits,
+                                  uint32_t preferredDepthEncodingMask,
+                                  uint32_t allowedDepthEncodingMask) const;
 
     protected:
 
@@ -538,6 +600,10 @@ class XRState : public OpenXR::EventHandler
         std::set<ActionSet::Private *> _actionSets;
         std::set<InteractionProfile::Private *> _interactionProfiles;
         std::map<std::string, std::weak_ptr<Subaction::Private>> _subactions;
+
+        // Composition layers
+        bool _compositionLayersUpdated;
+        std::list<CompositionLayer::Private *> _compositionLayers;
 
         /// Current state of OpenXR initialization.
         VRState _currentState;

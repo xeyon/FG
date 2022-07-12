@@ -56,21 +56,24 @@ Session::Session(System *system,
     createInfo.next = graphicsBinding->getXrGraphicsBinding();
 
     // GL context must not be bound in another thread
-    bool currentSet = checkCurrent();
-    // As of 2021-12-16 Monado expects the GL context to be current
-    // See https://gitlab.freedesktop.org/monado/monado/-/issues/145
-    if (!currentSet)
+    bool switchContext = shouldSwitchContext();
+    if (switchContext)
         makeCurrent();
     if (check(xrCreateSession(getXrInstance(), &createInfo, &_session),
               "Failed to create OpenXR session"))
     {
         _instance->registerSession(this);
     }
-    if (!currentSet)
+    if (switchContext)
         releaseContext();
 }
 
 Session::~Session()
+{
+    releaseGLObjects();
+}
+
+void Session::releaseGLObjects(osg::State *state)
 {
     if (_session != XR_NULL_HANDLE)
     {
@@ -79,6 +82,8 @@ Session::~Session()
         // GL context must not be bound in another thread
         check(xrDestroySession(_session),
               "Failed to destroy OpenXR session");
+        _session = XR_NULL_HANDLE;
+        _running = false;
     }
 }
 
@@ -195,7 +200,8 @@ void Session::deactivateActionSet(ActionSet *actionSet, Path subactionPath)
 
 bool Session::syncActions()
 {
-    assert(valid());
+    if (!valid())
+        return false;
 
     XrActionsSyncInfo syncInfo{ XR_TYPE_ACTIONS_SYNC_INFO };
     std::vector<XrActiveActionSet> actionSets;
@@ -422,6 +428,9 @@ void Session::requestExit()
 
 osg::ref_ptr<Session::Frame> Session::waitFrame()
 {
+    if (_instance->lost())
+        return nullptr;
+
     osg::ref_ptr<Frame> frame;
 
     XrFrameWaitInfo frameWaitInfo{ XR_TYPE_FRAME_WAIT_INFO };
@@ -507,12 +516,11 @@ bool Session::Frame::end()
     frameEndInfo.layerCount = layers.size();
     frameEndInfo.layers = layers.data();
 
-    bool currentSet = _session->checkCurrent();
+    bool restoreContext = _session->shouldRestoreContext();
     bool ret = check(xrEndFrame(_session->getXrSession(), &frameEndInfo),
                  "Failed to end OpenXR frame");
 
-    // TODO: should not be necessary, but is for SteamVR 1.16.4 (but not 1.15.x)
-    if (currentSet)
+    if (restoreContext)
         _session->makeCurrent();
 
     return ret;
