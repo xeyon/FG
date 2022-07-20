@@ -75,6 +75,7 @@ private:
     SGPropertyNode_ptr _pressureAltitude_node;
     SGPropertyNode_ptr _autoGround_node;
     SGPropertyNode_ptr _airspeedIndicator_node;
+    SGPropertyNode_ptr _machSource_node;
 
     SGPropertyNode_ptr _mode_node;
     SGPropertyNode_ptr _knob_node;
@@ -94,6 +95,7 @@ private:
     SGPropertyNode_ptr _ident_node;
     SGPropertyNode_ptr _ground_node;
     SGPropertyNode_ptr _airspeed_node;
+    SGPropertyNode_ptr _mach_node;
 
     // Internal
     Mode _mode;
@@ -104,6 +106,7 @@ private:
     std::string _altitudeSourcePath;
     std::string _autoGroundPath;
     std::string _airspeedSourcePath;
+    std::string _machSourcePath;
 
     void valueChanged (SGPropertyNode *) override;
 

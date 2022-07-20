@@ -26,6 +26,7 @@
 //        <mode>2</mode>  // Mode A = 0, Mode C = 1, Mode S = 2
 //        <auto-ground>...</auto-ground>
 //        <airspeed-path>...</airspeed-path>
+//        <mach-path>...</mach-path>
 //      </altimeter>
 //
 // Mode-S transponders (configured with mode = 2) can transmit a ground bit to
@@ -41,9 +42,10 @@
 // Note that Mode-A and Mode-C transponders do not transmit a ground bit, even
 // if the transponder knob is set to the GND position.
 //
-// Mode-S transponders also transmit indicated airspeed. The default source of
-// this is /instrumentation/airspeed-indicator/indicated-speed-kt but this can be
-// changed by setting the airspeed-path property as shown above.
+// Mode-S transponders also transmit indicated airspeed and Mach number. The
+// default sources are "/instrumentation/airspeed-indicator/indicated-speed-kt"
+// and ".../indicated-mach", but this can be changed by setting "airspeed-path"
+// and "mach-path" properties respectively as shown above.
 
 #include <config.h>
 
@@ -62,6 +64,7 @@ using std::string;
 const double IDENT_TIMEOUT = 18.0; // 18 seconds
 const int INVALID_ALTITUDE = -9999;
 const int INVALID_AIRSPEED = -9999;
+const float INVALID_MACH_NUM = -1.0;
 const int INVALID_ID = -9999;
 
 Transponder::Transponder(SGPropertyNode *node) :
@@ -78,6 +81,7 @@ Transponder::Transponder(SGPropertyNode *node) :
     _altitudeSourcePath = node->getStringValue("encoder-path", "/instrumentation/altimeter");
     _autoGroundPath = node->getStringValue("auto-ground");
     _airspeedSourcePath = node->getStringValue("airspeed-path", "/instrumentation/airspeed-indicator/indicated-speed-kt");
+    _machSourcePath = node->getStringValue("mach-path", "/instrumentation/airspeed-indicator/indicated-mach");
     _kt70Compat = node->getBoolValue("kt70-compatibility", false);
 }
 
@@ -96,6 +100,7 @@ void Transponder::init()
     _pressureAltitude_node = fgGetNode(_altitudeSourcePath, true);
     _autoGround_node = fgGetNode(_autoGroundPath, true);
     _airspeedIndicator_node = fgGetNode(_airspeedSourcePath, true);
+    _machSource_node = fgGetNode(_machSourcePath, true);
 
     SGPropertyNode *in_node = node->getChild("inputs", 0, true);
     for (int i=0; i<4;++i) {
@@ -137,6 +142,7 @@ void Transponder::init()
     _transmittedId_node = node->getChild("transmitted-id", 0, true);
     _ground_node = node->getChild("ground-bit", 0, true);
     _airspeed_node = node->getChild("airspeed-kt", 0, true);
+    _mach_node = node->getChild("mach-number", 0, true);
     
     if (_kt70Compat) {
         // alias the properties through
@@ -238,6 +244,12 @@ void Transponder::update(double dt)
         } else {
             _airspeed_node->setIntValue(INVALID_AIRSPEED);
         }
+
+        if (_mode == MODE_S && _machSource_node->hasValue()) {
+            _mach_node->setDoubleValue(_machSource_node->getDoubleValue());
+        } else {
+            _mach_node->setDoubleValue(INVALID_MACH_NUM);
+        }
     }
     else
     { // un-powered or u/s
@@ -246,6 +258,7 @@ void Transponder::update(double dt)
       _ident_node->setBoolValue(false);
       _ground_node->setBoolValue(false);
       _airspeed_node->setIntValue(INVALID_AIRSPEED);
+      _mach_node->setDoubleValue(INVALID_MACH_NUM);
       _transmittedId_node->setIntValue(INVALID_ID);
     }
 }
