@@ -17,9 +17,10 @@
 #include "FGPUIMenuBar.hxx"
 #include "FlightGear_pu.h"
 
-using std::vector;
+using std::map;
 using std::string;
-using std::map;
+using std::unique_ptr;
+using std::vector;
 ////////////////////////////////////////////////////////////////////////
 // FIXME!!
 //
@@ -159,12 +160,13 @@ void
 FGPUIMenuBar::fireItem (puObject * item)
 {
     const char * name = item->getLegend();
-    vector<SGBinding *> &bindings = _bindings[name];
-    int nBindings = bindings.size();
+    const auto& bindings =
+        *static_cast< vector<unique_ptr<SGBinding>>* >(item->getUserData());
     flightgear::addSentryBreadcrumb("fire menu item:" + string{name}, "info");
 
-    for (int i = 0; i < nBindings; i++)
-        bindings[i]->fire();
+    for (const auto& binding: bindings) {
+        binding->fire();
+    }
 }
 
 void
@@ -185,11 +187,12 @@ FGPUIMenuBar::make_menu (SGPropertyNode * node)
 
     char ** items = make_char_array(array_size);
     puCallback * callbacks = make_callback_array(array_size);
+    const vector<unique_ptr<SGBinding>> ** userdata =
+        make_userdata_array(array_size);
 
     for (unsigned int i = 0, j = item_nodes.size() - 1;
          i < item_nodes.size();
          i++, j--) {
-
                                 // Set up the PUI entries for this item
         string label = getLocalizedLabel(item_nodes[i]);
         FGLocale::utf8toLatin1(label);
@@ -202,8 +205,14 @@ FGPUIMenuBar::make_menu (SGPropertyNode * node)
             label.append(key);
             label.append(">");
         }
+
         items[j] = strdup(label.c_str());
         callbacks[j] = menu_callback;
+        // Add an element (vector) that will contain all bindings assigned
+        // to the menu entry.
+        _bindings.emplace_front();
+        auto& bindingsVec = _bindings.front();
+        userdata[j] = &bindingsVec;
 
                                 // Load all the bindings for this item
         vector<SGPropertyNode_ptr> bindings = item_nodes[i]->getChildren("binding");
@@ -217,11 +226,12 @@ FGPUIMenuBar::make_menu (SGPropertyNode * node)
 
             binding = dest->getChild("binding", m, true);
             copyProperties(bindings[k], binding);
-            _bindings[items[j]].push_back(new SGBinding(binding, globals->get_props()));
+            bindingsVec.push_back(
+                std::make_unique<SGBinding>(binding, globals->get_props()));
         }
     }
 
-    _menuBar->add_submenu(name, items, callbacks);
+    _menuBar->add_submenu(name, items, callbacks, (void **) userdata);
 }
 
 void
@@ -263,9 +273,10 @@ FGPUIMenuBar::make_menubar(SGPropertyNode * props)
     destroy_menubar();
     _menuBar = new puMenuBar;
 
-    vector<SGPropertyNode_ptr> menu_nodes = props->getChildren("menu");
-    for (unsigned int i = 0; i < menu_nodes.size(); i++)
-        make_menu(menu_nodes[i]);
+    const vector<SGPropertyNode_ptr> menu_nodes = props->getChildren("menu");
+    for (const auto& menuNode: menu_nodes) {
+        make_menu(menuNode);
+    }
 
     _menuBar->close();
     make_object_map(props);
@@ -307,19 +318,15 @@ FGPUIMenuBar::destroy_menubar ()
     for (i = 0; i < _callback_arrays.size(); i++)
         delete[] _callback_arrays[i];
 
-                                // Delete all those bindings
-    SG_LOG(SG_GENERAL, SG_BULK, "Deleting bindings");
-    map<string,vector<SGBinding *> >::iterator it;
-    for (it = _bindings.begin(); it != _bindings.end(); it++) {
-        SG_LOG(SG_GENERAL, SG_BULK, "Deleting bindings for " << it->first);
-        for ( i = 0; i < it->second.size(); i++ )
-            delete it->second[i];
-    }
+    SG_LOG(SG_GENERAL, SG_BULK, "Deleting user data arrays");
+    for (i = 0; i < _userdata_arrays.size(); i++)
+        delete[] _userdata_arrays[i];
 
     _menuBar = NULL;
     _bindings.clear();
     _char_arrays.clear();
     _callback_arrays.clear();
+    _userdata_arrays.clear();
     SG_LOG(SG_GENERAL, SG_BULK, "Done.");
 }
 
@@ -432,6 +439,17 @@ FGPUIMenuBar::make_callback_array (int size)
     for (int i = 0; i <= size; i++)
         list[i] = 0;
     _callback_arrays.push_back(list);
+    return list;
+}
+
+const vector<unique_ptr<SGBinding>> **
+FGPUIMenuBar::make_userdata_array (int size)
+{
+    auto list = new const vector<unique_ptr<SGBinding>>*[size+1];
+    for (int i = 0; i <= size; i++) {
+        list[i] = nullptr;
+    }
+    _userdata_arrays.push_back(list);
     return list;
 }
 

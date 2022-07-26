@@ -9,7 +9,10 @@
 
 #include <GUI/menubar.hxx>
 
+#include <forward_list>
 #include <map>
+#include <memory>
+#include <string>
 #include <vector>
 
 // forward decls, avoid pulling in PLIB headers here
@@ -27,9 +30,6 @@ typedef void (*puCallback)(class puObject *) ;
  * properties are not part of the main FlightGear property tree, but
  * are read from a separate file ($FG_ROOT/gui/menubar.xml).
  *
- * WARNING: because PUI provides no easy way to attach user data to a
- * menu item, all menu item strings must be unique; otherwise, this
- * class will always use the first binding with any given name.
  */
 class FGPUIMenuBar : public FGMenuBar
 {
@@ -125,8 +125,10 @@ private:
     // The top-level menubar itself.
     puMenuBar * _menuBar;
 
-    // A map of bindings for the menubar.
-    std::map<std::string,std::vector<SGBinding *> > _bindings;
+    // Each element contains the list of bindings for a particular menu entry.
+    // Not an std::vector because we want the addresses of previous elements
+    // to remain valid when we add new ones.
+    std::forward_list< std::vector<std::unique_ptr<SGBinding>> > _bindings;
 
     // These are hoops that we have to jump through because PUI doesn't
     // do memory management for lists.  We have to allocate the arrays,
@@ -134,8 +136,12 @@ private:
     // freed.
     char ** make_char_array (int size);
     puCallback * make_callback_array (int size);
+    // The return value points to an array where each element is a pointer to a
+    // vector that gives the list of bindings assigned to a given menu entry.
+    const vector<std::unique_ptr<SGBinding>> ** make_userdata_array (int size);
     std::vector<char **> _char_arrays;
     std::vector<puCallback *> _callback_arrays;
+    std::vector<const vector<std::unique_ptr<SGBinding>> **> _userdata_arrays;
 
     // A map for {menu node path}->puObject translation.
     std::map<std::string, puObject *> _objects;
