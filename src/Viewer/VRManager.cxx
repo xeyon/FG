@@ -59,7 +59,7 @@ VRManager::VRManager() :
                           FLIGHTGEAR_MINOR_VERSION << 8 |
                           FLIGHTGEAR_PATCH_VERSION);
     _settings->setApp("FlightGear", fgVersion);
-    _settings->preferEnvBlendMode(osgXR::Settings::OPAQUE);
+    _settings->preferEnvBlendMode(osgXR::Settings::BLEND_MODE_OPAQUE);
 
     // Inform osgXR what node masks to use
     setVisibilityMaskNodeMasks(simgear::NodeMask::LEFT_BIT,
