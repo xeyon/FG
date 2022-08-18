@@ -210,8 +210,7 @@ FGPUIMenuBar::make_menu (SGPropertyNode * node)
         callbacks[j] = menu_callback;
         // Add an element (vector) that will contain all bindings assigned
         // to the menu entry.
-        _bindings.emplace_front();
-        auto& bindingsVec = _bindings.front();
+        auto& bindingsVec = _bindings.emplace_front();
         userdata[j] = &bindingsVec;
 
                                 // Load all the bindings for this item
