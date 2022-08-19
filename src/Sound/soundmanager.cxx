@@ -213,20 +213,23 @@ bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGProper
     string file = arg->getStringValue("file");
     float volume = arg->getFloatValue("volume");
 
-    SGPath foundPath = globals->resolve_maybe_aircraft_path(path);
+    const auto fullPath = SGPath(path) / file;
+    const auto foundPath = globals->resolve_maybe_aircraft_path(
+        fullPath.utf8Str());
     if (!foundPath.exists()) {
-        SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: no such file:'" << path << "'");
+        SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: no such file: '" <<
+               fullPath.utf8Str() << "'");
         return false;
     }
 
-    // cout << "playing " << path << " / " << file << endl;
+    // SG_LOG(SG_GENERAL, SG_ALERT, "Playing '" << foundPath.utf8Str() << "'");
     try {
         if ( !_queue[name] ) {
             _queue[name] = new FGSampleQueue(this, name);
             _queue[name]->tie_to_listener();
         }
 
-        SGSoundSample *msg = new SGSoundSample(file.c_str(), path);
+        SGSoundSample *msg = new SGSoundSample(foundPath);
         msg->set_volume( volume );
         _queue[name]->add( msg );
 
@@ -234,7 +237,7 @@ bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGProper
 
     } catch (const sg_io_exception&) {
         SG_LOG(SG_GENERAL, SG_ALERT, "play-audio-sample: "
-               "failed to load" << path << '/' << file);
+               "failed to load '" << foundPath.utf8Str() << "'");
         return false;
     }
 }
