@@ -70,7 +70,6 @@
 #include "NasalUnitTesting.hxx"
 
 #include <Main/globals.hxx>
-#include <Main/util.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/sentryIntegration.hxx>
 
@@ -738,7 +737,7 @@ static naRef f_directory(naContext c, naRef me, int argc, naRef* args)
     if(argc != 1 || !naIsString(args[0]))
         naRuntimeError(c, "bad arguments to directory()");
 
-    SGPath dirname = fgValidatePath(SGPath::fromUtf8(naStr_data(args[0])), false);
+    SGPath dirname = SGPath::fromUtf8(naStr_data(args[0])).validate(false);
     if(dirname.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "directory(): listing '" <<
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
@@ -853,7 +852,7 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     naRef mode = argc > 1 ? naStringValue(c, args[1]) : naNil();
     if(!naStr_data(file)) naRuntimeError(c, "bad argument to open()");
     const char* modestr = naStr_data(mode) ? naStr_data(mode) : "rb";
-    SGPath filename = fgValidatePath(SGPath::fromUtf8(naStr_data(file)),
+    const SGPath filename = SGPath::fromUtf8(naStr_data(file)).validate(
         strcmp(modestr, "rb") && strcmp(modestr, "r"));
     if(filename.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "open(): reading/writing '" <<
@@ -897,7 +896,7 @@ static naRef f_custom_stat(naContext ctx, naRef me, int argc, naRef* args)
         return naNil();
     }
 
-    const SGPath filename = fgValidatePath(path, false );
+    const SGPath filename = SGPath(path).validate(false);
     if (filename.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "stat(): reading '" <<
         naStr_data(pathArg) << "' denied (unauthorized directory - authorization"
@@ -948,7 +947,7 @@ static naRef f_parsexml(naContext c, naRef me, int argc, naRef* args)
         if(!(naIsNil(args[i]) || naIsFunc(args[i])))
             naRuntimeError(c, "parsexml(): callback argument not a function");
 
-    SGPath file = fgValidatePath(SGPath::fromUtf8(naStr_data(args[0])), false);
+    const SGPath file = SGPath::fromUtf8(naStr_data(args[0])).validate(false);
     if(file.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "parsexml(): reading '" <<
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"

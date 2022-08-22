@@ -19,7 +19,6 @@
 #include "FGCanvasSystemAdapter.hxx"
 
 #include <Main/globals.hxx>
-#include <Main/util.hxx>
 #include <Network/HTTPClient.hxx>
 #include <Viewer/renderer.hxx>
 
@@ -88,7 +87,7 @@ namespace canvas
 
     if( p.isAbsolute() )
     {
-      SGPath valid_path = fgValidatePath(p, false);
+      const SGPath valid_path = SGPath(p).validate(false);
       if( !valid_path.isNull() )
           return osgDB::readRefImageFile(valid_path.utf8Str(), localReaderWriterOptions);
 

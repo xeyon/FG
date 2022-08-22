@@ -35,7 +35,6 @@
 #include <Autopilot/route_mgr.hxx>
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Main/util.hxx>
 #include <Navaids/FlightPlan.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/airways.hxx>
@@ -1930,8 +1929,8 @@ static naRef f_flightplan_save(naContext c, naRef me, int argc, naRef* args)
         naRuntimeError(c, "flightplan.save, no file path argument");
     }
 
-    SGPath raw_path(naStr_data(args[0]));
-    SGPath validated_path = fgValidatePath(raw_path, true);
+    const SGPath raw_path(naStr_data(args[0]));
+    const SGPath validated_path = SGPath(raw_path).validate(true);
     if (validated_path.isNull()) {
         naRuntimeError(c, "flightplan.save, writing to path is not permitted");
     }

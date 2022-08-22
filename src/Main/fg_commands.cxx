@@ -44,7 +44,6 @@
 #include "fg_props.hxx"
 #include "globals.hxx"
 #include "logger.hxx"
-#include "util.hxx"
 #include "main.hxx"
 #include "positioninit.hxx"
 
@@ -258,7 +257,7 @@ do_load (const SGPropertyNode * arg, SGPropertyNode * root)
     if (file.extension() != "sav")
         file.concat(".sav");
 
-    SGPath validated_path = fgValidatePath(file, false);
+    const SGPath validated_path = SGPath(file).validate(false);
     if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "load: reading '" << file << "' denied "
                 "(unauthorized access)");
@@ -291,7 +290,7 @@ do_save (const SGPropertyNode * arg, SGPropertyNode * root)
     if (file.extension() != "sav")
         file.concat(".sav");
 
-    SGPath validated_path = fgValidatePath(file, true);
+    const SGPath validated_path = SGPath(file).validate(true);
     if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "save: writing '" << file << "' denied "
                 "(unauthorized access)");
@@ -884,7 +883,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
         return false;
     }
 
-    SGPath validated_path = fgValidatePath(file, false);
+    const SGPath validated_path = SGPath(file).validate(false);
     if (validated_path.isNull()) {
         SG_LOG(SG_IO, quiet ? SG_DEV_WARN : SG_ALERT, "loadxml: reading '" << file << "' denied "
                                                                                       "(unauthorized directory - authorization no longer follows symlinks; to authorize reading additional directories, pass them to --allow-nasal-read)");
@@ -971,7 +970,7 @@ do_save_xml_from_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
     if (file.extension() != "xml")
         file.concat(".xml");
 
-    SGPath validated_path = fgValidatePath(file, true);
+    const SGPath validated_path = SGPath(file).validate(true);
     if (validated_path.isNull()) {
         SG_LOG(SG_IO, SG_ALERT, "savexml: writing to '" << file << "' denied "
                 "(unauthorized directory - authorization no longer follows symlinks)");

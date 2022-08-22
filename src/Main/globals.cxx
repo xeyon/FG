@@ -279,7 +279,7 @@ void FGGlobals::set_fg_root (const SGPath &root) {
                 << fg_root << "'\n***\n***");
     }
 
-    // deliberately not a tied property, for fgValidatePath security
+    // deliberately not a tied property, for SGPath::validate() security
     // write-protect to avoid accidents
     SGPropertyNode *n = fgGetNode("/sim", true);
     n->removeChild("fg-root", 0);
@@ -467,7 +467,7 @@ void FGGlobals::set_terrasync_dir(const SGPath &path)
   }
   SGPath abspath(path.realpath());
   terrasync_dir = abspath;
-  // deliberately not a tied property, for fgValidatePath security
+  // deliberately not a tied property, for SGPath::validate() security
   // write-protect to avoid accidents
   SGPropertyNode *n = fgGetNode("/sim/terrasync/scenery-dir", true);
   n->setAttribute(SGPropertyNode::WRITE, true);

@@ -35,7 +35,6 @@
 
 #include <Main/fg_props.hxx>
 #include <Main/globals.hxx>
-#include <Main/util.hxx>
 #include <Scripting/NasalSys.hxx>
 
 #include "addon_fwd.hxx"
@@ -200,12 +199,12 @@ SGPath Addon::createStorageDir() const
       throw errors::unable_to_create_addon_storage_dir(msg);
     }
   } else {
-    SGPath authorizedPath = fgValidatePath(_storagePath, true /* write */);
-
+    const SGPath authorizedPath = SGPath(_storagePath).validate(/* write */
+                                                                true);
     if (authorizedPath.isNull()) {
       string msg =
         "Unable to create add-on storage directory because of the FlightGear "
-        "security policy (refused by fgValidatePath()): '" +
+        "security policy (refused by SGPath::validate()): '" +
         _storagePath.utf8Str() + "'";
       SG_LOG(SG_GENERAL, SG_POPUP, msg);
       throw errors::unable_to_create_addon_storage_dir(msg);
@@ -218,8 +217,8 @@ SGPath Addon::createStorageDir() const
   // _storagePath instead of authorizedPath for consistency with the
   // getStoragePath() method (_storagePath and authorizedPath could be
   // different in case the former contains symlink components). Further
-  // sensitive operations beneath _storagePath must use fgValidatePath() again
-  // every time, of course (otherwise attackers could use symlinks in
+  // sensitive operations beneath _storagePath must use SGPath::validate()
+  // again every time, of course (otherwise, attackers could use symlinks in
   // _storagePath to bypass the security policy).
   return _storagePath;
 }

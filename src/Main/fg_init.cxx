@@ -696,7 +696,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
     createBaseStorageDirForAddons(exportDir.path());
 
     // Set /sim/fg-home.  Use FG_HOME if necessary.
-    // deliberately not a tied property, for fgValidatePath security
+    // deliberately not a tied property, for SGPath::validate() security
     // write-protect to avoid accidents
     SGPropertyNode *home = fgGetNode("/sim", true);
     home->removeChild("fg-home", 0);
@@ -766,7 +766,7 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
 
 static void initAircraftDirsNasalSecurity()
 {
-    // deliberately not a tied property, for fgValidatePath security
+    // deliberately not a tied property, for SGPath::validate() security
     // write-protect to avoid accidents
     SGPropertyNode* sim = fgGetNode("/sim", true);
     sim->removeChildren("fg-aircraft");

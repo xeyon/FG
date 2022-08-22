@@ -19,7 +19,6 @@
 
 #include "fg_props.hxx"
 #include "globals.hxx"
-#include "util.hxx"
 
 using std::string;
 using std::endl;
@@ -53,7 +52,7 @@ FGLogger::init ()
 
     // Security: the path comes from the global Property Tree; it *must* be
     //           validated before we overwrite the file.
-    const SGPath authorizedPath = fgValidatePath(SGPath::fromUtf8(filename),
+    const SGPath authorizedPath = SGPath::fromUtf8(filename).validate(
                                                  /* write */ true);
 
     if (authorizedPath.isNull()) {
@@ -79,7 +78,7 @@ FGLogger::init ()
     log.interval_ms = child->getLongValue("interval-ms");
     log.last_time_ms = globals->get_sim_time_sec() * 1000;
     log.delimiter = delimiter.c_str()[0];
-    // Security: use the return value of fgValidatePath()
+    // Security: use the return value of SGPath::validate()
     log.output.reset(new sg_ofstream(authorizedPath, std::ios_base::out));
     if ( !(*log.output) ) {
       SG_LOG(SG_GENERAL, SG_ALERT, "Cannot write log to " << filename);

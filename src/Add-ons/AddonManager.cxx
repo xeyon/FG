@@ -178,8 +178,8 @@ string
 AddonManager::registerAddon(const SGPath& addonPath)
 {
   // Use realpath() as in FGGlobals::append_aircraft_path(), otherwise
-  // fgValidatePath() will deny access to resources under the add-on path if
-  // one of its components is a symlink.
+  // SGPath::validate() will deny access to resources under the add-on path
+  // if one of its components is a symlink.
   const SGPath addonRealPath = addonPath.realpath();
   const string addonId = registerAddonMetadata(addonRealPath);
   loadConfigFileIfExists(addonRealPath / "addon-config.xml");

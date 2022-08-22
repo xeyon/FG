@@ -74,7 +74,6 @@
 #include "fg_os.hxx"
 #include "fg_props.hxx"
 #include "options.hxx"
-#include "util.hxx"
 #include "main.hxx"
 #include "locale.hxx"
 #include <Viewer/view.hxx>
@@ -2458,7 +2457,7 @@ OptionResult Options::initAircraft()
     globals->append_read_allowed_paths(realAircraftPath);
 
     // Set this now, so it's available in FindAndCacheAircraft. Use realpath()
-    // as in FGGlobals::append_aircraft_path(), otherwise fgValidatePath()
+    // as in FGGlobals::append_aircraft_path(), otherwise SGPath::validate()
     // will deny access to resources under this path if one of its components
     // is a symlink (which is not a problem, since it was given as is by the
     // user---this is very different from a symlink *under* the aircraft dir

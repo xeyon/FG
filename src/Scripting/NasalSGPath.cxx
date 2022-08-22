@@ -22,7 +22,6 @@
 
 #include "NasalSGPath.hxx"
 #include <Main/globals.hxx>
-#include <Main/util.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #include <simgear/nasal/cppbind/NasalHash.hxx>
@@ -42,8 +41,8 @@ SGPath::Permissions checkIORules(const SGPath& path)
         "realpath() to make a path absolute)");
   }
 
-  perm.read  = path.isAbsolute() && !fgValidatePath(path, false).isNull();
-  perm.write = path.isAbsolute() && !fgValidatePath(path, true ).isNull();
+  perm.read  = path.isAbsolute() && !SGPath(path).validate(false).isNull();
+  perm.write = path.isAbsolute() && !SGPath(path).validate(true).isNull();
 
   return perm;
 }

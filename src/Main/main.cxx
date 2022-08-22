@@ -667,8 +667,6 @@ int fgMainInit( int argc, char **argv )
     string_list *col = new string_list;
     globals->set_channel_options_list( col );
 
-    fgValidatePath(globals->get_fg_home(), false);  // initialize static variables
-
     if (showLauncher) {
         // to minimise strange interactions when launcher and config files
         // set overlaping options, we disable the default files. Users can

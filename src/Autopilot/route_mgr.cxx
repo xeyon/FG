@@ -49,7 +49,6 @@
 #include "Airports/runways.hxx"
 #include <GUI/new_gui.hxx>
 #include <GUI/dialog.hxx>
-#include <Main/util.hxx>        // fgValidatePath()
 #include <GUI/MessageBox.hxx>
 
 #define RM "/autopilot/route-manager/"
@@ -69,7 +68,7 @@ static bool commandSaveFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
   FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
   SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
-  SGPath authorizedPath = fgValidatePath(path, true /* write */);
+  const SGPath authorizedPath = SGPath(path).validate(true /* write */);
 
   if (!authorizedPath.isNull()) {
     return self->saveRoute(authorizedPath);
@@ -768,7 +767,7 @@ void FGRouteMgr::InputListener::valueChanged(SGPropertyNode *prop)
         mgr->loadRoute(path);
     } else if (input == "@SAVE") {
         SGPath path = SGPath::fromUtf8(mgr->_pathNode->getStringValue());
-        SGPath authorizedPath = fgValidatePath(path, true /* write */);
+        const SGPath authorizedPath = SGPath(path).validate(true /* write */);
 
         if (!authorizedPath.isNull()) {
             mgr->saveRoute(authorizedPath);

@@ -23,8 +23,6 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/misc/strutils.hxx>
 
-#include <Main/util.hxx>
-
 #include "AddonManager.hxx"
 #include "AddonResourceProvider.hxx"
 
@@ -72,7 +70,7 @@ ResourceProvider::resolve(const string& resource, SGPath& context) const
     return SGPath();
   }
 
-  return fgValidatePath(candidate, /* write */ false);
+  return SGPath(candidate).validate(/* write */ false);
 }
 
 } // of namespace addons

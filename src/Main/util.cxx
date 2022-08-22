@@ -72,9 +72,6 @@ fgGetLowPass (double current, double target, double timeratio)
     return current;
 }
 
-static string_list read_allowed_paths;
-static string_list write_allowed_paths;
-
 /**
  * Allowed paths here are absolute, and may contain _one_ *,
  * which matches any string
@@ -82,54 +79,54 @@ static string_list write_allowed_paths;
 void fgInitAllowedPaths()
 {
     if(SGPath("ygjmyfvhhnvdoesnotexist").realpath().utf8Str() == "ygjmyfvhhnvdoesnotexist"){
-        // Forbid using this version of fgValidatePath() with older
-        // (not normalizing non-existent files) versions of realpath(),
-        // as that would be a security hole
+        // Abort in case this is used with older versions of realpath()
+        // that don't normalize non-existent files, as that would be a security
+        // hole.
         flightgear::fatalMessageBoxThenExit(
           "Nasal initialization error",
           "Version mismatch - please update simgear");
     }
-    read_allowed_paths.clear();
-    write_allowed_paths.clear();
+    SGPath::clearListOfAllowedPaths(false); // clear list of read-allowed paths
+    SGPath::clearListOfAllowedPaths(true);  // clear list of write-allowed paths
 
     PathList read_paths = globals->get_extra_read_allowed_paths();
     read_paths.push_back(globals->get_fg_root());
     read_paths.push_back(globals->get_fg_home());
 
-    for( PathList::const_iterator it = read_paths.begin(); it != read_paths.end(); ++it )
-      {
-        // if we get the initialization order wrong, better to have an
+    for (const auto& path: read_paths) {
+        // If we get the initialization order wrong, better to have an
         // obvious error than a can-read-everything security hole...
-          if (it->isNull()) {
-              flightgear::fatalMessageBoxThenExit(
+        if (path.isNull()) {
+            flightgear::fatalMessageBoxThenExit(
                 "Nasal initialization error",
                 "Empty string in FG_ROOT, FG_HOME, FG_AIRCRAFT, FG_SCENERY or "
                 "--allow-nasal-read, or fgInitAllowedPaths() called too early");
-          }
-          read_allowed_paths.push_back(it->realpath().utf8Str() + "/*");
-          read_allowed_paths.push_back(it->realpath().utf8Str());
-      }
-    
-    std::string fg_home = globals->get_fg_home().realpath().utf8Str();
-    write_allowed_paths.push_back(fg_home + "/*.sav");
-    write_allowed_paths.push_back(fg_home + "/*.log");
-    write_allowed_paths.push_back(fg_home + "/cache/*");
-    write_allowed_paths.push_back(fg_home + "/Export/*");
-    write_allowed_paths.push_back(fg_home + "/state/*.xml");
-    write_allowed_paths.push_back(fg_home + "/aircraft-data/*.xml");
-    write_allowed_paths.push_back(fg_home + "/Wildfire/*.xml");
-    write_allowed_paths.push_back(fg_home + "/runtime-jetways/*.xml");
-    write_allowed_paths.push_back(fg_home + "/Input/Joysticks/*.xml");
-    
+        }
+        SGPath::addAllowedPathPattern(path.realpath().utf8Str() + "/*",
+                                      false /* write */);
+        SGPath::addAllowedPathPattern(path.realpath().utf8Str(), false);
+    }
+
+    const std::string fg_home = globals->get_fg_home().realpath().utf8Str();
+    SGPath::addAllowedPathPattern(fg_home + "/*.sav", true /* write */);
+    SGPath::addAllowedPathPattern(fg_home + "/*.log", true);
+    SGPath::addAllowedPathPattern(fg_home + "/cache/*", true);
+    SGPath::addAllowedPathPattern(fg_home + "/Export/*", true);
+    SGPath::addAllowedPathPattern(fg_home + "/state/*.xml", true);
+    SGPath::addAllowedPathPattern(fg_home + "/aircraft-data/*.xml", true);
+    SGPath::addAllowedPathPattern(fg_home + "/Wildfire/*.xml", true);
+    SGPath::addAllowedPathPattern(fg_home + "/runtime-jetways/*.xml", true);
+    SGPath::addAllowedPathPattern(fg_home + "/Input/Joysticks/*.xml", true);
+
     // Check that it works
-    std::string homePath = globals->get_fg_home().utf8Str();
-    if(!fgValidatePath(homePath + "/../no.log",true).isNull() ||
-        !fgValidatePath(homePath + "/no.logt",true).isNull() ||
-        !fgValidatePath(homePath + "/nolog",true).isNull() ||
-        !fgValidatePath(homePath + "no.log",true).isNull() ||
-        !fgValidatePath(homePath + "\\..\\no.log",false).isNull() ||
-        fgValidatePath(homePath + "/aircraft-data/yes..xml",true).isNull() ||
-        fgValidatePath(homePath + "/.\\yes.bmp",false).isNull()) {
+    const std::string homePath = globals->get_fg_home().utf8Str();
+    if (! SGPath(homePath + "/../no.log").validate(true).isNull() ||
+        ! SGPath(homePath + "/no.logt").validate(true).isNull() ||
+        ! SGPath(homePath + "/nolog").validate(true).isNull() ||
+        ! SGPath(homePath + "no.log").validate(true).isNull() ||
+        ! SGPath(homePath + "\\..\\no.log").validate(false).isNull() ||
+        SGPath(homePath + "/aircraft-data/yes..xml").validate(true).isNull() ||
+        SGPath(homePath + "/.\\yes.bmp").validate(false).isNull()) {
             flightgear::fatalMessageBoxThenExit(
               "Nasal initialization error",
               "The FG_HOME directory must not be inside any of the FG_ROOT, "
@@ -137,46 +134,6 @@ void fgInitAllowedPaths()
               "(check that you have not accidentally included an extra ':', "
               "as an empty part means the current directory)");
     }
-}
-
-/**
- * Check whether Nasal is allowed to access a path
- * Warning: because this always (not just on Windows) treats both \ and /
- * as path separators, and accepts relative paths (check-to-use race if
- * the current directory changes),
- * always use the returned path not the original one
- */
-SGPath fgValidatePath (const SGPath& path, bool write)
-{
-    // Normalize the path (prevents ../../.. or symlink trickery)
-    std::string normed_path = path.realpath().utf8Str();
-    
-    const string_list& allowed_paths(write ? write_allowed_paths : read_allowed_paths);
-    size_t star_pos;
-    
-    // Check against each allowed pattern
-    for( string_list::const_iterator it = allowed_paths.begin();
-                                     it != allowed_paths.end();
-                                   ++it )
-    {
-        star_pos = it->find('*');
-        if (star_pos == std::string::npos) {
-            if (!(it->compare(normed_path))) {
-                return SGPath::fromUtf8(normed_path);
-            }
-        } else {
-            if ((it->size()-1 <= normed_path.size()) /* long enough to be a potential match */
-                && !(it->substr(0,star_pos)
-                    .compare(normed_path.substr(0,star_pos))) /* before-star parts match */
-                && !(it->substr(star_pos+1,it->size()-star_pos-1)
-                    .compare(normed_path.substr(star_pos+1+normed_path.size()-it->size(),
-                      it->size()-star_pos-1))) /* after-star parts match */) {
-                return SGPath::fromUtf8(normed_path);
-            }
-        }
-    }
-    // no match found
-    return SGPath();
 }
 
 std::string generateAuthorsText(SGPropertyNode* authors)

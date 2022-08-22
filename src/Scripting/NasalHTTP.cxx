@@ -22,7 +22,6 @@
 
 #include "NasalHTTP.hxx"
 #include <Main/globals.hxx>
-#include <Main/util.hxx>
 #include <Network/HTTPClient.hxx>
 
 #include <simgear/io/HTTPFileRequest.hxx>
@@ -55,7 +54,7 @@ static naRef f_http_save(const nasal::CallContext& ctx)
 
   // Check for write access to target file
   const std::string filename = ctx.requireArg<std::string>(1);
-  const SGPath validated_path = fgValidatePath(filename, true);
+  const SGPath validated_path = SGPath(filename).validate(true);
 
   if( validated_path.isNull() )
     ctx.runtimeError("Access denied: can not write to %s", filename.c_str());
