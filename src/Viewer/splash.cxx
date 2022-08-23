@@ -463,7 +463,7 @@ SplashScreen::TextItem *SplashScreen::addText(osg::Geode* geode ,
                            const osg::Vec4& textColor,
                            const std::string &fontFace )
 {
-    SGPath path = globals->resolve_resource_path(fontFace);
+    SGPath path = globals->resolve_maybe_aircraft_path(fontFace);
 
     TextItem item;
     osg::ref_ptr<osgText::Text> t = new osgText::Text;
