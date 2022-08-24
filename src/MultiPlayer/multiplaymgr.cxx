@@ -1137,7 +1137,7 @@ FGMultiplayMgr::init (void)
     if (rxPort <= 0)
       rxPort = txPort;
   } else {
-    SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - multiplayer mode disabled (no MP server specificed).");
+    SG_LOG(SG_NETWORK, SG_INFO, "FGMultiplayMgr - multiplayer mode disabled (no MP server specified).");
     return;
   }
 

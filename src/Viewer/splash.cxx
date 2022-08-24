@@ -124,7 +124,7 @@ void SplashScreen::createNodes()
     std::string licenseUrlText = globals->get_locale()->getLocalizedString("license-url", "sys", LICENSE_URL_TEXT);
     // add the splash image
     std::string splashImageName = selectSplashImage();
-    const ImageItem* splashImage = addImage(splashImageName, true, 0, 0, 1, 1, nullptr, true);
+    addImage(splashImageName, true, 0, 0, 1, 1, nullptr, true);
 
     // parse the content from the tree
     // there can be many <content> <model-content> and <image> nodes
