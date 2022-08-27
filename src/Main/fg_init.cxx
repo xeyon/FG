@@ -1394,7 +1394,7 @@ void fgStartNewReset()
     // Rebuild the lists of allowed paths for cases where a path comes from an
     // untrusted source, such as the global property tree (this uses $FG_HOME
     // and other paths set by Options::processOptions()).
-    fgInitAllowedPaths();
+    fgInitAllowedPaths(); // FIXME: this call is probably not necessary anymore
 
     const auto& resMgr = simgear::EmbeddedResourceManager::instance();
     // The language was (re)set in processOptions()
@@ -1413,6 +1413,7 @@ void fgStartNewReset()
 
     fgGetNode("/sim")->removeChild("aircraft-dir");
     fgInitAircraftPaths(true);
+    fgInitAllowedPaths();       // take the new aircraft paths into account
     fgInitAircraft(true, false /* not from launcher */);
     
     render = new FGRenderer(composite_viewer);
