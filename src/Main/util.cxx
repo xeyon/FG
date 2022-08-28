@@ -78,11 +78,6 @@ fgGetLowPass (double current, double target, double timeratio)
  */
 void fgInitAllowedPaths()
 {
-    static unsigned int fgInitAllowedPaths_nbCalls = 0;
-    fgInitAllowedPaths_nbCalls++;
-    SG_LOG(SG_GENERAL, SG_DEBUG, "fgInitAllowedPaths() started (call " <<
-           fgInitAllowedPaths_nbCalls << ")");
-
     if(SGPath("ygjmyfvhhnvdoesnotexist").realpath().utf8Str() == "ygjmyfvhhnvdoesnotexist"){
         // Abort in case this is used with older versions of realpath()
         // that don't normalize non-existent files, as that would be a security

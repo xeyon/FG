@@ -703,7 +703,6 @@ int fgMainInit( int argc, char **argv )
     
     fgInitSecureMode();
     fgInitAircraftPaths(false);
-    fgInitAllowedPaths();       // take the new aircraft paths into account
 
     auto errorManager = globals->add_new_subsystem<flightgear::ErrorReporter>(SGSubsystemMgr::GENERAL);
     errorManager->preinit();
