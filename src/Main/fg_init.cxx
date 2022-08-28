@@ -711,7 +711,6 @@ int fgInitConfig ( int argc, char **argv, bool reinit )
         if (result != flightgear::FG_OPTIONS_OK) {
             return result;
         }
-        fgInitAllowedPaths();   // preliminary: whitelist at least FGData
     }
 
     // establish default for developer-mode based upon compiled build types
