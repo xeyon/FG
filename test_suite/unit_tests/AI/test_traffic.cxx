@@ -156,7 +156,8 @@ void TrafficTests::testPushback()
     departureTime = departureTime + 90;
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -214,7 +215,8 @@ void TrafficTests::testPushbackCargo()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           egph, egpf, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -228,6 +230,253 @@ void TrafficTests::testPushbackCargo()
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
     aiAircraft = flyAI(aiAircraft, "flight_cargo_EGPH_EGPF_" + std::to_string(departureTime));
+}
+
+void TrafficTests::testPushbackCargoInProgress()
+{
+    FGAirportRef egph = FGAirport::getByIdent("EGPH");
+
+    FGAirportRef egpf = FGAirport::getByIdent("EGPF");
+    fgSetString("/sim/presets/airport-id", "EGPH");
+
+    // Time to depart
+    std::string dep = getTimeString(-100);
+    // Time to arrive
+    std::string arr = getTimeString(190);
+
+
+    FGAISchedule* schedule = new FGAISchedule(
+        "B737", "KLM", "EGPH", "G-BLA", "ID", false, "B737", "KLM", "N", "cargo", 24, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushbackCargo", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
+    schedule->assign(flight);
+
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
+
+    const SGGeod position = SGGeodesy::direct(egph->geod(), 270, 50000);
+    const double crs = SGGeodesy::courseDeg(position, egpf->geod()); // direct course
+    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");
+
+    FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
+
+    aiAircraft->setPerformance("jet_transport", "");
+    aiAircraft->setCompany("KLM");
+    aiAircraft->setAcType("B737");
+    aiAircraft->setSpeed(0);
+    aiAircraft->setBank(0);
+    aiAircraft->setHeading(crs);
+
+    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+
+    const int radius = 16.0;
+    const int cruiseAltFt = 32000;
+    const int cruiseSpeedKnots = 80;
+
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 6000;
+
+
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                                          flightPlanName, crs,
+                                                          departureTime, 100,
+                                                          egph, egpf, true, radius,
+                                                          cruiseAltFt, // cruise alt
+                                                          position.getLatitudeDeg(),
+                                                          position.getLongitudeDeg(),
+                                                          cruiseSpeedKnots, "cargo",
+                                                          aiAircraft->getAcType(),
+                                                          aiAircraft->getCompany()));
+
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+    globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+
+    aiAircraft = flyAI(aiAircraft, "flight_cargo_in_progress_EGPH_EGPF_" + std::to_string(departureTime));
+}
+
+void TrafficTests::testPushbackCargoInProgressDownWind()
+{
+    FGAirportRef egph = FGAirport::getByIdent("EGPH");
+
+    FGAirportRef egpf = FGAirport::getByIdent("EGPF");
+    fgSetString("/sim/presets/airport-id", "EGPH");
+
+    // Time to depart
+    std::string dep = getTimeString(-100);
+    // Time to arrive
+    std::string arr = getTimeString(190);
+
+
+    FGAISchedule* schedule = new FGAISchedule(
+        "B737", "KLM", "EGPH", "G-BLA", "ID", false, "B737", "KLM", "N", "cargo", 24, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushbackCargoInProgressDownWind", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
+    schedule->assign(flight);
+
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
+
+    const SGGeod position = SGGeodesy::direct(egph->geod(), 0, 50000);
+    const double crs = SGGeodesy::courseDeg(position, egpf->geod()); // direct course
+    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");
+
+    FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
+
+    aiAircraft->setPerformance("jet_transport", "");
+    aiAircraft->setCompany("KLM");
+    aiAircraft->setAcType("B737");
+    aiAircraft->setSpeed(0);
+    aiAircraft->setBank(0);
+    aiAircraft->setHeading(crs);
+
+    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+
+    const int radius = 16.0;
+    const int cruiseAltFt = 32000;
+    const int cruiseSpeedKnots = 80;
+
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 6000;
+
+
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                                          flightPlanName, crs,
+                                                          departureTime, 100,
+                                                          egph, egpf, true, radius,
+                                                          cruiseAltFt, // cruise alt
+                                                          position.getLatitudeDeg(),
+                                                          position.getLongitudeDeg(),
+                                                          cruiseSpeedKnots, "cargo",
+                                                          aiAircraft->getAcType(),
+                                                          aiAircraft->getCompany()));
+
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+    globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+
+    aiAircraft = flyAI(aiAircraft, "flight_cargo_in_progress_downwind_EGPH_EGPF_" + std::to_string(departureTime));
+}
+
+void TrafficTests::testPushbackCargoInProgressNotBeyond()
+{
+    FGAirportRef egph = FGAirport::getByIdent("EGPH");
+
+    FGAirportRef egpf = FGAirport::getByIdent("EGPF");
+    fgSetString("/sim/presets/airport-id", "EGPH");
+
+    // Time to depart
+    std::string dep = getTimeString(-100);
+    // Time to arrive
+    std::string arr = getTimeString(190);
+
+
+    FGAISchedule* schedule = new FGAISchedule(
+        "B737", "KLM", "EGPH", "G-BLA", "ID", false, "B737", "KLM", "N", "cargo", 24, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushbackCargo", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
+    schedule->assign(flight);
+
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
+
+    // Position west of runway
+    const SGGeod position = SGGeodesy::direct(egpf->geod(), 270, 5000);
+    const double crs = SGGeodesy::courseDeg(position, egpf->geod()); // direct course
+    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");
+
+    FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
+
+    aiAircraft->setPerformance("jet_transport", "");
+    aiAircraft->setCompany("KLM");
+    aiAircraft->setAcType("B737");
+    aiAircraft->setSpeed(0);
+    aiAircraft->setBank(0);
+    aiAircraft->setHeading(crs);
+
+    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+
+    const int radius = 16.0;
+    const int cruiseAltFt = 32000;
+    const int cruiseSpeedKnots = 80;
+
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 6000;
+
+
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                                          flightPlanName, crs,
+                                                          departureTime, 100,
+                                                          egph, egpf, true, radius,
+                                                          cruiseAltFt, // cruise alt
+                                                          position.getLatitudeDeg(),
+                                                          position.getLongitudeDeg(),
+                                                          cruiseSpeedKnots, "cargo",
+                                                          aiAircraft->getAcType(),
+                                                          aiAircraft->getCompany()));
+
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+    globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+
+    aiAircraft = flyAI(aiAircraft, "flight_cargo_in_progress_not_beyond_EGPH_EGPF_" + std::to_string(departureTime));
+}
+
+void TrafficTests::testPushbackCargoInProgressBeyond()
+{
+    FGAirportRef egph = FGAirport::getByIdent("EGPH");
+
+    FGAirportRef egpf = FGAirport::getByIdent("EGPF");
+    fgSetString("/sim/presets/airport-id", "EGPH");
+
+    // Time to depart
+    std::string dep = getTimeString(-100);
+    // Time to arrive
+    std::string arr = getTimeString(190);
+
+
+    FGAISchedule* schedule = new FGAISchedule(
+        "B737", "KLM", "EGPH", "G-BLA", "ID", false, "B737", "KLM", "N", "cargo", 24, 8);
+    FGScheduledFlight* flight = new FGScheduledFlight("testPushbackCargo", "", "EGPH", "EGPF", 24, dep, arr, "WEEK", "HBR_BN_2");
+    schedule->assign(flight);
+
+    SGSharedPtr<FGAIAircraft> aiAircraft = new FGAIAircraft{schedule};
+
+    // Position east of runway pointing away from runway
+    const SGGeod position = SGGeodesy::direct(egpf->geod(), 90, 5000);
+
+    const double crs = SGMiscd::normalizePeriodic(0, 360, SGGeodesy::courseDeg(position, egpf->geod()));
+    ParkingAssignment parking = egph->getDynamics()->getParkingByName("north-cargo208");
+
+    FGTestApi::setPositionAndStabilise(egph->getDynamics()->getParkingByName("ga206").parking()->geod());
+
+    aiAircraft->setPerformance("jet_transport", "");
+    aiAircraft->setCompany("KLM");
+    aiAircraft->setAcType("B737");
+    aiAircraft->setSpeed(0);
+    aiAircraft->setBank(0);
+    aiAircraft->setHeading(crs);
+
+    const string flightPlanName = egph->getId() + "-" + egpf->getId() + ".xml";
+
+    const int radius = 16.0;
+    const int cruiseAltFt = 32000;
+    const int cruiseSpeedKnots = 80;
+
+    time_t departureTime = globals->get_time_params()->get_cur_time();
+    departureTime = departureTime - 6000;
+
+
+    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                                          flightPlanName, crs,
+                                                          departureTime, 100,
+                                                          egph, egpf, true, radius,
+                                                          cruiseAltFt, // cruise alt
+                                                          position.getLatitudeDeg(),
+                                                          position.getLongitudeDeg(),
+                                                          cruiseSpeedKnots, "cargo",
+                                                          aiAircraft->getAcType(),
+                                                          aiAircraft->getCompany()));
+
+    CPPUNIT_ASSERT_EQUAL(fp->isValidPlan(), true);
+    aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
+    globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
+
+    aiAircraft = flyAI(aiAircraft, "flight_cargo_in_progress_beyond_EGPH_EGPF_" + std::to_string(departureTime));
 }
 
 void TrafficTests::testChangeRunway()
@@ -274,7 +523,8 @@ void TrafficTests::testChangeRunway()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -287,7 +537,7 @@ void TrafficTests::testChangeRunway()
     aiAircraft->FGAIBase::setFlightPlan(std::move(fp));
     globals->get_subsystem<FGAIManager>()->attach(aiAircraft);
 
-    aiAircraft = flyAI(aiAircraft, "flight_runway_EGPH_EGPF_" + std::to_string(departureTime));
+    aiAircraft = flyAI(aiAircraft, "flight_change_runway_EGPH_EGPF_" + std::to_string(departureTime));
 }
 
 
@@ -332,7 +582,8 @@ void TrafficTests::testPushforward()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -389,7 +640,8 @@ void TrafficTests::testPushforwardSpeedy()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -447,7 +699,8 @@ void TrafficTests::testPushforwardParkYBBN()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -528,7 +781,7 @@ void TrafficTests::testPushforwardParkYBBNRepeatGa()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs, departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -604,7 +857,8 @@ void TrafficTests::testPushforwardParkYBBNRepeatGaDelayed()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),
@@ -700,7 +954,8 @@ void TrafficTests::testPushforwardParkYBBNRepeatGate()
 
 
     std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
-                                                          flightPlanName, crs, departureTime,
+                                                          flightPlanName, crs,
+                                                          departureTime, departureTime+3000,
                                                           departureAirport, arrivalAirport, true, radius,
                                                           cruiseAltFt, // cruise alt
                                                           position.getLatitudeDeg(),

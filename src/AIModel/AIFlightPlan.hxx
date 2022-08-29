@@ -137,6 +137,7 @@ public:
                  const std::string& p,
 		 double course,
 		 time_t start,
+     time_t remainingTime,
 		 FGAirport *dep,
 		 FGAirport *arr,
 		 bool firstLeg,
@@ -276,7 +277,7 @@ private:
 
   /**Create an arc flightplan around a center from startAngle to endAngle.*/
   void createArc(FGAIAircraft *ac, const SGGeod& center, int startAngle, int endAngle, int increment, int radius, double aElev, double aSpeed, const char* pattern);
-  void createLine(FGAIAircraft *ac, const SGGeod& startPoint, double azimuth, double dist, double dAlt, double vDescent);
+  void createLine(FGAIAircraft *ac, const SGGeod& startPoint, double azimuth, double dist, double dAlt, double vDescent, const char* pattern);
   bool createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
   void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);
@@ -300,9 +301,14 @@ private:
    */
   bool parseProperties(const std::string& filename);
 
+  /**
+   * Creates the waypoints for this Flightplan.
+   */
+
   void createWaypoints(FGAIAircraft *ac,
                        double course,
                        time_t start,
+                       time_t remainingTime,
                        FGAirport *dep,
                        FGAirport *arr,
                        bool firstLeg,

@@ -68,3 +68,17 @@ void VectorMathTests::testInnerTangent2()
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 330, angles[0], 0.1);
     CPPUNIT_ASSERT_DOUBLES_EQUAL( 30, angles[1], 0.1);
 }
+
+void VectorMathTests::testOuterTanget()
+{
+    double r1 = 10;
+    double r2 = 50;
+    // when the circles are dist appart the angle will be 45°
+    double dist = 40;
+    SGGeod m1 = SGGeod::fromDeg(9,51);
+    SGGeod m2 = SGGeodesy::direct(m1, 90, dist);
+
+    auto angles = VectorMath::outerTangentsAngle(m1, m2, r1, r2);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 45, angles[0], 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL( 135, angles[1], 0.1);
+}

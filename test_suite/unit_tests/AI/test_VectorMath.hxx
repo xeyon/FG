@@ -35,6 +35,7 @@ class VectorMathTests : public CppUnit::TestFixture
     CPPUNIT_TEST_SUITE(VectorMathTests);
     CPPUNIT_TEST(testInnerTanget);
     CPPUNIT_TEST(testInnerTangent2);
+    CPPUNIT_TEST(testOuterTanget);
 
     CPPUNIT_TEST_SUITE_END();
 
@@ -49,4 +50,5 @@ public:
     // The tests.
     void testInnerTanget();
     void testInnerTangent2();
+    void testOuterTanget();
 };

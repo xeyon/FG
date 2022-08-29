@@ -314,12 +314,22 @@ bool FGAIFlightPlan::createCruise(FGAIAircraft *ac, bool firstFlight, FGAirport 
   assert( rwy != NULL );
   // begin descent 110km out
   double distanceOut = arr->getDynamics()->getApproachController()->getRunway(rwy->name())->getApproachDistance();    //12 * SG_NM_TO_METER;
-  SGGeod beginDescentPoint     = rwy->pointOnCenterline(-2*distanceOut);
+
+  SGGeod beginDescentPoint     = rwy->pointOnCenterline(-3*distanceOut);
   SGGeod secondaryDescentPoint = rwy->pointOnCenterline(0);
 
-  wpt = createInAir(ac, "BOD", beginDescentPoint,  alt, vCruise);
-  pushBackWaypoint(wpt);
-  wpt = createInAir(ac, "BOD2", secondaryDescentPoint, alt, vCruise);
-  pushBackWaypoint(wpt);
+  double distanceToRwy = SGGeodesy::distanceM(current, secondaryDescentPoint);
+  if (distanceToRwy>4*distanceOut) {
+    FGAIWaypoint *bodWpt = createInAir(ac, "BOD", beginDescentPoint,  alt, vCruise);
+    pushBackWaypoint(bodWpt);
+    FGAIWaypoint *bod2Wpt = createInAir(ac, "BOD2", secondaryDescentPoint, alt, vCruise);
+    pushBackWaypoint(bod2Wpt);
+  } else {
+    // We are too near. The descent leg takes care of this (teardrop etc)
+    FGAIWaypoint *bodWpt = createInAir(ac, "BOD", SGGeodesy::direct(current, ac->getTrueHeadingDeg(), 10000),  alt, vCruise);
+    pushBackWaypoint(bodWpt);
+    FGAIWaypoint *bod2Wpt = createInAir(ac, "BOD2", SGGeodesy::direct(current, ac->getTrueHeadingDeg(), 15000), alt, vCruise);
+    pushBackWaypoint(bod2Wpt);
+  }
   return true;
 }

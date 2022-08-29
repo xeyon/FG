@@ -131,16 +131,19 @@ FGAIFlightPlan::FGAIFlightPlan(const string& filename) :
 }
 
 
-// This is a modified version of the constructor,
-// Which not only reads the waypoints from a
-// Flight plan file, but also adds the current
-// Position computed by the traffic manager, as well
-// as setting speeds and altitude computed by the
-// traffic manager.
+/**
+ * This is a modified version of the constructor,
+ * Which not only reads the waypoints from a
+ * Flight plan file, but also adds the current
+ * Position computed by the traffic manager, as well
+ * as setting speeds and altitude computed by the
+ * traffic manager.
+ */
 FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
                                const std::string& p,
                                double course,
                                time_t start,
+                               time_t remainingTime,
                                FGAirport *dep,
                                FGAirport *arr,
                                bool firstLeg,
@@ -168,7 +171,7 @@ FGAIFlightPlan::FGAIFlightPlan(FGAIAircraft *ac,
   if (parseProperties(p)) {
     isValid = true;
   } else {
-    createWaypoints(ac, course, start, dep, arr, firstLeg, radius,
+    createWaypoints(ac, course, start, remainingTime, dep, arr, firstLeg, radius,
                     alt, lat, lon, speed, fltType, acType, airline);
   }
 }
@@ -182,6 +185,7 @@ FGAIFlightPlan::~FGAIFlightPlan()
 void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
                                      double course,
                                      time_t start,
+                                     time_t remainingTime,
                                      FGAirport *dep,
                                      FGAirport *arr,
                                      bool firstLeg,
@@ -196,25 +200,22 @@ void FGAIFlightPlan::createWaypoints(FGAIAircraft *ac,
 {
   time_t now = globals->get_time_params()->get_cur_time();
   time_t timeDiff = now-start;
-  leg = 1;
+  leg = AILeg::STARTUP_PUSHBACK;
 
   if ((timeDiff > 60) && (timeDiff < 1500))
-    leg = 2;
-  //else if ((timeDiff >= 1200) && (timeDiff < 1500)) {
-    //leg = 3;
-  //ac->setTakeOffStatus(2);
-  //}
+    leg = AILeg::TAXI;
   else if ((timeDiff >= 1500) && (timeDiff < 2000))
-    leg = 4;
-  else if (timeDiff >= 2000)
-    leg = 5;
-  /*
-   if (timeDiff >= 2000)
-   leg = 5;
-   */
+    leg = AILeg::TAKEOFF;
+  else if (timeDiff >= 2000) {
+    if (remainingTime > 2000) {
+      leg = AILeg::CRUISE;
+    } else {
+      leg = AILeg::APPROACH;
+    }
+  }
 
-    SG_LOG(SG_AI, SG_DEBUG, "Route from " << dep->getId() << " to " << arr->getId() <<
-           ". Set leg to : " << leg << " " << ac->getTrafficRef()->getCallSign());
+  SG_LOG(SG_AI, SG_DEBUG, ac->getTrafficRef()->getCallSign() << "|Route from " << dep->getId() << " to " << arr->getId() <<
+           ". Set leg to : " << leg << " " << remainingTime);
 
   wpt_iterator = waypoints.begin();
   bool dist = 0;
@@ -391,6 +392,8 @@ void FGAIFlightPlan::IncrementWaypoint(bool eraseWaypoints )
     if (wpt_iterator == waypoints.begin())
         return;
     if (wpt_iterator+1 == waypoints.end())
+        return;
+    if (waypoints.size()<3)
         return;
     FGAIWaypoint* previousWP = *(wpt_iterator -1);
     FGAIWaypoint* currentWP = *(wpt_iterator);

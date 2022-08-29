@@ -69,9 +69,9 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
                             const string & aircraftType,
                             const string & airline, double distance)
 {
-    if( legNr <= 3 )
+    if( legNr <= AILeg::TAKEOFF )
         SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " At Airport : " << dep->getId());
-    else if( legNr<= 6 )
+    else if( legNr<= AILeg::APPROACH )
         SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " Departure Airport : " << dep->getId()  << " Arrival Airport : " << arr->getId());
     else
         SG_LOG(SG_AI, SG_BULK, "Create Leg " << legNr << " " << (firstFlight?"First":"") << " Old Leg " << getLeg() << " At Airport : " << arr->getId());
@@ -79,35 +79,35 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
     bool retVal = true;
     int currWpt = wpt_iterator - waypoints.begin();
     switch (legNr) {
-    case 1:
+    case AILeg::STARTUP_PUSHBACK:
         retVal = createPushBack(ac, firstFlight, dep,
                                 radius, fltType, aircraftType, airline);
         break;
-    case 2:
+    case AILeg::TAXI:
         retVal = createTakeoffTaxi(ac, firstFlight, dep, radius, fltType,
                           aircraftType, airline);
         break;
-    case 3:
+    case AILeg::TAKEOFF:
         retVal = createTakeOff(ac, firstFlight, dep, SGGeod::fromDeg(longitude, latitude), speed, fltType);
         break;
-    case 4:
+    case AILeg::CLIMB:
         retVal = createClimb(ac, firstFlight, dep, arr, speed, alt, fltType);
         break;
-    case 5:
+    case AILeg::CRUISE:
         retVal = createCruise(ac, firstFlight, dep, arr, SGGeod::fromDeg(longitude, latitude), speed,
                      alt, fltType);
         break;
-    case 6:
+    case AILeg::APPROACH:
         retVal = createDescent(ac, arr, SGGeod::fromDeg(longitude, latitude), speed, alt, fltType,
                       distance);
         break;
-    case 7:
+    case AILeg::LANDING:
         retVal = createLanding(ac, arr, fltType);
         break;
-    case 8:
+    case AILeg::PARKING_TAXI:
         retVal = createLandingTaxi(ac, arr, radius, fltType, aircraftType, airline);
         break;
-    case 9:
+    case AILeg::PARKING:
         retVal = createParking(ac, arr, radius);
         break;
     default:
@@ -202,7 +202,7 @@ int endAngle, int increment, int radius, double aElev, double aSpeed, const char
     }
 }
 
-void FGAIFlightPlan::createLine( FGAIAircraft *ac, const SGGeod& startPoint, double azimuth, double dist, double dAlt, double vDescent) {
+void FGAIFlightPlan::createLine( FGAIAircraft *ac, const SGGeod& startPoint, double azimuth, double dist, double dAlt, double vDescent, const char* pattern) {
     SGGeod dummyAz2;
     double nPoints = dist/(vDescent/2);
     char buffer[20];
@@ -211,7 +211,7 @@ void FGAIFlightPlan::createLine( FGAIAircraft *ac, const SGGeod& startPoint, dou
         double currentDist = i * (dist / nPoints);
         double currentAltitude = ac->getAltitude() - (i * (dAlt / nPoints));
         SGGeod result = SGGeodesy::direct(startPoint, azimuth, currentDist);
-        snprintf(buffer, sizeof(buffer), "descent%03d", i);
+        snprintf(buffer, sizeof(buffer), pattern, i);
         FGAIWaypoint* wpt = createInAir(ac, buffer, result, currentAltitude, vDescent);
         wpt->setCrossat(currentAltitude);
         wpt->setTrackLength((dist / nPoints));
@@ -744,9 +744,11 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
  * Generate a flight path from the last waypoint of the cruise to
  * the permission to land point
  ******************************************************************/
-bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
+bool FGAIFlightPlan::createDescent(FGAIAircraft * ac,
+                                   FGAirport * apt,
                                    const SGGeod& current,
-                                   double speed, double alt,
+                                   double speed,
+                                   double alt,
                                    const string & fltType,
                                    double requiredDistance)
 {
@@ -762,16 +764,21 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
 
     //Beginning of Descent
     const string& rwyClass = getRunwayClassFromTrafficType(fltType);
-    double heading = ac->getTrafficRef()->getCourse();
+    double heading = ac->getTrueHeadingDeg();
     apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
                                         heading);
     if (!apt->hasRunwayWithIdent(activeRunway))
         return false;
 
     FGRunwayRef rwy = apt->getRunwayByIdent(activeRunway);
+    if (waypoints.size()==0 && ac->getTrueHeadingDeg()==0) {
+        // we obviously have no previous state and are free to position the aircraft
+        double courseTowardsThreshold = SGGeodesy::courseDeg(current, rwy->pointOnCenterlineDisplaced(0));
+        ac->setHeading(courseTowardsThreshold);
+    }
+
     // depending on entry we differ approach (teardrop/direct/parallel)
 
-    // Create a slow descent path that ends 250 lateral to the runway.
     double initialTurnRadius = getTurnRadius(vDescent, true);
     //double finalTurnRadius = getTurnRadius(vApproach, true);
 
@@ -787,6 +794,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     }
 
     SGGeod initialTarget = rwy->pointOnCenterline(-distanceOut);
+    SGGeod otherRwyEnd = rwy->pointOnCenterline(rwy->lengthM());
     SGGeod secondaryTarget =
         rwy->pointOffCenterline(-2 * distanceOut, lateralOffset);
     SGGeod secondHoldCenter =
@@ -797,50 +805,204 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     double secondaryAzimuth = SGGeodesy::courseDeg(current, secondaryTarget);
     double initialHeadingDiff = SGMiscd::normalizePeriodic(-180, 180, azimuth-secondaryAzimuth);
     double dummyAz2;
+    double courseTowardsThreshold = SGGeodesy::courseDeg(current, rwy->pointOnCenterlineDisplaced(0));
+    double courseTowardsRwyEnd = SGGeodesy::courseDeg(current, otherRwyEnd);
+    double headingDiffToRunwayThreshold = SGMiscd::normalizePeriodic(-180, 180, ac->getTrueHeadingDeg() - courseTowardsThreshold);
+    double headingDiffToRunwayEnd = SGMiscd::normalizePeriodic(-180, 180, ac->getTrueHeadingDeg() - courseTowardsRwyEnd);
 
-    SG_LOG(SG_AI, SG_BULK, " Heading Diff " << headingDiffRunway <<
-                           " Distance " << distance <<
+    SG_LOG(SG_AI, SG_BULK, ac->getCallSign() <<
+                           "| " <<
+                           " WPs : " << waypoints.size() <<
+                           " Heading Diff (rwy) : " << headingDiffRunway <<
+                           " Distance : " << distance <<
                            " Azimuth : " << azimuth <<
-                           " Heading : " << ac->getTrueHeadingDeg() << " Lateral : " << lateralOffset);
+                           " Heading : " << ac->getTrueHeadingDeg() <<
+                           " Initial Headingdiff " << initialHeadingDiff <<
+                           " Lateral : " << lateralOffset);
+    // Erase the two bogus BOD points: Note check for conflicts with scripted AI flightPlans
+    IncrementWaypoint(false);
+    IncrementWaypoint(false);
 
-    if (fabs(headingDiffRunway)>=30) {
-        // Entering not "straight" into runway so we do a s-curve
-        int rightAngle = initialHeadingDiff<0?90:-90;
-        SGGeod firstTurnCenter = SGGeodesy::direct(current, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
-        int firstTurnIncrement = initialHeadingDiff<0?2:-2;
-        const double heading = VectorMath::innerTangentsAngle(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius )[0];
-        createArc(ac, firstTurnCenter, ac->_getHeading()-rightAngle, heading-rightAngle, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "initialturn%03d");
-        double length = VectorMath::innerTangentsLength(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius );
-        createLine(ac, waypoints.back()->getPos(), heading, length, 50, vDescent);
-        int holdsPatterns = 0;
-        // Length of
-        if (holdsPatterns>0) {
-            // Turn into hold
-            createArc(ac, secondaryTarget, heading+rightAngle, rwy->headingDeg()+rightAngle, firstTurnIncrement*-1, initialTurnRadius,
-            waypoints.back()->getAltitude(), vDescent, "turnintohold%03d");
-            for (int t = 0; t < holdsPatterns; t++)
-            {
-                /*
-            createArc(ac, secondaryTarget, endval, endval+180, increment, initialTurnRadius,
-            currentAltitude, vDescent, "hold_1_%03d");
-            createArc(ac, secondHoldCenter, endval+180, endval, increment, initialTurnRadius,
-            currentAltitude, vDescent, "hold_2_%03d");
-            */
+    if (fabs(headingDiffRunway)>=30 && fabs(headingDiffRunway)<=150 ) {
+        if (distance < (2*initialTurnRadius)) {
+            // Too near so we pass over and enter over other side
+            SG_LOG(SG_AI, SG_BULK, ac->getCallSign() << "| Enter near S curve");
+            secondaryTarget =
+                rwy->pointOffCenterline(-2 * distanceOut, -lateralOffset);
+            secondHoldCenter =
+                rwy->pointOffCenterline(-3 * distanceOut, -lateralOffset);
+
+            // Entering not "straight" into runway so we do a s-curve
+            int rightAngle = headingDiffRunway>0?90:-90;
+            int firstTurnIncrement = headingDiffRunway>0?2:-2;
+
+            SGGeod firstTurnCenter = SGGeodesy::direct(current, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
+            SGGeod newCurrent = current;
+            // If we are not far enough cross over
+            if (abs(headingDiffToRunwayThreshold)<90) {
+                newCurrent = SGGeodesy::direct(current, ac->getTrueHeadingDeg(), distance + 1000);
+                firstTurnCenter = SGGeodesy::direct(newCurrent, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
+                createLine(ac, current, ac->getTrueHeadingDeg(), distance + 1000, 50, vDescent, "move%03d");
+            }
+            int offset = 1000;
+            while (SGGeodesy::distanceM(firstTurnCenter, secondaryTarget) < 2*initialTurnRadius) {
+                newCurrent = SGGeodesy::direct(newCurrent, ac->getTrueHeadingDeg(), offset+=100);
+                firstTurnCenter = SGGeodesy::direct(newCurrent, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
+            }
+            const double heading = VectorMath::outerTangentsAngle(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius )[0];
+            createArc(ac, firstTurnCenter, ac->_getHeading()-rightAngle, heading-rightAngle, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "near-initialturn%03d");
+            double length = VectorMath::innerTangentsLength(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius );
+            createLine(ac, waypoints.back()->getPos(), heading, length, 50, vDescent, "descent%03d");
+            int holdsPatterns = 0;
+            // Length of
+            if (holdsPatterns>0) {
+                // Turn into hold
+                createArc(ac, secondaryTarget, heading+rightAngle, rwy->headingDeg()+rightAngle, firstTurnIncrement*-1, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "turnintohold%03d");
+                for (int t = 0; t < holdsPatterns; t++)
+                {
+                    /*
+                createArc(ac, secondaryTarget, endval, endval+180, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_1_%03d");
+                createArc(ac, secondHoldCenter, endval+180, endval, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_2_%03d");
+                */
+                }
+            } else {
+                int startVal = SGMiscd::normalizePeriodic(0, 360, heading-rightAngle);
+                int endVal = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg()-rightAngle);
+                // Turn into runway
+                createArc(ac, secondaryTarget, startVal ,endVal , firstTurnIncrement, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "turn%03d");
             }
         } else {
-            int startVal = SGMiscd::normalizePeriodic(0, 360, heading+rightAngle);
-            int endVal = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg()+rightAngle);
-            // Turn into runway
-            createArc(ac, secondaryTarget, startVal, endVal, firstTurnIncrement*-1, initialTurnRadius,
-            waypoints.back()->getAltitude(), vDescent, "turn%03d");
+            SG_LOG(SG_AI, SG_BULK, ac->getCallSign() << "| Enter far S curve");
+            // Entering not "straight" into runway so we do a s-curve
+            int rightAngle = headingDiffRunway>0?90:-90;
+            int firstTurnIncrement = headingDiffRunway>0?2:-2;
+            SGGeod firstTurnCenter = SGGeodesy::direct(current, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
+            int innerTangent = headingDiffRunway<0?0:1;
+            int offset = 1000;
+            while (SGGeodesy::distanceM(firstTurnCenter, secondaryTarget)<2*initialTurnRadius) {
+               secondaryTarget = rwy->pointOffCenterline(-2 * distanceOut + (offset+=1000), lateralOffset);
+            }
+            const double heading = VectorMath::innerTangentsAngle(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius )[innerTangent];
+            createArc(ac, firstTurnCenter, ac->_getHeading()-rightAngle, heading-rightAngle, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "far-initialturn%03d");
+            double length = VectorMath::innerTangentsLength(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius );
+            createLine(ac, waypoints.back()->getPos(), heading, length, 50, vDescent, "descent%03d");
+            int holdsPatterns = 0;
+            // Length of
+            if (holdsPatterns>0) {
+                // Turn into hold
+                createArc(ac, secondaryTarget, heading+rightAngle, rwy->headingDeg()+rightAngle, firstTurnIncrement*-1, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "turnintohold%03d");
+                for (int t = 0; t < holdsPatterns; t++)
+                {
+                    /*
+                createArc(ac, secondaryTarget, endval, endval+180, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_1_%03d");
+                createArc(ac, secondHoldCenter, endval+180, endval, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_2_%03d");
+                */
+                }
+            } else {
+                int startVal = SGMiscd::normalizePeriodic(0, 360, heading+rightAngle);
+                int endVal = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg()+rightAngle);
+                // Turn into runway
+                createArc(ac, secondaryTarget, startVal, endVal, firstTurnIncrement*-1, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "s-turn%03d");
+            }
+        }
+    } else if (fabs(headingDiffRunway)>=150 ) {
+        // We are entering downwind
+        if (distance < (2*initialTurnRadius)) {
+            // Too near so we pass over and enter over other side
+            SG_LOG(SG_AI, SG_BULK, ac->getCallSign() << "| Enter near downrunway");
+            secondaryTarget =
+                rwy->pointOffCenterline(-2 * distanceOut, -lateralOffset);
+            secondHoldCenter =
+                rwy->pointOffCenterline(-3 * distanceOut, -lateralOffset);
+
+            // Entering not "straight" into runway so we do a s-curve
+            int rightAngle = azimuth>0?90:-90;
+            int firstTurnIncrement = azimuth>0?2:-2;
+
+            SGGeod firstTurnCenter = SGGeodesy::direct(current, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
+            // rwy->headingDeg()-rightAngle
+            int endVal = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg()-180);
+            SGGeod secondTurnCenter = SGGeodesy::direct(firstTurnCenter, endVal, 2*initialTurnRadius);
+            createArc(ac, firstTurnCenter, ac->_getHeading()-rightAngle, endVal, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "d-near-initialturn%03d");
+            endVal = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg());
+            // int endVal2 = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg()-rightAngle);
+            const double endVal2 = VectorMath::outerTangentsAngle(secondTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius )[0];
+            createArc(ac, secondTurnCenter, endVal, endVal2+rightAngle, -firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "secondturn%03d");
+            //outer
+            double length = VectorMath::outerTangentsLength(secondTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius );
+            int reverseRwyHeading = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg() - 180);
+            createLine(ac, waypoints.back()->getPos(), endVal2, length, 50, vDescent, "descent%03d");
+            int holdsPatterns = 0;
+            // Length of
+            if (holdsPatterns>0) {
+                // Turn into hold
+                createArc(ac, secondaryTarget, heading+rightAngle, rwy->headingDeg()+rightAngle, firstTurnIncrement*-1, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "turnintohold%03d");
+                for (int t = 0; t < holdsPatterns; t++)
+                {
+                    /*
+                createArc(ac, secondaryTarget, endval, endval+180, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_1_%03d");
+                createArc(ac, secondHoldCenter, endval+180, endval, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_2_%03d");
+                */
+                }
+            } else {
+                int endVal = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg()+rightAngle);
+                // Turn into runway
+                createArc(ac, secondaryTarget, endVal2+rightAngle, endVal, -firstTurnIncrement, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "turn%03d");
+            }
+        } else {
+            SG_LOG(SG_AI, SG_BULK, ac->getCallSign() << "| Enter far S downrunway");
+            // Entering not "straight" into runway so we do a s-curve
+            int rightAngle = azimuth<0?90:-90;
+            int firstTurnIncrement = azimuth<0?2:-2;
+            int innerTangent = headingDiffRunway<0?0:1;
+            SGGeod firstTurnCenter = SGGeodesy::direct(current, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
+            const double heading = VectorMath::innerTangentsAngle(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius )[innerTangent];
+            createArc(ac, firstTurnCenter, ac->_getHeading()-rightAngle, heading-rightAngle, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "d-far-initialturn%03d");
+            double length = VectorMath::innerTangentsLength(firstTurnCenter, secondaryTarget, initialTurnRadius, initialTurnRadius );
+            createLine(ac, waypoints.back()->getPos(), heading, length, 50, vDescent, "descent%03d");
+            int holdsPatterns = 0;
+            // Length of
+            if (holdsPatterns>0) {
+                // Turn into hold
+                createArc(ac, secondaryTarget, heading+rightAngle, rwy->headingDeg()+rightAngle, firstTurnIncrement*-1, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "turnintohold%03d");
+                for (int t = 0; t < holdsPatterns; t++)
+                {
+                    /*
+                createArc(ac, secondaryTarget, endval, endval+180, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_1_%03d");
+                createArc(ac, secondHoldCenter, endval+180, endval, increment, initialTurnRadius,
+                currentAltitude, vDescent, "hold_2_%03d");
+                */
+                }
+            } else {
+                int startVal = SGMiscd::normalizePeriodic(0, 360, heading+rightAngle);
+                int endVal = SGMiscd::normalizePeriodic(0, 360, rwy->headingDeg()+rightAngle);
+                // Turn into runway
+                createArc(ac, secondaryTarget, startVal, endVal, -firstTurnIncrement, initialTurnRadius,
+                waypoints.back()->getAltitude(), vDescent, "d-s-turn%03d");
+            }
         }
     } else {
+        SG_LOG(SG_AI, SG_BULK, ac->getCallSign() << "| Enter far straight");
         // Entering "straight" into runway so only one turn
         int rightAngle = headingDiffRunway>0?90:-90;
         SGGeod firstTurnCenter = SGGeodesy::direct(current, ac->getTrueHeadingDeg() - rightAngle, initialTurnRadius);
         int firstTurnIncrement = headingDiffRunway>0?-2:2;
         const double heading = rwy->headingDeg();
-        createArc(ac, firstTurnCenter, ac->_getHeading()+rightAngle, heading+rightAngle, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "initialturn_%03d");
+        createArc(ac, secondaryTarget, ac->_getHeading()+rightAngle, heading+rightAngle, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), vDescent, "straight_turn_%03d");
     }
 
     // To prevent absurdly steep approaches, compute the origin from where the approach should have started
@@ -861,55 +1023,12 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
         azimuth = SGGeodesy::courseDeg(origin, initialTarget);
     }
 
-    double dAlt = 0; //  = alt - (apt->getElevation() + 2000);
-    FGTaxiNodeRef tn;
-    if (apt->groundNetwork()) {
-        tn = apt->groundNetwork()->findNearestNode(refPoint);
-    }
-
-    if (tn) {
-        dAlt = alt - ((tn->getElevationFt()) + 2000);
-    } else {
-        dAlt = alt - (apt->getElevation() + 2000);
-    }
-
-    //cerr << "Phase 1: Linear Descent path to runway" << rwy->name() << endl;
-    // Create an initial destination point on a semicircle
-    //cerr << "lateral offset : " << lateralOffset << endl;
-    //cerr << "Distance       : " << distance      << endl;
-    //cerr << "Azimuth        : " << azimuth       << endl;
-    //cerr << "Initial Lateral point: " << lateralOffset << endl;
-//    double lat = refPoint.getLatitudeDeg();
-//    double lon = refPoint.getLongitudeDeg();
-    //cerr << "Reference point (" << lat << ", " << lon << ")." << endl;
-//    lat = initialTarget.getLatitudeDeg();
-//    lon = initialTarget.getLongitudeDeg();
-    //cerr << "Initial Target point (" << lat << ", " << lon << ")." << endl;
-
-#if 0
-    double ratio = initialTurnRadius / distance;
-    if (ratio > 1.0)
-        ratio = 1.0;
-    if (ratio < -1.0)
-        ratio = -1.0;
-
-    double newHeading = asin(ratio) * SG_RADIANS_TO_DEGREES;
-    double newDistance =
-        cos(newHeading * SG_DEGREES_TO_RADIANS) * distance;
-    //cerr << "new distance " << newDistance << ". additional Heading " << newHeading << endl;
-#endif
-
-    double side = azimuth - rwy->headingDeg();
-    if (side < 0.0)
-        side += 360.0;
-
     // Calculate the ETA at final, based on remaining distance, and approach speed.
     // distance should really consist of flying time to terniary target, plus circle
     // but the distance to secondary target should work as a reasonable approximation
     // aditionally add the amount of distance covered by making a turn of "side"
-    double turnDistance = (2 * M_PI * initialTurnRadius) * (side / 360.0);
     time_t remaining =
-        (turnDistance + distance) / ((vDescent * SG_NM_TO_METER) / 3600.0);
+        (initialTurnRadius + distance) / ((vDescent * SG_NM_TO_METER) / 3600.0);
     time_t now = globals->get_time_params()->get_cur_time();
 
     //if (ac->getTrafficRef()->getCallSign() == fgGetString("/ai/track-callsign")) {
@@ -939,110 +1058,6 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac, FGAirport * apt,
     double holdsPatterns = (additionalTimeNeeded-additionalTimeNeeded%240)/240;
 
     additionalTimeNeeded -= holdsPatterns*240;
-
-    double distanceCovered =
-        ((vApproach * SG_NM_TO_METER) / 3600.0) * additionalTimeNeeded;
-    distanceOut += distanceCovered;
-
-    azimuth = SGGeodesy::courseDeg(origin, secondaryTarget);
-    distance = SGGeodesy::distanceM(origin, secondaryTarget);
-    double ratio = initialTurnRadius / distance;
-    if (ratio > 1.0)
-        ratio = 1.0;
-    if (ratio < -1.0)
-        ratio = -1.0;
-
-    double newHeading = asin(ratio) * SG_RADIANS_TO_DEGREES;
-    double newDistance = cos(newHeading * SG_DEGREES_TO_RADIANS) * distance;
-    //cerr << "new distance realative to secondary target: " << newDistance << ". additional Heading " << newHeading << endl;
-
-    if (side < 180) {
-        azimuth += newHeading;
-    } else {
-        azimuth -= newHeading;
-    }
-
-    SGGeod tertiaryTarget;
-    SGGeodesy::direct(origin, azimuth, newDistance, tertiaryTarget, dummyAz2);
-
-//    lat = tertiaryTarget.getLatitudeDeg();
-//    lon = tertiaryTarget.getLongitudeDeg();
-    //cerr << "tertiary Target point (" << lat << ", " << lon << ")." << endl;
-
-
-    //cerr << "Phase 2: Circle " << endl;
-    double initialAzimuth =
-        SGGeodesy::courseDeg(secondaryTarget, tertiaryTarget);
-    double finalAzimuth =
-        SGGeodesy::courseDeg(secondaryTarget, initialTarget);
-
-    //cerr << "Angles from secondary target: " << initialAzimuth << " " << finalAzimuth << endl;
-    int increment, startval, endval;
-    // circle right around secondary target if orig of position is to the right of the runway
-    // i.e. use negative angles; else circle leftward and use postivi
-    if (side < 180) {
-        increment = -2;
-        startval = floor(initialAzimuth);
-        endval = ceil(finalAzimuth);
-        if (endval > startval) {
-            endval -= 360;
-        }
-    } else {
-        increment = 2;
-        startval = ceil(initialAzimuth);
-        endval = floor(finalAzimuth);
-        if (endval < startval) {
-            endval += 360;
-        }
-    }
-
-    //cerr << "creating circle between " << startval << " and " << endval << " using " << increment << endl;
-    //FGTaxiNode * tn = apt->getDynamics()->getGroundNetwork()->findNearestNode(initialTarget);
-    double currentAltitude = 0;
-    if (tn) {
-        currentAltitude = (tn->getElevationFt()) + 2000;
-    } else {
-        currentAltitude = apt->getElevation() + 2000;
-    }
-
-
-
-
-    // The approach leg should bring the aircraft to approximately 4-6 nm out, after which the landing phase should take over.
-    //cerr << "Phase 3: Approach" << endl;
-
-    //cerr << "Done" << endl;
-
-    // Erase the two bogus BOD points: Note check for conflicts with scripted AI flightPlans
-    IncrementWaypoint(true);
-    IncrementWaypoint(true);
-
-    if (reposition) {
-        double tempDistance = SGGeodesy::distanceM(current, initialTarget);
-        time_t eta2 =
-            tempDistance / ((vDescent * SG_NM_TO_METER) / 3600.0) + now;
-        SG_LOG(SG_ATC, SG_BULK, "Final 1 " << eta2);
-        time_t newEta2 =
-            apt->getDynamics()->getApproachController()->getRunway(rwy->name())->requestTimeSlot(eta2);
-        SG_LOG(SG_ATC, SG_BULK, "Final 1 " << eta2 << " " << newEta2);
-        arrivalTime = newEta2;
-        double newDistance2 =
-            ((vDescent * SG_NM_TO_METER) / 3600.0) * (newEta2 - now);
-
-        IncrementWaypoint(true);        // remove waypoint BOD2
-
-        while (checkTrackLength("final001") > newDistance2) {
-            SG_LOG(SG_ATC, SG_BULK, "Final 2 " << checkTrackLength("final001") );
-            IncrementWaypoint(true);
-        }
-
-        ac->resetPositionFromFlightPlan();
-    }
-
-    if (!waypoints.empty()) {
-        SG_LOG(SG_AI, SG_BULK, "Setting Node " << waypoints.back()->getName() << " to a leg end");
-        waypoints.back()->setName( (waypoints.back()->getName() + string("legend")));
-    }
 
     return true;
 }

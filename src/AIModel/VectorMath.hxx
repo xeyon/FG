@@ -27,4 +27,8 @@ class VectorMath {
   static std::array<double, 2> innerTangentsAngle( SGGeod m1, SGGeod m2, double r1, double r2);
   /**Length of inner tangent between two circles.*/
   static double innerTangentsLength( SGGeod m1, SGGeod m2, double r1, double r2);
+  /**Angles of outer tangent between two circles normalized to 0-360*/
+  static std::array<double, 2> outerTangentsAngle( SGGeod m1, SGGeod m2, double r1, double r2);
+  /**Length of outer tangent between two circles.*/
+  static double outerTangentsLength( SGGeod m1, SGGeod m2, double r1, double r2);
 };

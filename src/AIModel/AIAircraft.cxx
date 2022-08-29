@@ -333,7 +333,9 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     dt_count = 0;
 
     double distanceToDescent;
-    if (reachedEndOfCruise(distanceToDescent)) {
+    // Not the best solution. Double adding of legs is possible
+    if (*fp->getLastWayPoint() == fp->getNextWaypoint() &&
+        reachedEndOfCruise(distanceToDescent)) {
         if (!loadNextLeg(distanceToDescent)) {
             setDie(true);
             return;
@@ -591,7 +593,6 @@ bool FGAIAircraft::loadNextLeg(double distance) {
     FGAirport *arr = trafficRef->getArrivalAirport();
     if (!(dep && arr)) {
         setDie(true);
-
     } else {
         double cruiseAlt = trafficRef->getCruiseAlt() * 100;
 
@@ -1473,7 +1474,7 @@ bool FGAIAircraft::reachedEndOfCruise(double &distance) {
 
         distance = distanceCoveredByDescent;
         if (dist < distanceCoveredByDescent) {
-            SG_LOG(SG_AI, SG_BULK, "End Of Cruise");
+            SG_LOG(SG_AI, SG_BULK, getCallSign() << "|End Of Cruise");
             return true;
         } else {
               return false;

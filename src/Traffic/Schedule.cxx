@@ -202,10 +202,10 @@ bool FGAISchedule::init()
 bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
 {
 
-  time_t totalTimeEnroute,
-         elapsedTimeEnroute,
-         //remainingTimeEnroute,
-         deptime = 0;
+  time_t totalTimeEnroute;
+  time_t elapsedTimeEnroute;
+  time_t remainingTimeEnroute;
+  time_t deptime = 0;
 
   if (!valid) {
     return true; // processing complete
@@ -255,7 +255,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   // This flight entry is entirely in the past, do we need to
   // push it forward in time to the next scheduled departure.
   if (flight->getArrivalTime() < now) {
-    SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is in the Past");
+    SG_LOG (SG_AI, SG_BULK, "Traffic Manager:   " << flight->getCallSign() << " is in the Past");
     // Don't just update: check whether we need to load a new leg. etc.
     // This update occurs for distant aircraft, so we can update the current leg
     // and detach it from the current list of aircraft.
@@ -275,7 +275,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     totalTimeEnroute = flight->getArrivalTime() - flight->getDepartureTime();
     if (flight->getDepartureTime() < now) {
       elapsedTimeEnroute   = now - flight->getDepartureTime();
-      //remainingTimeEnroute = totalTimeEnroute - elapsedTimeEnroute;
+      remainingTimeEnroute = totalTimeEnroute - elapsedTimeEnroute;
       double x = elapsedTimeEnroute / (double) totalTimeEnroute;
 
     // current pos is based on great-circle course between departure/arrival,
@@ -285,21 +285,22 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
       SGGeodesy::inverse(dep->geod(), arr->geod(), course, az2, distanceM);
       double coveredDistance = distanceM * x;
 
+      //FIXME very crude that doesn't harmonise with Legs
       SGGeodesy::direct(dep->geod(), course, coveredDistance, position, az2);
 
-      SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is in progress, %=" << x);
+      SG_LOG (SG_AI, SG_BULK, "Traffic Manager: " << flight->getCallSign() << " is in progress " << (x*100) << "%");
       speed = ((distanceM - coveredDistance) * SG_METER_TO_NM) / 3600.0;
     } else {
     // not departed yet
-      //remainingTimeEnroute = totalTimeEnroute;
+      remainingTimeEnroute = totalTimeEnroute;
       elapsedTimeEnroute = 0;
       position = dep->geod();
-      SG_LOG (SG_AI, SG_BULK, "Traffic Manager:      Flight is pending, departure in "
+      SG_LOG (SG_AI, SG_BULK, "Traffic Manager: " << flight->getCallSign() << " is pending, departure in "
         << flight->getDepartureTime() - now << " seconds ");
     }
   } else {
     // departure / arrival coincident
-    //remainingTimeEnroute = totalTimeEnroute = 0.0;
+    remainingTimeEnroute = totalTimeEnroute = flight->getArrivalTime() - flight->getDepartureTime();
     elapsedTimeEnroute = 0;
     position = dep->geod();
   }
@@ -320,12 +321,12 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
     return true; // out of visual range, for the moment.
   }
 
-  if (!createAIAircraft(flight, speed, deptime)) {
+  if (!createAIAircraft(flight, speed, deptime, remainingTimeEnroute)) {
       valid = false;
   }
 
 
-    return true; // processing complete
+  return true; // processing complete
 }
 
 bool FGAISchedule::validModelPath(const std::string& modelPath)
@@ -353,12 +354,13 @@ SGPath FGAISchedule::resolveModelPath(const std::string& modelPath)
     return SGPath();
 }
 
-bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime)
+bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime, time_t remainingTime)
 {
+  //FIXME The position must be set here not in update
   FGAirport* dep = flight->getDepartureAirport();
   FGAirport* arr = flight->getArrivalAirport();
   string flightPlanName = dep->getId() + "-" + arr->getId() + ".xml";
-  SG_LOG(SG_AI, SG_DEBUG, "Traffic manager: Creating AIModel from:" << flightPlanName);
+  SG_LOG(SG_AI, SG_DEBUG, flight->getCallSign() << "|Traffic manager: Creating AIModel from:" << flightPlanName);
 
   aiAircraft = new FGAIAircraft(this);
   aiAircraft->setPerformance(acType, m_class); //"jet_transport";
@@ -373,8 +375,15 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   aiAircraft->setBank(0);
 
   courseToDest = SGGeodesy::courseDeg(position, arr->geod());
-    std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft, flightPlanName, courseToDest, deptime,
-                                            dep, arr, true, radius,
+  std::unique_ptr<FGAIFlightPlan> fp(new FGAIFlightPlan(aiAircraft,
+                                            flightPlanName,
+                                            courseToDest,
+                                            deptime,
+                                            remainingTime,
+                                            dep,
+                                            arr,
+                                            true,
+                                            radius,
                                             flight->getCruiseAlt()*100,
                                             position.getLatitudeDeg(),
                                             position.getLongitudeDeg(),
@@ -409,7 +418,6 @@ bool FGAISchedule::createAIAircraft(FGScheduledFlight* flight, double speedKnots
   }
 }
 
-// Create an initial heading for user controlled aircraft.
 void FGAISchedule::setHeading()
 {
     courseToDest = SGGeodesy::courseDeg((*flights.begin())->getDepartureAirport()->geod(), (*flights.begin())->getArrivalAirport()->geod());

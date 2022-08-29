@@ -23,7 +23,7 @@
  * This file contains the definition of the class Schedule.
  *
  * A schedule is basically a number of scheduled flights, which can be
- * assigned to an AI aircraft. 
+ * assigned to an AI aircraft.
  **************************************************************************/
 
 #ifndef _FGSCHEDULE_HXX_
@@ -69,13 +69,13 @@ class FGAISchedule
 
   bool scheduleFlights(time_t now);
   int groundTimeFromRadius();
-  
+
   /**
    * Transition this schedule from distant mode to AI mode;
    * create the AIAircraft (and flight plan) and register with the AIManager
    */
-  bool createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime);
-  
+  bool createAIAircraft(FGScheduledFlight* flight, double speedKnots, time_t deptime, time_t remainingTime);
+
   // the aiAircraft associated with us
   SGSharedPtr<FGAIAircraft> aiAircraft;
  public:
@@ -85,12 +85,12 @@ class FGAISchedule
                const std::string& homePort,
                const std::string& registration,
                const std::string& flightId,
-               bool   heavy, 
+               bool   heavy,
                const std::string& acType,
                const std::string& airline,
                const std::string& m_class,
                const std::string& flight_type,
-               double radius, 
+               double radius,
                double offset);                              // construct & init
   FGAISchedule(const FGAISchedule &other);                  // copy constructor
 
@@ -100,7 +100,7 @@ class FGAISchedule
 
     static bool validModelPath(const std::string& model);
     static SGPath resolveModelPath(const std::string& model);
-    
+
   bool update(time_t now, const SGVec3d& userCart);
   bool init();
 
@@ -130,7 +130,8 @@ class FGAISchedule
   void         setHits    (unsigned int count) { hits     = count; };
   void         setScore   ();
   double       getScore   () { return score; };
-  void         setHeading (); 
+  /**Create an initial heading for user controlled aircraft.*/
+  void         setHeading ();
   void         assign         (FGScheduledFlight *ref);
   void         clearAllFlights();
   void         setFlightType  (const std::string& val) { flightType = val; };
