@@ -50,14 +50,16 @@
 #include <simgear/structure/OSGUtils.hxx>
 #include <simgear/props/condition.hxx>
 
-#include <Main/globals.hxx>
-#include <Main/fg_props.hxx>
+#include "VRManager.hxx"
+#include "renderer.hxx"
+#include "splash.hxx"
+#include <GUI/gui.h>
 #include <Main/fg_os.hxx>
+#include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
 #include <Main/locale.hxx>
 #include <Main/util.hxx>
-#include "splash.hxx"
-#include "renderer.hxx"
-#include "VRManager.hxx"
+#include <Viewer/CameraGroup.hxx>
 
 #include <sstream>
 
@@ -103,9 +105,30 @@ SplashScreen::~SplashScreen()
 
 void SplashScreen::createNodes()
 {
+    // The splash FBO is rendered as sRGB, but for VR it needs to be in an sRGB
+    // pixel format for it to be handled as such by OpenXR.
+    bool useSRGB = false;
+#if !defined(SG_MAC)
+    // SRGB does detect on macOS, but doesn't actually work, so we
+    // disable the check there.
+    osg::Camera* guiCamera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
+    if (guiCamera) {
+        osg::GraphicsContext* gc = guiCamera->getGraphicsContext();
+        osg::GLExtensions* glext = gc->getState()->get<osg::GLExtensions>();
+        if (glext) {
+            SG_LOG(SG_VIEW, SG_WARN, "GL version " << glext->glVersion);
+            SG_LOG(SG_VIEW, SG_WARN, "GL_EXT_texture_sRGB " << osg::isGLExtensionSupported(glext->contextID, "GL_EXT_texture_sRGB"));
+            SG_LOG(SG_VIEW, SG_WARN, "GL_EXT_framebuffer_sRGB " << osg::isGLExtensionSupported(glext->contextID, "GL_EXT_framebuffer_sRGB"));
+            useSRGB = osg::isGLExtensionOrVersionSupported(glext->contextID, "GL_EXT_texture_sRGB", 2.1f) &&
+                      osg::isGLExtensionOrVersionSupported(glext->contextID, "GL_EXT_framebuffer_sRGB", 3.0f);
+        }
+    }
+    SG_LOG(SG_VIEW, SG_INFO, "Splash: useSRGB " << useSRGB);
+#endif
     // setup the base geometry 
     _splashFBOTexture = new osg::Texture2D;
-    _splashFBOTexture->setInternalFormat(GL_SRGB8);
+    _splashFBOTexture->setInternalFormat(useSRGB ? GL_SRGB8 : GL_RGB);
+
     _splashFBOTexture->setResizeNonPowerOfTwoHint(false);
     _splashFBOTexture->setFilter(osg::Texture::MIN_FILTER, osg::Texture::LINEAR);
     _splashFBOTexture->setFilter(osg::Texture::MAG_FILTER, osg::Texture::LINEAR);
@@ -240,8 +263,11 @@ void SplashScreen::createNodes()
     stateSet->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     stateSet->setRenderBinDetails(1000, "RenderBin");
     stateSet->setMode(GL_DEPTH_TEST, osg::StateAttribute::OFF);
-    stateSet->setMode(GL_FRAMEBUFFER_SRGB, osg::StateAttribute::ON);
-    
+
+    if (useSRGB) {
+        stateSet->setMode(GL_FRAMEBUFFER_SRGB, osg::StateAttribute::ON);
+    }
+
     geometry = osg::createTexturedQuadGeometry(osg::Vec3(0.0, 0.0, 0.0),
                                                osg::Vec3(1.0, 0.0, 0.0),
                                                osg::Vec3(0.0, 1.0, 0.0));
@@ -585,6 +611,11 @@ std::string SplashScreen::selectSplashImage()
 
 void SplashScreen::doUpdate()
 {
+    if (!guiInit()) {
+        // don't createNodes until OSG init operations have completed
+        return;
+    }
+
     double alpha = _splashAlphaNode->getDoubleValue();
 
     if (alpha <= 0 || !fgGetBool("/sim/startup/splash-screen")) {
