@@ -1440,6 +1440,44 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
       struct BoolArrayBuffer boolBuffer[MAX_BOOL_BUFFERS];
       memset(&boolBuffer, 0, sizeof(boolBuffer));
 
+      /* Read BOOLARRAY properties.
+       *
+       * All properties contained in a bool array must be read before adding it to the packet.
+       * Earlier versions of this code read the properties in the main loop below,
+       * and added the bool array at the very end of the packet.
+       * This causes bool arrays to break whenever a new MP property is added:
+       * older client will stop reading the packet when encountering the new property,
+       * and never get to the bool array.
+       *
+       * Instead, read all properties early and send the array in the main loop.
+       */
+
+      std::vector<FGPropertyData*>::const_iterator it = motionInfo.properties.begin();
+      while (it != motionInfo.properties.end()) {
+          switch (mPropertyDefinition[(*it)->id]->TransmitAs) {
+          case TT_BOOLARRAY:
+          {
+              struct BoolArrayBuffer *boolBuf = nullptr;
+              if ((*it)->id >= BOOLARRAY_START_ID && (*it)->id <= BOOLARRAY_END_ID + BOOLARRAY_BLOCKSIZE)
+              {
+                  int buffer_block = ((*it)->id - BOOLARRAY_BASE_1) / BOOLARRAY_BLOCKSIZE;
+                  boolBuf = &boolBuffer[buffer_block];
+                  boolBuf->propertyId = BOOLARRAY_START_ID + buffer_block * BOOLARRAY_BLOCKSIZE;
+              }
+              if (boolBuf)
+              {
+                  int bitidx = (*it)->id - boolBuf->propertyId;
+                  if ((*it)->int_value)
+                      boolBuf->boolValue |= 1 << bitidx;
+              }
+              break;
+          }
+          default:
+              break;
+          }
+          ++it;
+      }
+
       for (int partition = 1; partition <= protocolToUse; partition++)
       {
           std::vector<FGPropertyData*>::const_iterator it = motionInfo.properties.begin();
@@ -1550,19 +1588,28 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
                       }
                       case TT_BOOLARRAY:
                       {
-                          struct BoolArrayBuffer *boolBuf = nullptr;
-                          if ((*it)->id >= BOOLARRAY_START_ID && (*it)->id <= BOOLARRAY_END_ID + BOOLARRAY_BLOCKSIZE)
+                          int boolIdx = ((*it)->id - BOOLARRAY_BASE_1) / BOOLARRAY_BLOCKSIZE;
+
+                          if (boolIdx < 0 || boolIdx >= MAX_BOOL_BUFFERS)
                           {
-                              int buffer_block = ((*it)->id - BOOLARRAY_BASE_1) / BOOLARRAY_BLOCKSIZE;
-                              boolBuf = &boolBuffer[buffer_block];
-                              boolBuf->propertyId = BOOLARRAY_START_ID + buffer_block * BOOLARRAY_BLOCKSIZE;
+                              SG_LOG(SG_NETWORK, SG_WARN, "Unexpected prop id with type TT_BOOLARRAY: " << (*it)->id);
+                              break;
                           }
-                          if (boolBuf)
+
+                          if (!boolBuffer[boolIdx].propertyId)
                           {
-                              int bitidx = (*it)->id - boolBuf->propertyId;
-                              if ((*it)->int_value)
-                                  boolBuf->boolValue |= 1 << bitidx;
+                              // propertyId being unset indicates that this block was already written
+                              break;
                           }
+
+                          if (ptr + 2 >= msgEnd)
+                          {
+                              SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: " << boolBuffer[boolIdx].propertyId << ": multiplay/generic/bools[" << boolIdx * 30 << "]");
+                          }
+                          *ptr++ = XDR_encode_int32(boolBuffer[boolIdx].propertyId);
+                          *ptr++ = XDR_encode_int32(boolBuffer[boolIdx].boolValue);
+
+                          boolBuffer[boolIdx].propertyId = 0;   // mark block as written
                           break;
                       }
                       case simgear::props::INT:
@@ -1710,22 +1757,6 @@ FGMultiplayMgr::SendMyPosition(const FGExternalMotionData& motionInfo)
           }
       }
       escape:
-
-      /*
-      * Send the boolean arrays (if present) as single 32bit integers.
-      */
-      for (int boolIdx = 0; boolIdx < MAX_BOOL_BUFFERS; boolIdx++)
-      {
-          if (boolBuffer[boolIdx].propertyId)
-          {
-              if (ptr + 2 >= msgEnd)
-              {
-                  SG_LOG(SG_NETWORK, SG_ALERT, "Multiplayer packet truncated prop id: " << boolBuffer[boolIdx].propertyId << ": multiplay/generic/bools[" << boolIdx * 30 << "]");
-              }
-              *ptr++ = XDR_encode_int32(boolBuffer[boolIdx].propertyId);
-              *ptr++ = XDR_encode_int32(boolBuffer[boolIdx].boolValue);
-          }
-      }
 
       msgLen = reinterpret_cast<char*>(ptr) - msgBuf.Msg;
       FillMsgHdr(msgBuf.msgHdr(), POS_DATA_ID, msgLen);
