@@ -130,6 +130,7 @@ const int EMESARYBRIDGE_BASE = 12000;
 const int V2018_3_BASE = 13000;
 const int FALLBACK_MODEL_ID = 13000;
 const int V2019_3_BASE = 13001;
+const int V2020_4_BASE = 13003;
 
 /*
  * definition of properties that are to be transmitted.
@@ -337,7 +338,6 @@ static const IdPropertyList sIdPropertyList[] = {
     { 1503, "instrumentation/transponder/inputs/mode", simgear::props::INT, TT_SHORTINT, V1_1_PROP_ID, NULL, NULL },
     { 1504, "instrumentation/transponder/ground-bit", simgear::props::BOOL, TT_SHORTINT, V1_1_2_PROP_ID, NULL, NULL },
     { 1505, "instrumentation/transponder/airspeed-kt", simgear::props::INT, TT_SHORTINT, V1_1_2_PROP_ID, NULL, NULL },
-    { 1506, "instrumentation/transponder/mach-number", simgear::props::FLOAT, TT_SHORT_FLOAT_4, V1_1_2_PROP_ID, NULL, NULL },
 
     { 10001, "sim/multiplay/transmission-freq-hz",  simgear::props::STRING, TT_NOSEND,  V1_1_2_PROP_ID, NULL, NULL },
     { 10002, "sim/multiplay/chat",  simgear::props::STRING, TT_ASIS,  V1_1_2_PROP_ID, NULL, NULL },
@@ -678,6 +678,7 @@ static const IdPropertyList sIdPropertyList[] = {
     { V2019_3_BASE,   "sim/multiplay/comm-transmit-frequency-hz", simgear::props::INT, TT_INT,  V1_1_2_PROP_ID, NULL, NULL },
     { V2019_3_BASE+1, "sim/multiplay/comm-transmit-power-norm", simgear::props::INT, TT_SHORT_FLOAT_NORM ,  V1_1_2_PROP_ID, NULL, NULL },
     // Add new MP properties here
+    { V2020_4_BASE, "instrumentation/transponder/mach-number", simgear::props::FLOAT, TT_SHORT_FLOAT_4, V1_1_2_PROP_ID, NULL, NULL },
 };
 /*
  * For the 2017.x version 2 protocol the properties are sent in two partitions,
