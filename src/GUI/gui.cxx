@@ -175,7 +175,12 @@ struct GeneralInitOperation : public GraphicsContextOperation
 bool guiInit()
 {
     static osg::ref_ptr<GeneralInitOperation> genOp;
-
+    static bool didInit = false;
+    
+    if (didInit) {
+        return true;
+    }
+    
     if (!genOp.valid())
     {
         // Pick some window on which to do queries.
@@ -210,6 +215,7 @@ bool guiInit()
         initOp = 0;
 #endif
         genOp = 0;
+        didInit = true;
         // we're done
         return true;
     }
