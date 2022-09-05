@@ -180,10 +180,9 @@ bool openBrowser(const std::string& aAddress)
         // resolve local file path
         SGPath path(address);
         path = globals->resolve_maybe_aircraft_path(address);
-        if (!path.isNull())
-            address = path.local8BitStr();
-        else
-        {
+        if (!path.isNull()) {
+            address = "file://" + path.local8BitStr();
+        } else {
             mkDialog ("Sorry, file not found!");
             SG_LOG(SG_GENERAL, SG_ALERT, "openBrowser: Cannot find requested file '"  
                     << address << "'.");
@@ -192,10 +191,6 @@ bool openBrowser(const std::string& aAddress)
     }
 
 #ifdef SG_MAC
-  if (address.find("://")==string::npos) {
-    address = "file://" + address;
-  }
-  
   cocoaOpenUrl(address);
 #elif defined _WIN32
 
