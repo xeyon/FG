@@ -121,9 +121,6 @@ void PUICompatObject::init()
         for (auto bindingNode : bindings) {
             const auto cmd = bindingNode->getStringValue("command");
             if (cmd == "nasal") {
-                SG_LOG(SG_GUI, SG_ALERT, "Fix me, not implemented correctly yet");
-                std::string uniqueModule = "abcd";
-
                 // we need to clone the binding node, so we can unique the
                 // Nasal module. Otherwise we always modify the global dialog
                 // definition, and cloned dialogs use the same Nasal module for
@@ -134,7 +131,7 @@ void PUICompatObject::init()
                 // argument node and holds onto it.
                 SGPropertyNode_ptr copiedBinding = new SGPropertyNode;
                 copyProperties(bindingNode, copiedBinding);
-                copiedBinding->setStringValue("module", uniqueModule.c_str());
+                copiedBinding->setStringValue("module", dialog()->nasalModule());
 
                 bindingNode = copiedBinding;
             }
