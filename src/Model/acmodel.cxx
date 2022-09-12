@@ -152,9 +152,9 @@ FGAircraftModel::init ()
         return;
     }
 
+    simgear::ErrorReportContext ec("primary-aircraft", "yes");
     _fx = new FGFX("fx");
     _fx->init();
-    simgear::ErrorReportContext ec("primary-aircraft", "yes");
 
     SGPropertyNode_ptr sim = fgGetNode("/sim", true);
     for (auto model : sim->getChildren("model")) {
