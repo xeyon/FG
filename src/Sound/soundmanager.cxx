@@ -224,14 +224,25 @@ bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGProper
 
     // SG_LOG(SG_GENERAL, SG_ALERT, "Playing '" << foundPath.utf8Str() << "'");
     try {
-        if ( !_queue[name] ) {
-            _queue[name] = new FGSampleQueue(this, name);
-            _queue[name]->tie_to_listener();
-        }
-
         SGSoundSample *msg = new SGSoundSample(foundPath);
         msg->set_volume( volume );
-        _queue[name]->add( msg );
+
+        if (name == "instant")
+        {
+            // Add a special queue-name 'instant' which does not put samples
+            // into a sample queue but plays them instantly.
+            SGSampleGroup* sgr = find("NASAL instant queue", true);
+            sgr->add(msg, foundPath.str());
+            sgr->play_once(foundPath.str());
+        }
+        else
+        {
+            if ( !_queue[name] ) {
+                _queue[name] = new FGSampleQueue(this, name);
+                _queue[name]->tie_to_listener();
+            }
+            _queue[name]->add( msg );
+         }
 
         return true;
 
