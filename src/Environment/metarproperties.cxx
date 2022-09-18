@@ -417,6 +417,11 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
                 -9999.0 : 
                 metarClouds[i].getAltitude_ft() + _station_elevation;
 
+            // crash https://sourceforge.net/p/flightgear/codetickets/2765/
+            if (coverage >= coverage_string.size()) {
+                throw sg_range_exception("Invalid cloud coverage value:" + to_string(coverage));
+            }
+
             layerNode->setDoubleValue( "alpha", 1.0 );
             layerNode->setStringValue( "coverage", coverage_string[coverage] );
             layerNode->setDoubleValue( "coverage-type", SGCloudLayer::getCoverageType(coverage_string[coverage]) );
