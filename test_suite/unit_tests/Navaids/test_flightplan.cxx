@@ -31,6 +31,8 @@
 #include <simgear/misc/sg_dir.hxx>
 #include <simgear/io/iostreams/sgstream.hxx>
 #include <simgear/structure/exception.hxx>
+#include <simgear/magvar/magvar.hxx>
+#include <simgear/timing/sg_time.hxx>
 
 #include <Navaids/FlightPlan.hxx>
 #include <Navaids/routePath.hxx>
@@ -795,6 +797,12 @@ void FlightplanTests::testLeadingWPDynamic()
     CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, f->totalDistanceNm(), 0.001);
 }
 
+static double magVarFor(const SGGeod& geod)
+{
+  double jd = globals->get_time_params()->getJD();
+  return sgGetMagVar(geod, jd) * SG_RADIANS_TO_DEGREES;
+}
+
 void FlightplanTests::testRadialIntercept()
 {
     // replicate AJO1R departure
@@ -809,7 +817,7 @@ void FlightplanTests::testRadialIntercept()
     f->insertWayptAtIndex(intc, 3); // between BUNAX and BEBEV
     
     RoutePath rtepath(f);
-    CPPUNIT_ASSERT_DOUBLES_EQUAL(232, f->legAtIndex(3)->courseDeg(), 1.0);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(230 + magVarFor(pos), f->legAtIndex(3)->courseDeg(), 1.0);
 }
 
 void FlightplanTests::loadFGFPWithoutDepartureArrival()
