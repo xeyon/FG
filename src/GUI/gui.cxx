@@ -172,7 +172,7 @@ struct GeneralInitOperation : public GraphicsContextOperation
 
 /** Initializes GUI.
  * Returns true when done, false when still busy (call again). */
-bool guiInit()
+bool guiInit(osg::GraphicsContext* gc)
 {
     static osg::ref_ptr<GeneralInitOperation> genOp;
     static bool didInit = false;
@@ -187,11 +187,6 @@ bool guiInit()
         // XXX Perhaps all this graphics initialization code should be
         // moved to renderer.cxx?
         genOp = new GeneralInitOperation;
-        osg::Camera* guiCamera = getGUICamera(CameraGroup::getDefault());
-        WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
-        osg::GraphicsContext* gc = 0;
-        if (guiCamera)
-            gc = guiCamera->getGraphicsContext();
         if (gc) {
             gc->add(genOp.get());
 #if defined(HAVE_PUI)
@@ -199,6 +194,7 @@ bool guiInit()
             gc->add(initOp.get());
 #endif
         } else {
+            WindowSystemAdapter* wsa = WindowSystemAdapter::getWSA();
             wsa->windows[0]->gc->add(genOp.get());
         }
         return false; // not ready yet
