@@ -232,6 +232,7 @@ bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGProper
             // Add a special queue-name 'instant' which does not put samples
             // into a sample queue but plays them instantly.
             SGSampleGroup* sgr = find("NASAL instant queue", true);
+            sgr->tie_to_listener();
             sgr->add(msg, foundPath.str());
             sgr->play_once(foundPath.str());
         }
