@@ -201,9 +201,9 @@ void FGSoundManager::update(double dt)
 
 /**
  * Built-in command: play an audio message (i.e. a wav file) This is
- * fire and forget.  Call this once per message and it will get dumped
- * into a queue.  Messages are played sequentially so they do not
- * overlap.
+ * fire and forget. Call this once per message and it will get dumped
+ * into a queue. Except for the special 'instant' queue, messages within
+ * a given queue are played sequentially so they do not overlap.
  */
 bool FGSoundManager::playAudioSampleCommand(const SGPropertyNode * arg, SGPropertyNode * root)
 {
