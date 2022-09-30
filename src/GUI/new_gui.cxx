@@ -158,6 +158,7 @@ NewGUI::shutdown()
     _active_dialog.clear();
 
     fgUntie("/sim/menubar/visibility");
+    fgUntie("/sim/menubar/overlap-hide");
     _menubar.reset();
     _dialog_props.clear();
 
