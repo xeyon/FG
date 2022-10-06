@@ -358,6 +358,11 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
         bool setGroundCloudLayer = _rootNode->getBoolValue("set-ground-cloud-layer", false ) &&
               !fgGetBool("/sim/rendering/clouds3d-enable", false);
 
+        // track the coverage of the previous layer, so we can use it
+        // for higher layers which don't have coverage set
+        // see: https://sourceforge.net/p/flightgear/codetickets/2765/
+        SGMetarCloud::Coverage coverageBelow = SGMetarCloud::COVERAGE_NIL;
+
         if( setGroundCloudLayer ) {
             // create a cloud layer #0 starting at the ground if its fog, mist or haze
 
@@ -406,21 +411,29 @@ void MetarProperties::setMetar( SGSharedPtr<FGMetar> m )
                 _min_visibility = _max_visibility =
                   fgGetDouble("/environment/params/fog-mist-haze-layer/visibility-above-layer-m",20000.0); // assume good visibility above the fog
                 layerOffset = 1;  // shudder
+                
+                coverageBelow = coverage;
             }
         } 
 
         for( unsigned i = 0; i < 5-layerOffset; i++ ) {
             SGPropertyNode_ptr layerNode = cloudsNode->getChild(LAYER, i+layerOffset, true );
             SGMetarCloud::Coverage coverage = i < metarClouds.size() ? metarClouds[i].getCoverage() : SGMetarCloud::COVERAGE_CLEAR;
+            if (coverage == SGMetarCloud::COVERAGE_NIL) {
+                coverage = coverageBelow; // invalid coverage, use value of layer below
+            } else {
+                coverageBelow = coverage; // valid coverage, save for future layers
+            }
+            
+            if (coverage == SGMetarCloud::COVERAGE_NIL) {
+                SG_LOG(SG_ENVIRONMENT, SG_WARN, "METAR: skipping cloud layer " << i << " becuase no coverage is set");
+                continue;
+            }
+            
             double elevation = 
                 i >= metarClouds.size() || coverage == SGMetarCloud::COVERAGE_CLEAR ? 
                 -9999.0 : 
                 metarClouds[i].getAltitude_ft() + _station_elevation;
-
-            // crash https://sourceforge.net/p/flightgear/codetickets/2765/
-            if (coverage >= coverage_string.size()) {
-                throw sg_range_exception("Invalid cloud coverage value:" + to_string(coverage));
-            }
 
             layerNode->setDoubleValue( "alpha", 1.0 );
             layerNode->setStringValue( "coverage", coverage_string[coverage] );
