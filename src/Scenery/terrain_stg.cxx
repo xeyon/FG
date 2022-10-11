@@ -365,16 +365,17 @@ bool FGStgTerrain::scenery_available(const SGGeod& position, double range_m)
 {
   if( schedule_scenery(position, range_m, 0.0) )
   {
-    double elev;
+    double elev = 0.0;
 
     bool use_vpb = globals->get_props()->getNode("scenery/use-vpb")->getBoolValue();
+    bool got_elev = get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0);
 
-    if (!use_vpb && !get_elevation_m(SGGeod::fromGeodM(position, SG_MAX_ELEVATION_M), elev, 0, 0))
+    if (!use_vpb && !got_elev)
     {
         SG_LOG(SG_TERRAIN, SG_DEBUG, "FGStgTerrain::scenery_available - false" );
         return false;
     }
-    
+
     SGVec3f p = SGVec3f::fromGeod(SGGeod::fromGeodM(position, elev));
     osg::FrameStamp* framestamp
             = globals->get_renderer()->getFrameStamp();
