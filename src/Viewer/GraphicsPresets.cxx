@@ -547,4 +547,9 @@ bool GraphicsPresets::saveToXML(const SGPath& path, const std::string& name, con
     return true;
 }
 
+// Register the subsystem.
+SGSubsystemMgr::Registrant<GraphicsPresets> registrantGraphicsPresets(
+    SGSubsystemMgr::DISPLAY);
+
+
 } // namespace flightgear

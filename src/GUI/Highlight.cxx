@@ -668,3 +668,7 @@ void Highlight::addPropertyProperty(const std::string& from0, const std::string&
         }
     }
 }
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<Highlight> registrantHighlight(
+    SGSubsystemMgr::INIT);
