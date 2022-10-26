@@ -961,7 +961,7 @@ void LocationController::applyOnFinal()
 
         const double offsetNm = m_offsetDistance.convertToUnit(Units::NauticalMiles).value;
         m_config->setArg("offset-distance", QString::number(offsetNm));
-        m_config->setArg("on-ground", std::string("false"));
+        m_config->setArg("in-air", std::string(""));
 
         applyAirspeed();
         applyAltitude();
