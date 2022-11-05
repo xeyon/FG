@@ -116,14 +116,10 @@ void SplashScreen::createNodes()
         osg::GraphicsContext* gc = guiCamera->getGraphicsContext();
         osg::GLExtensions* glext = gc->getState()->get<osg::GLExtensions>();
         if (glext) {
-            SG_LOG(SG_VIEW, SG_WARN, "GL version " << glext->glVersion);
-            SG_LOG(SG_VIEW, SG_WARN, "GL_EXT_texture_sRGB " << osg::isGLExtensionSupported(glext->contextID, "GL_EXT_texture_sRGB"));
-            SG_LOG(SG_VIEW, SG_WARN, "GL_EXT_framebuffer_sRGB " << osg::isGLExtensionSupported(glext->contextID, "GL_EXT_framebuffer_sRGB"));
             useSRGB = osg::isGLExtensionOrVersionSupported(glext->contextID, "GL_EXT_texture_sRGB", 2.1f) &&
                       osg::isGLExtensionOrVersionSupported(glext->contextID, "GL_EXT_framebuffer_sRGB", 3.0f);
         }
     }
-    SG_LOG(SG_VIEW, SG_INFO, "Splash: useSRGB " << useSRGB);
 #endif
     // setup the base geometry 
     _splashFBOTexture = new osg::Texture2D;
