@@ -483,8 +483,6 @@ void FGNavRadio::updateReceiver(double dt)
 
   //////////////////////////////////////////////////////////
   // adjust reception range for altitude
-  // FIXME: make sure we are using the navdata range now that
-  //        it is valid in the data file
   //////////////////////////////////////////////////////////
 	if ( is_loc ) {
 	    double offset = radial - target_radial;
