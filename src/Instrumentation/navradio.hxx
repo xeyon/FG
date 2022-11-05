@@ -113,6 +113,10 @@ class FGNavRadio : public AbstractInstrument,
 
     // internal (private) values
 
+    // When the selected frequency is changed or when leaving GPS slave mode,
+    // the low-pass filter applied to signal quality must be disabled. Setting
+    // this member to 'false' has one-shot behavior.
+    bool _apply_lowpass_filter = false;
     int play_count;
     bool _nav_search;
     double _last_freq;
