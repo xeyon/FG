@@ -1185,11 +1185,23 @@ void CameraGroup::buildDefaultGroup(osgViewer::View* viewer)
             setValue(masterCamera->getNode("vr-mirror", true), true);
         }
         SGPropertyNode* nameNode = masterCamera->getNode("window/name");
-        if (nameNode) {
+        if (nameNode)
             setValue(cgroupNode->getNode("gui/window/name", true),
                      nameNode->getStringValue());
-            setValue(cgroupNode->getNode("splash/window/name", true),
-                     nameNode->getStringValue());
+    }
+
+    SGPropertyNode* splashWindowNameNode = cgroupNode->getNode("splash/window/name");
+    if (!splashWindowNameNode) {
+        // Find the first camera with a window name
+        SGPropertyNodeVec cameras(cgroupNode->getChildren("camera"));
+        for (auto it = cameras.begin(); it != cameras.end(); ++it) {
+            SGPropertyNode* nameNode = (*it)->getNode("window/name");
+            if (nameNode) {
+                // Use that window name for the splash
+                setValue(cgroupNode->getNode("splash/window/name", true),
+                         nameNode->getStringValue());
+                break;
+            }
         }
     }
 
