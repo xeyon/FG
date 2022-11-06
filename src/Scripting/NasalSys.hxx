@@ -163,6 +163,8 @@ public:
      */
     static naRef getPropertyValue(naContext c, SGPropertyNode* node);
 
+    bool reloadModuleFromFile(const std::string& moduleName);
+
 private:
     void initLogLevelConstants();
 
@@ -175,6 +177,7 @@ private:
     naRef parse(naContext ctx, const char* filename, const char* buf, int len,
                std::string& errors);
     naRef genPropsModule();
+
 
 private:
     //friend class FGNasalScript;

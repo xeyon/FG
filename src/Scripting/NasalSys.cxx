@@ -800,7 +800,7 @@ public:
         _sys->gcRelease(_gcRoot);
     }
 
-    virtual bool operator()(const SGPropertyNode* aNode, SGPropertyNode * root)
+    bool operator()(const SGPropertyNode* aNode, SGPropertyNode* root) override
     {
         _sys->setCmdArg(const_cast<SGPropertyNode*>(aNode));
         naRef args[1];
@@ -1541,8 +1541,12 @@ bool FGNasalSys::createModule(const char* moduleName, const char* fileName,
     if (!naHash_get(_globals, modname, &locals))
         locals = naNewHash(ctx);
 
-    _cmdArg = (SGPropertyNode*)cmdarg;
+    // store the filename in the module hash, so we could reload it
+    naRef modFilePath = naNewString(ctx);
+    naStr_fromdata(modFilePath, (char*)fileName, strlen(fileName));
+    hashset(locals, "__moduleFilePath", modFilePath);
 
+    _cmdArg = (SGPropertyNode*)cmdarg;
     callWithContext(ctx, code, argc, args, locals);
     hashset(_globals, moduleName, locals);
 
@@ -1563,6 +1567,28 @@ void FGNasalSys::deleteModule(const char* moduleName)
     naStr_fromdata(modname, (char*)moduleName, strlen(moduleName));
     naHash_delete(_globals, modname);
     naFreeContext(ctx);
+}
+
+bool FGNasalSys::reloadModuleFromFile(const std::string& moduleName)
+{
+    if (!_inited || naIsNil(_globals)) {
+        return false;
+    }
+
+    naRef locals = naHash_cget(_globals, (char*)moduleName.c_str());
+    if (naIsNil(locals)) {
+        // no such module
+        return false;
+    }
+
+    naRef filePath = naHash_cget(locals, (char*)"__moduleFilePath");
+    if (naIsNil(filePath)) {
+        return false;
+    }
+
+    SGPath path = SGPath::fromUtf8(naStr_data(filePath));
+    deleteModule(moduleName.c_str());
+    return loadModule(path, moduleName.c_str());
 }
 
 naRef FGNasalSys::getModule(const std::string& moduleName) const

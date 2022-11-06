@@ -1036,6 +1036,17 @@ do_profiler_stop(const SGPropertyNode *arg, SGPropertyNode *root)
 #endif
 }
 
+static bool do_reload_nasal_module(const SGPropertyNode* arg, SGPropertyNode*)
+{
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+    if (!nasalSys) {
+        SG_LOG(SG_GUI, SG_ALERT, "reloadModuleFromFile command: Nasal subsystem not found");
+        return false;
+    }
+
+    return nasalSys->reloadModuleFromFile(arg->getStringValue("module"));
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Command setup.
@@ -1051,53 +1062,54 @@ do_profiler_stop(const SGPropertyNode *arg, SGPropertyNode *root)
 static struct {
   const char * name;
   SGCommandMgr::command_t command;
-} built_ins [] = {
-    { "null", do_null },
-    { "nasal", do_nasal },
-    { "pause", do_pause },
-    { "load", do_load },
-    { "save", do_save },
-    { "save-tape", do_save_tape },
-    { "load-tape", do_load_tape },
-    { "view-cycle", do_view_cycle },
-    { "view-push", do_view_push },
-    { "view-clone", do_view_clone },
-    { "view-last-pair", do_view_last_pair },
-    { "view-last-pair-double", do_view_last_pair_double },
-    { "view-new", do_view_new },
+} built_ins[] = {
+    {"null", do_null},
+    {"nasal", do_nasal},
+    {"nasal-module-reload", do_reload_nasal_module},
+    {"pause", do_pause},
+    {"load", do_load},
+    {"save", do_save},
+    {"save-tape", do_save_tape},
+    {"load-tape", do_load_tape},
+    {"view-cycle", do_view_cycle},
+    {"view-push", do_view_push},
+    {"view-clone", do_view_clone},
+    {"view-last-pair", do_view_last_pair},
+    {"view-last-pair-double", do_view_last_pair_double},
+    {"view-new", do_view_new},
     /*
     { "set-sea-level-air-temp-degc", do_set_sea_level_degc },
     { "set-outside-air-temp-degc", do_set_oat_degc },
     { "set-dewpoint-sea-level-air-temp-degc", do_set_dewpoint_sea_level_degc },
     { "set-dewpoint-temp-degc", do_set_dewpoint_degc },
     */
-    { "property-toggle", do_property_toggle },
-    { "property-assign", do_property_assign },
-    { "property-adjust", do_property_adjust },
-    { "property-multiply", do_property_multiply },
-    { "property-swap", do_property_swap },
-    { "property-scale", do_property_scale },
-    { "property-cycle", do_property_cycle },
-    { "property-randomize", do_property_randomize },
-    { "property-interpolate", do_property_interpolate },
-    { "data-logging-commit", do_data_logging_commit },
-    { "log-level", do_log_level },
-    { "replay", do_replay },
+    {"property-toggle", do_property_toggle},
+    {"property-assign", do_property_assign},
+    {"property-adjust", do_property_adjust},
+    {"property-multiply", do_property_multiply},
+    {"property-swap", do_property_swap},
+    {"property-scale", do_property_scale},
+    {"property-cycle", do_property_cycle},
+    {"property-randomize", do_property_randomize},
+    {"property-interpolate", do_property_interpolate},
+    {"data-logging-commit", do_data_logging_commit},
+    {"log-level", do_log_level},
+    {"replay", do_replay},
     /*
     { "decrease-visibility", do_decrease_visibility },
     { "increase-visibility", do_increase_visibility },
     */
-    { "loadxml", do_load_xml_to_proptree},
-    { "savexml", do_save_xml_from_proptree },
-    { "xmlhttprequest", do_load_xml_from_url },
+    {"loadxml", do_load_xml_to_proptree},
+    {"savexml", do_save_xml_from_proptree},
+    {"xmlhttprequest", do_load_xml_from_url},
 
-    { "profiler-start", do_profiler_start },
-    { "profiler-stop",  do_profiler_stop },
-    
-    { "video-start", do_video_start },
-    { "video-stop", do_video_stop },
+    {"profiler-start", do_profiler_start},
+    {"profiler-stop", do_profiler_stop},
 
-    { 0, 0 }			// zero-terminated
+    {"video-start", do_video_start},
+    {"video-stop", do_video_stop},
+
+    {0, 0} // zero-terminated
 };
 
 
