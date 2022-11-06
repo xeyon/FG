@@ -334,7 +334,7 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
 
     double distanceToDescent;
     // Not the best solution. Double adding of legs is possible
-    if (*fp->getLastWayPoint() == fp->getNextWaypoint() &&
+    if (fp->getLastWaypoint() == fp->getNextWaypoint() &&
         reachedEndOfCruise(distanceToDescent)) {
         if (!loadNextLeg(distanceToDescent)) {
             setDie(true);
