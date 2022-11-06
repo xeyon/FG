@@ -108,8 +108,10 @@ FGPUICompatDialog::FGPUICompatDialog(SGPropertyNode* props) : FGDialog(props),
 
 FGPUICompatDialog::~FGPUICompatDialog()
 {
-    _peer->callMethod<void>("doClose");
-
+    if (_peer) {
+        _peer->callMethod<void>("doClose");
+    }
+    
     _props->setIntValue("lastx", getX());
     _props->setIntValue("lasty", getY());
     // FIXME: save width/height as well?
