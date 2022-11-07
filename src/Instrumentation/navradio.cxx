@@ -698,10 +698,12 @@ void FGNavRadio::valueChanged (SGPropertyNode* prop)
     _navaid = NULL;
     _apply_lowpass_filter = false;
     _time_before_search_sec = 0;
-  } else if ((prop == freq_node) || (prop == alt_freq_node)) {
+  } else if (prop == alt_freq_node) {
+      updateFormattedFrequencies();
+  } else if (prop == freq_node) {
       updateFormattedFrequencies();
       _apply_lowpass_filter = false; // signal quality allowed to vary quickly
-      _time_before_search_sec = 0.0; // force a frequency update
+      _time_before_search_sec = 0.0; // trigger a new search() ASAP
   }
 }
 
