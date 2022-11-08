@@ -26,8 +26,9 @@
 
 #include <simgear/sound/sample.hxx>
 
+#include <cstdlib>
 #include <cstring>
-#include <stdlib.h>
+#include <utility>
 
 static const char DI = '1';
 static const char DIT = '1';
@@ -235,7 +236,7 @@ SGSoundSample *FGMorse::make_ident( const std::string& id, const int freq ) {
     buf_ptr += SPACE_SIZE;
 
     // 4. create the simple sound and return
-    SGSoundSample *sample = new SGSoundSample( buffer, length,
+    SGSoundSample *sample = new SGSoundSample( std::move(buffer), length,
                                                BYTES_PER_SECOND );
 
     sample->set_reference_dist( 10.0 );

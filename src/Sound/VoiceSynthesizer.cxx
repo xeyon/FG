@@ -16,6 +16,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+
+#include <utility>
+
 #include "VoiceSynthesizer.hxx"
 #include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
@@ -127,7 +130,7 @@ SGSoundSample * FLITEVoiceSynthesizer::synthesize(const std::string & text, doub
     reinterpret_cast<unsigned char*>( data ),
     free
   };
-  return new SGSoundSample(buf,
+  return new SGSoundSample(std::move(buf),
                            count * sizeof(short),
                            rate,
                            SG_SAMPLE_MONO16);
