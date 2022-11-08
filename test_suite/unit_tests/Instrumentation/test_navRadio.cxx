@@ -800,7 +800,6 @@ void NavRadioTests::testGlideslopeLongDistance()
     CPPUNIT_ASSERT(node->getStringValue("frequencies/selected-mhz-fmt") == "109.50");
 
     CPPUNIT_ASSERT_DOUBLES_EQUAL(gs->glideSlopeAngleDeg(), 3.0, 0.001);
-    double gsAngleRad = gs->glideSlopeAngleDeg() * SG_DEGREES_TO_RADIANS;
 
     // standard approach (per charts)
     SGGeod p = SGGeodesy::direct(gs->geod(), 90, 7.5 * SG_NM_TO_METER);
