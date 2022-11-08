@@ -1,11 +1,14 @@
 #include "test_navRadio.hxx"
 
+#include <algorithm>
 #include <memory>
+#include <cmath>
 #include <cstring>
 
 #include "test_suite/FGTestApi/testGlobals.hxx"
 #include "test_suite/FGTestApi/NavDataCache.hxx"
 
+#include <Main/fg_props.hxx>
 #include <Navaids/NavDataCache.hxx>
 #include <Navaids/navrecord.hxx>
 #include <Navaids/navlist.hxx>
@@ -836,4 +839,93 @@ void NavRadioTests::testGlideslopeLongDistance()
     setPositionAndStabilise(r.get(), p);
     CPPUNIT_ASSERT_EQUAL(false, node->getBoolValue("gs-in-range"));
     CPPUNIT_ASSERT_EQUAL(true, node->getBoolValue("in-range"));
+}
+
+void NavRadioTests::testVORSignalQuality()
+{
+    std::unique_ptr<FGNavRadio> r = testVORSignalQuality_setup("navtest", 2);
+    SGPropertyNode* node = fgGetNode("/instrumentation/navtest[2]");
+
+    SGGeod pos = SGGeod::fromDegFt(-3.35277800, 55.499167, 20000);
+    setPositionAndStabilise(r.get(), pos);
+    // The signal quality should be good here
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0,
+                                 node->getDoubleValue("signal-quality-norm"),
+                                 0.01);
+
+    // 2786 feet is the navaid altitude above sea level, according to nav.dat.
+    // I believe 150000 is high enough, however I'm not knowledgeable in this
+    // field.
+    pos = SGGeod::fromDegFt(-3.35277800, 55.499167, 2786 + 150000);
+    setPositionAndStabilise(r.get(), pos);
+    // Too high for a good signal here
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0,
+                                 node->getDoubleValue("signal-quality-norm"),
+                                 0.01);
+    r.reset();
+
+    // Test that changing the standby frequency doesn't affect the rate of
+    // change of signal quality (it has no reason to disable the low-pass
+    // filter).
+    double rate1 = testVORSignalQuality_maxRateOfChange(false);
+    double rate2 = testVORSignalQuality_maxRateOfChange(true);
+    // At the time of this writing, rate1 == rate2, however randomness, signal
+    // quality affected by weather... might be added in the future.
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, rate2 / rate1, 0.01);
+}
+
+std::unique_ptr<FGNavRadio>
+NavRadioTests::testVORSignalQuality_setup(const std::string& name, int index)
+{
+    SGPropertyNode_ptr configNode(new SGPropertyNode);
+    configNode->setStringValue("name", name);
+    configNode->setIntValue("number", index);
+    auto r = std::make_unique<FGNavRadio>(configNode);
+    r->bind();
+    r->init();
+
+    SGPropertyNode* node = fgGetNode("/instrumentation/" + name, index);
+    node->setBoolValue("serviceable", true);
+    // Needed for the radio to power up
+    fgSetDouble("/systems/electrical/outputs/nav", 6.0);
+    node->setDoubleValue("frequencies/selected-mhz", 113.8);
+    node->setDoubleValue("frequencies/standby-mhz", 112.4); // whatever
+
+    return r;
+}
+
+// Rise above the selected VOR station and measure how quickly the signal
+// quality diminishes. Return the largest variation seen between two
+// consecutive positions.
+//
+// When the low-pass filter is disabled, the return value is larger (by a
+// factor of approximately four with the FG code from November 2022).
+double
+NavRadioTests::testVORSignalQuality_maxRateOfChange(bool changeStandbyFreq)
+{
+    std::unique_ptr<FGNavRadio> r = testVORSignalQuality_setup("navtest", 2);
+    SGPropertyNode* node = fgGetNode("/instrumentation/navtest[2]");
+
+    double currAlt = 2786 + 65000; // in feet, above MSL
+    double maxChange = 0.0;
+    double signalQuality, lastSignalQuality = 1.0;
+
+    for (int i = 0; i < 1000; i++) {
+        currAlt += 20;
+        SGGeod pos = SGGeod::fromDegFt(-3.35277800, 55.499167, currAlt);
+        FGTestApi::setPosition(pos);
+
+        if (changeStandbyFreq) {
+            node->setDoubleValue("frequencies/standby-mhz",
+                                           (i % 2) ? 112.2 : 112.5);
+        }
+        r->update(0.01);
+
+        signalQuality = node->getDoubleValue("signal-quality-norm");
+        maxChange = std::max(maxChange,
+                             std::abs(signalQuality - lastSignalQuality));
+        lastSignalQuality = signalQuality;
+    }
+
+    return maxChange;
 }

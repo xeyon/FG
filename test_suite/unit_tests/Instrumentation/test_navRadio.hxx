@@ -21,6 +21,8 @@
 #ifndef _FG_NAVRADIO_UNIT_TESTS_HXX
 #define _FG_NAVRADIO_UNIT_TESTS_HXX
 
+#include <memory>
+#include <string>
 
 #include <cppunit/extensions/HelperMacros.h>
 #include <cppunit/TestFixture.h>
@@ -48,9 +50,14 @@ class NavRadioTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testILSAdjacentPaired);
     CPPUNIT_TEST(testGlideslopeLongDistance);
 
+    CPPUNIT_TEST(testVORSignalQuality);
+
     CPPUNIT_TEST_SUITE_END();
 
     void setPositionAndStabilise(FGNavRadio* r, const SGGeod& g);
+    std::unique_ptr<FGNavRadio> testVORSignalQuality_setup(
+        const std::string& name, int index);
+    double testVORSignalQuality_maxRateOfChange(bool changeStandbyFreq);
 
 public:
     // Set up function for each test.
@@ -76,6 +83,8 @@ public:
     void testILSPaired();
     void testILSAdjacentPaired();
     void testGlideslopeLongDistance();
+
+    void testVORSignalQuality();
 };
 
 
