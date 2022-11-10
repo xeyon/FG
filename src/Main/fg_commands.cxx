@@ -1065,7 +1065,7 @@ static struct {
 } built_ins[] = {
     {"null", do_null},
     {"nasal", do_nasal},
-    {"nasal-module-reload", do_reload_nasal_module},
+    {"nasal-reload", do_reload_nasal_module}, // avoid conflict with modules.nas which defines 'nasal-module-reload' 
     {"pause", do_pause},
     {"load", do_load},
     {"save", do_save},
