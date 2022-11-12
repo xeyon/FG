@@ -276,8 +276,9 @@ private:
   void pushBackWaypoint(FGAIWaypoint *wpt);
 
   /**Create an arc flightplan around a center from startAngle to endAngle.*/
-  void createArc(FGAIAircraft *ac, const SGGeod& center, int startAngle, int endAngle, int increment, int radius, double aElev, double aSpeed, const char* pattern);
-  void createLine(FGAIAircraft *ac, const SGGeod& startPoint, double azimuth, double dist, double dAlt, double vDescent, const char* pattern);
+  void createArc(FGAIAircraft *ac, const SGGeod& center, int startAngle, int endAngle, int increment, int radius, double aElev, double altDiff, double aSpeed, const char* pattern);
+  /**Create a line flightplan from start with dist and altitude diff*/
+  void createLine(FGAIAircraft *ac, const SGGeod& startPoint, double azimuth, double dist, double aElev, double dAlt, double vDescent, const char* pattern);
   bool createLandingTaxi(FGAIAircraft *, FGAirport *apt, double radius, const std::string& fltType, const std::string& acType, const std::string& airline);
   void createDefaultLandingTaxi(FGAIAircraft *, FGAirport* aAirport);
   void createDefaultTakeoffTaxi(FGAIAircraft *, FGAirport* aAirport, FGRunway* aRunway);

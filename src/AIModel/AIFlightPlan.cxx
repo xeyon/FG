@@ -472,12 +472,18 @@ void FGAIFlightPlan::setLeadDistance(double speed,
 
   //lead_distance_ft = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS);
 
-  double lead_distance_m = turn_radius_m * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
-  lead_distance_ft = lead_distance_m * SG_METER_TO_FEET;
-  SG_LOG(SG_AI, SG_BULK, "Setting Leaddistance " << (lead_distance_ft*SG_FEET_TO_METER) << " Turnradius " << turn_radius_m << " Speed " << speed_mps << " Half turn Angle " << (leadInAngle)/2);
-  if (lead_distance_ft > 1000) {
-      SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance_ft << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
+  if ((int)leadInAngle==0) {
+        double lead_distance_m = fabs(2*speed) * SG_FEET_TO_METER;
+        setLeadDistance(lead_distance_m * SG_METER_TO_FEET);
+  } else {
+    double lead_distance_m = turn_radius_m * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
+    lead_distance_ft = lead_distance_m * SG_METER_TO_FEET;
+    SG_LOG(SG_AI, SG_BULK, "Setting Leaddistance " << (lead_distance_ft*SG_FEET_TO_METER) << " Turnradius " << turn_radius_m << " Speed " << speed_mps << " Half turn Angle " << (leadInAngle)/2);
+    if (lead_distance_ft > 1000) {
+        SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance_ft << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
+    }
   }
+
   /*
   if ((lead_distance_ft > (3*turn_radius)) && (current->on_ground == false)) {
       SG_LOG(SG_AI, SG_ALERT, "Warning: Lead-in distance is large. Inbound = " << inbound
