@@ -111,6 +111,8 @@ private:
 
     typedef string_list ParameterList;
 
+    SGPropertyNode* getLsDir(SGPropertyNode* node, const ParameterList &tokens);
+
     inline void node_not_found_error( const string& s ) const {
         throw "node '" + s + "' not found";
     }
@@ -330,21 +332,7 @@ FGProps::PropsChannel::foundTerminator()
             string command = tokens[0];
 
             if (command == "ls") {
-                SGPropertyNode* dir = node;
-                if (tokens.size() == 2) {
-                    if (tokens[1][0] == '/') {
-                        dir = globals->get_props()->getNode( tokens[1].c_str() );
-                    } else {
-                        string s = path;
-                        s += "/";
-                        s += tokens[1];
-                        dir = globals->get_props()->getNode( s.c_str() );
-                    }
-
-                    if (dir == 0) {
-                        node_not_found_error( tokens[1] );
-                    }
-                }
+                SGPropertyNode* dir = getLsDir(node, tokens);
 
                 for (int i = 0; i < dir->nChildren(); i++) {
                     SGPropertyNode * child = dir->getChild(i);
@@ -367,7 +355,7 @@ FGProps::PropsChannel::foundTerminator()
                     push( line.c_str() );
                 }
             } else if (command == "ls2") {
-                SGPropertyNode* dir = globals->get_props()->getNode(tokens[1]);
+                SGPropertyNode* dir = getLsDir(node, tokens);
                 if (dir) {
                     int n = dir->nChildren();
                     for (int i = 0; i < n; i++) {
@@ -719,6 +707,31 @@ nasal [EOF <marker>]  execute arbitrary Nasal code (simulator must be running wi
     }
 
     buffer.remove();
+}
+
+/**
+ * Return directory to use with ls or ls2 command.
+ */
+SGPropertyNode*
+FGProps::PropsChannel::getLsDir(SGPropertyNode* node, const ParameterList &tokens)
+{
+    SGPropertyNode* dir = node;
+    if (tokens.size() == 2) {
+        if (tokens[1][0] == '/') {
+            dir = globals->get_props()->getNode( tokens[1] );
+        } else {
+            string s = path;
+            s += "/";
+            s += tokens[1];
+            dir = globals->get_props()->getNode( s );
+        }
+
+        if (dir == nullptr) {
+            node_not_found_error( tokens[1] );
+        }
+    }
+
+    return dir;
 }
 
 /**
