@@ -50,6 +50,17 @@ namespace AILeg
     };
 }
 
+// 1 = joined departure queue; 2 = Passed DepartureHold waypoint; handover control to tower; 0 = any other state.
+namespace AITakeOffStatus
+{
+    enum Type
+    {
+      NONE = 0,
+      QUEUED = 1, // joined departure queue
+      CLEARED_FOR_TAKEOFF = 2 // Passed DepartureHold waypoint; handover control to tower;
+    };
+}
+
 class FGAIAircraft : public FGAIBaseAircraft {
 
 public:
@@ -86,7 +97,7 @@ public:
 
     void ClimbTo(double altitude);
     void TurnTo(double heading);
-    
+
     void getGroundElev(double dt); //TODO these 3 really need to be public?
     void doGroundAltitude();
     bool loadNextLeg  (double dist=0);
@@ -106,7 +117,7 @@ public:
     bool getTaxiClearanceRequest() { return needsTaxiClearance; };
     FGAISchedule * getTrafficRef() { return trafficRef; };
     void setTrafficRef(FGAISchedule *ref) { trafficRef = ref; };
-    void resetTakeOffStatus() { takeOffStatus = 0;};
+    void resetTakeOffStatus() { takeOffStatus = AITakeOffStatus::NONE;};
     void setTakeOffStatus(int status) { takeOffStatus = status; };
     int getTakeOffStatus() { return takeOffStatus; };
     void setTakeOffSlot(time_t timeSlot) { takeOffTimeSlot = timeSlot;};
@@ -133,7 +144,7 @@ public:
     double calcVerticalSpeed(double vert_ft, double dist_m, double speed, double error);
 
     FGATCController * getATCController() { return controller; };
-    
+
     void clearATCController();
     bool isBlockedBy(FGAIAircraft* other);
     void dumpCSVHeader(std::unique_ptr<sg_ofstream> &o);
@@ -164,7 +175,7 @@ private:
     SGPropertyNode_ptr refuel_node;
     SGPropertyNode_ptr tcasThreatNode;
     SGPropertyNode_ptr tcasRANode;
-    
+
     // helpers for Run
     //TODO sort out which ones are better protected virtuals to allow
     //subclasses to override specific behaviour
@@ -177,7 +188,7 @@ private:
     void controlHeading(FGAIWaypoint* curr,
                         FGAIWaypoint* next);
     void controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next);
-    
+
     void updatePrimaryTargetValues(double dt, bool& flightplanActive, bool& aiOutOfSight);
     void updateSecondaryTargetValues(double dt);
     void updateHeading(double dt);
@@ -186,13 +197,15 @@ private:
     void updatePitchAngleTarget();
     void updateActualState(double dt);
     void updateModelProperties(double dt);
+    /**Handle special cases for the User AI shadow*/
+    void updateUserFlightPlan(double dt);
 
     void handleATCRequests(double dt);
 
     inline bool isStationary() {
         return ((fabs(speed) <= 0.0001) && (fabs(tgt_speed) <= 0.0001));
     }
-    
+
     inline bool needGroundElevation() {
         if (!isStationary())
             _needsGroundElevation = true;
@@ -218,7 +231,7 @@ private:
     int stuckCounter = 0;
     bool tracked = false;
     /**
-     * Signals a reset to leg 1 at a different airport. 
+     * Signals a reset to leg 1 at a different airport.
      * The leg loading happens at a different place than the parking loading.
      * */
     bool repositioned = false;

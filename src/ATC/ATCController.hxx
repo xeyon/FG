@@ -35,6 +35,35 @@
 
 #include <ATC/trafficcontrol.hxx>
 
+namespace ATCMessageState
+{
+    enum Type
+    {
+// 0 =  Normal; no action required
+NORMAL = 0,
+// 1 = "Acknowledge "Hold position
+ACK_HOLD = 1,
+// 2 = "Acknowledge "Resume taxi".
+ACK_RESUME_TAXI = 2,
+// 3 = "Issue TaxiClearance"
+TAXI_CLEARED = 3,
+// 4 = Acknowledge Taxi Clearance"
+ACK_TAXI_CLEARED = 4,
+// 5 = Post acknowlegde taxiclearance: Start taxiing
+START_TAXI = 5,
+// 6 = Report runway
+REPORT_RUNWAY = 6,
+// 7 = Acknowledge report runway
+ACK_REPORT_RUNWAY = 7,
+// 8 = Switch tower frequency
+SWITCH_TOWER = 8,
+// 9 = Acknowledge switch tower frequency
+ACK_SWITCH_TOWER = 9,
+// 10 = Cleared for takeoff
+CLEARED_TAKEOFF = 10,
+    };
+}
+
 /**
  * class FGATCController
  * NOTE: this class serves as an abstraction layer for all sorts of ATC controllers.

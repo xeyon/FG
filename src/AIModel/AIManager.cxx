@@ -150,7 +150,7 @@ FGAIManager::init() {
     globals->get_commands()->addCommand("remove-aiobject", this, &FGAIManager::removeObjectCommand);
     _environmentVisiblity = fgGetNode("/environment/visibility-m");
     _groundSpeedKts_node = fgGetNode("/velocities/groundspeed-kt", true);
-    
+
     // Create an (invisible) AIAircraft representation of the current
     // users's aircraft, that mimicks the user aircraft's behavior.
 
@@ -160,7 +160,7 @@ FGAIManager::init() {
     _userAircraft->setPerformance("", "jet_transport");
     _userAircraft->setHeading(fgGetDouble("/orientation/heading-deg"));
     _userAircraft->setSpeed(_groundSpeedKts_node->getDoubleValue());
-    
+
     // radar properties
     _simRadarControl = fgGetNode("/sim/controls/radar", true);
     if (!_simRadarControl->hasValue()) {
@@ -187,13 +187,13 @@ void FGAIManager::registerScenarios(SGPropertyNode_ptr root)
         static_haveRegisteredScenarios = true;
         root = globals->get_props();
     }
-    
+
     // find all scenarios at standard locations (for driving the GUI)
     std::vector<SGPath> scenarioSearchPaths;
     scenarioSearchPaths.push_back(globals->get_fg_root() / "AI");
     scenarioSearchPaths.push_back(globals->get_fg_home() / "Scenarios");
     scenarioSearchPaths.push_back(SGPath(fgGetString("/sim/aircraft-dir")) / "Scenarios");
-    
+
     // add-on scenario directories
     const auto& addonsManager = flightgear::addons::AddonManager::instance();
     if (addonsManager) {
@@ -213,7 +213,7 @@ void FGAIManager::registerScenarios(SGPropertyNode_ptr root)
     for (auto p : scenarioSearchPaths) {
         if (!p.exists())
             continue;
-        
+
         simgear::Dir dir(p);
         for (auto xmlPath : dir.children(simgear::Dir::TYPE_FILE, ".xml")) {
             registerScenarioFile(root, xmlPath);
@@ -224,7 +224,7 @@ void FGAIManager::registerScenarios(SGPropertyNode_ptr root)
 SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, const SGPath& xmlPath)
 {
     if (!xmlPath.exists()) return {};
-    
+
     auto scenariosNode = root->getNode("/sim/ai/scenarios", true);
     SGPropertyNode_ptr sNode;
 
@@ -233,18 +233,18 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
     try {
         SGPropertyNode_ptr scenarioProps(new SGPropertyNode);
         readProperties(xmlPath, scenarioProps);
-        
+
         for (auto xs : scenarioProps->getChildren("scenario")) {
             if (!xs->hasChild("name") || !xs->hasChild("description")) {
                 SG_LOG(SG_AI, SG_DEV_WARN, "Scenario is missing name/description:" << xmlPath);
             }
-            
+
             sNode = scenariosNode->addChild("scenario");
-            
+
             const auto bareName = xmlPath.file_base();
             sNode->setStringValue("id", bareName);
             sNode->setStringValue("path", xmlPath.utf8Str());
-            
+
             if (xs->hasChild("name")) {
                 sNode->setStringValue("name", xs->getStringValue("name"));
             } else {
@@ -253,11 +253,11 @@ SGPropertyNode_ptr FGAIManager::registerScenarioFile(SGPropertyNode_ptr root, co
                 // auto s = simgear::strutils::srep
                 sNode->setStringValue("name", cleanedName);
             }
-            
+
             if (xs->hasChild("description")) {
                 sNode->setStringValue("description", xs->getStringValue("description"));
             }
-            
+
             FGAICarrier::extractCarriersFromScenario(xs, sNode);
         } // of scenarios in the XML file
     } catch (sg_exception& e) {
@@ -332,7 +332,7 @@ FGAIManager::shutdown()
     }
 
     static_haveRegisteredScenarios = false;
-    
+
     globals->get_commands()->removeCommand("load-scenario");
     globals->get_commands()->removeCommand("unload-scenario");
     globals->get_commands()->removeCommand("add-aiobject");
@@ -377,12 +377,12 @@ FGAIManager::update(double dt)
         return;
 
     fetchUserState(dt);
-    
+
     // fetch radar state. Ensure we only do this once per frame.
     _radarEnabled = _simRadarControl->getBoolValue();
     _radarDebugMode = _radarDebugNode->getBoolValue();
     _radarRangeM = _radarRangeNode->getDoubleValue() * SG_NM_TO_METER;
-    
+
     // partition the list into dead followed by alive
     auto firstAlive =
       std::stable_partition(ai_list.begin(), ai_list.end(), std::mem_fn(&FGAIBase::getDie));
@@ -467,7 +467,6 @@ FGAIManager::getNumAiObjects() const
 void
 FGAIManager::fetchUserState( double dt )
 {
-
     globals->get_aircraft_orientation(user_heading, user_pitch, user_roll);
     user_speed     = user_speed_node->getDoubleValue() * 0.592484;
     wind_from_east = wind_from_east_node->getDoubleValue();
@@ -540,7 +539,7 @@ bool FGAIManager::addObjectCommand(const SGPropertyNode* arg, const SGPropertyNo
 FGAIBasePtr FGAIManager::addObject(const SGPropertyNode* definition)
 {
     const std::string& type = definition->getStringValue("type", "aircraft");
-    
+
     FGAIBase* ai = nullptr;
     if (type == "tanker") { // refueling scenarios
         ai = new FGAITanker;
@@ -702,7 +701,7 @@ FGAIManager::loadScenarioFile(const std::string& scenarioName, SGPath& outPath)
             }
         }
     }
-    
+
     return {};
 }
 

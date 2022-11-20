@@ -181,15 +181,15 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
     // only bother with aircraft that have a takeoff status of 2, since those are essentially under tower control
     auto ac = rwy->getFirstAircraftInDepartureQueue();
     if (ac) {
-        if (ac->getTakeOffStatus() == 1) {
+        if (ac->getTakeOffStatus() == AITakeOffStatus::QUEUED) {
             // transmit takeoff clearance
-            ac->setTakeOffStatus(2);
+            ac->setTakeOffStatus(AITakeOffStatus::CLEARED_FOR_TAKEOFF);
             transmit(&(*i), &(*parent), MSG_CLEARED_FOR_TAKEOFF, ATC_GROUND_TO_AIR, true);
-            i->setState(10);
+            i->setState(ATCMessageState::CLEARED_TAKEOFF);
         }
     }
     //FIXME Make it an member of traffic record
-    if (current.getAircraft()->getTakeOffStatus() == 2) {
+    if (current.getAircraft()->getTakeOffStatus() == AITakeOffStatus::CLEARED_FOR_TAKEOFF) {
         current.setHoldPosition(false);
     } else {
         current.setHoldPosition(true);
@@ -200,7 +200,7 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
             SG_LOG(SG_ATC, SG_BULK, "Unset Hold " << clearanceId << " for " << rwy->getRunwayName());
             current.setHoldPosition(false);
         } else {
-            SG_LOG(SG_ATC, SG_WARN, "Not cleared " << id << " " << clearanceId);
+            SG_LOG(SG_ATC, SG_WARN, "Not cleared " << id << " Currently cleared " << clearanceId);
         }
     } else {
         if (current.getAircraft() == rwy->getFirstAircraftInDepartureQueue()) {
@@ -209,7 +209,7 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
             rwy->setCleared(id);
             auto ac = rwy->getFirstOfStatus(1);
             if (ac) {
-                ac->setTakeOffStatus(2);
+                ac->setTakeOffStatus(AITakeOffStatus::QUEUED);
                 // transmit takeoff clearacne? But why twice?
             }
         } else {

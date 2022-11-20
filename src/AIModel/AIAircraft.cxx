@@ -102,7 +102,7 @@ FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI A
         _performance = PerformanceData::getDefaultData();
     }
 
-    takeOffStatus = 0;
+    takeOffStatus = AITakeOffStatus::NONE;
     timeElapsed = 0;
 
     trackCache.remainingLength = 0;
@@ -195,7 +195,7 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
     }
 }
 
- void FGAIAircraft::Run(double dt)
+void FGAIAircraft::Run(double dt)
 {
     // We currently have one situation in which an AIAircraft object is used that is not attached to the
     // AI manager. In this particular case, the AIAircraft is used to shadow the user's aircraft's behavior in the AI world.
@@ -213,23 +213,25 @@ void FGAIAircraft::setPerformance(const std::string& acType, const std::string& 
         if (outOfSight) {
             return;
         }
+    } else {
+        updateUserFlightPlan(dt);
     }
 
-     if (!flightplanActive) {
+    if (!flightplanActive) {
         groundTargetSpeed = 0;
-     }
+    }
 
-     handleATCRequests(dt); // ATC also has a word to say
-     updateSecondaryTargetValues(dt); // target roll, vertical speed, pitch
-     updateActualState(dt);
+    handleATCRequests(dt); // ATC also has a word to say
+    updateSecondaryTargetValues(dt); // target roll, vertical speed, pitch
+    updateActualState(dt);
 
-     updateModelProperties(dt);
+    updateModelProperties(dt);
 
 
-     if (!isUserAircraft) {
-         UpdateRadar(manager);
-         invisible = !manager->isVisible(pos);
-     }
+    if (!isUserAircraft) {
+        UpdateRadar(manager);
+        invisible = !manager->isVisible(pos);
+    }
   }
 
 
@@ -1047,7 +1049,7 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
         scheduleForATCTowerDepartureControl(1);
     }
     if (prev->contains(string("Accel"))) {
-        takeOffStatus = 3;
+        takeOffStatus = AITakeOffStatus::CLEARED_FOR_TAKEOFF;
     }
 
     // This is the last taxi waypoint, and marks the the end of the flight plan
@@ -1402,6 +1404,42 @@ void FGAIAircraft::handleATCRequests(double dt)
                                               speed,
                                               altitude_ft,
                                               dt);
+    }
+}
+
+void FGAIAircraft::updateUserFlightPlan(double dt)
+{
+    // If the aircraft leaves the airport proximity increase the flightplan leg to sign off
+    // from the tower controller and free the runway #2358 The user doesn't
+    // need to fly out straight
+    if (fp) {
+        switch (fp->getLeg())
+        {
+        case AILeg::TAKEOFF:
+            {
+                auto current = fp->getCurrentWaypoint();
+                auto last = fp->getLastWaypoint();
+                int legDistance = SGGeodesy::distanceM(current->getPos(), last->getPos());
+                int currDist = SGGeodesy::distanceM(getGeodPos(), current->getPos());
+                int lastDist = SGGeodesy::distanceM(getGeodPos(), last->getPos());
+                    SG_LOG(SG_ATC, SG_BULK, "Signing off from Tower "
+                    << "\t currDist\t" << currDist
+                    << "\t legDistance\t" << legDistance
+                    << "\t" << lastDist
+                    << "\t" << getGeodPos().getLatitudeDeg()
+                    << "\t" << getGeodPos().getLongitudeDeg()
+                    << "\t" << current->getPos().getLatitudeDeg()
+                    << "\t" << current->getPos().getLongitudeDeg());
+                if ( currDist>legDistance ) {
+                    // We are definetly beyond the airport
+                    fp->incrementLeg();
+                }
+            }
+            break;
+        default:
+            break;
+        }
+        //TODO
     }
 }
 

@@ -222,16 +222,16 @@ void FGGroundController::updateAircraftInformation(int id, SGGeod geod,
             available = true;
         }
         if (checkTransmissionState(0,2, current, now, MSG_REQUEST_TAXI_CLEARANCE, ATC_AIR_TO_GROUND)) {
-            current->setState(3);
+            current->setState(ATCMessageState::TAXI_CLEARED);
         }
         if (checkTransmissionState(3,3, current, now, MSG_ISSUE_TAXI_CLEARANCE, ATC_GROUND_TO_AIR)) {
-            current->setState(4);
+            current->setState(ATCMessageState::ACK_TAXI_CLEARED);
         }
         if (checkTransmissionState(4,4, current, now, MSG_ACKNOWLEDGE_TAXI_CLEARANCE, ATC_AIR_TO_GROUND)) {
-            current->setState(5);
+            current->setState(ATCMessageState::START_TAXI);
         }
         if ((state == 5) && available) {
-            current->setState(0);
+            current->setState(ATCMessageState::NORMAL);
             current->getAircraft()->setTaxiClearanceRequest(false);
             current->setHoldPosition(false);
             available = false;
@@ -491,11 +491,11 @@ void FGGroundController::checkHoldPosition(int id, double lat,
             if (currStatus == true) { // No has a hold short instruction
                 transmit(&(*current), parent, MSG_HOLD_POSITION, ATC_GROUND_TO_AIR, true);
                 SG_LOG(SG_ATC, SG_DEBUG, "Transmitting hold short instruction " << currStatus << " " << available);
-                current->setState(1);
+                current->setState(ATCMessageState::ACK_HOLD);
             } else {
                 transmit(&(*current), parent, MSG_RESUME_TAXI, ATC_GROUND_TO_AIR, true);
                 SG_LOG(SG_ATC, SG_DEBUG, "Transmitting resume instruction " << currStatus << " " << available);
-                current->setState(2);
+                current->setState(ATCMessageState::ACK_RESUME_TAXI);
             }
             lastTransmission = now;
             available = false;
@@ -512,16 +512,16 @@ void FGGroundController::checkHoldPosition(int id, double lat,
 
     //int state = current->getState();
     if (checkTransmissionState(1,1, current, now, MSG_ACKNOWLEDGE_HOLD_POSITION, ATC_AIR_TO_GROUND)) {
-        current->setState(0);
+        current->setState(ATCMessageState::NORMAL);
         current->setHoldPosition(true);
     }
     if (checkTransmissionState(2,2, current, now, MSG_ACKNOWLEDGE_RESUME_TAXI, ATC_AIR_TO_GROUND)) {
-        current->setState(0);
+        current->setState(ATCMessageState::NORMAL);
         current->setHoldPosition(false);
     }
     if (current->getAircraft()->getTakeOffStatus() && (current->getState() == 0)) {
         SG_LOG(SG_ATC, SG_DEBUG, "Scheduling " << current->getAircraft()->getCallSign() << " for hold short");
-        current->setState(6);
+        current->setState(ATCMessageState::REPORT_RUNWAY);
     }
     if (checkTransmissionState(6,6, current, now, MSG_REPORT_RUNWAY_HOLD_SHORT, ATC_AIR_TO_GROUND)) {
     }

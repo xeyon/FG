@@ -264,7 +264,7 @@ FGTrafficRecord::~FGTrafficRecord()
 void FGTrafficRecord::setPositionAndIntentions(int pos,
         FGAIFlightPlan * route)
 {
-    SG_LOG(SG_ATC, SG_DEBUG, "Position: " << pos);
+    SG_LOG(SG_AI, SG_DEBUG, "Traffic record position: " << pos);
     currentPos = pos;
     if (!intentions.empty()) {
         intVecIterator i = intentions.begin();
@@ -276,8 +276,7 @@ void FGTrafficRecord::setPositionAndIntentions(int pos,
     } else {
         //FGAIFlightPlan::waypoint* const wpt= route->getCurrentWaypoint();
         int size = route->getNrOfWayPoints();
-        SG_LOG(SG_ATC, SG_DEBUG, "Setting pos" << currentPos);
-        SG_LOG(SG_ATC, SG_DEBUG, "Setting intentions");
+        SG_LOG(SG_ATC, SG_DEBUG, "Setting pos to " << currentPos << " and intentions");
         for (int i = 2; i < size; i++) {
             int val = route->getRouteIndex(i);
             intentions.push_back(val);
