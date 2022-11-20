@@ -228,7 +228,7 @@ fgviewerMain(int argc, char** argv)
     // Now init the renderer, as we've got all the options, globals etc.
     fgrenderer->init();
 
-    FGScenery* scenery = globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);
+    auto scenery = globals->get_subsystem_mgr()->add<FGScenery>();
     scenery->init();
     scenery->bind();
 

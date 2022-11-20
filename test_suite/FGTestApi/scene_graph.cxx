@@ -48,7 +48,7 @@ void initScenery()
     render->setView(viewer.get());
 
     // Start up the scenery subsystem.
-    globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);
+    globals->get_subsystem_mgr()->add<FGScenery>();
     globals->get_scenery()->init();
     globals->get_scenery()->bind();
 }

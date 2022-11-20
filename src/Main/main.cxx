@@ -152,14 +152,16 @@ static void fgMainLoop( void )
 
     frame_signal->fireValueChanged();
 
-    auto timeManager = globals->get_subsystem<TimeManager>();
+    // Fetch the subsystem manager.
+    auto mgr = globals->get_subsystem_mgr();
+
     // compute simulated time (allowing for pause, warp, etc) and
     // real elapsed time
     double sim_dt, real_dt;
-    timeManager->computeTimeDeltas(sim_dt, real_dt);
+    mgr->get_subsystem<TimeManager>()->computeTimeDeltas(sim_dt, real_dt);
 
     // update all subsystems
-    globals->get_subsystem_mgr()->update(sim_dt);
+    mgr->update(sim_dt);
 
     // flush commands waiting in the queue
     SGCommandMgr::instance()->executedQueuedCommands();
@@ -186,9 +188,8 @@ static void initTerrasync()
     // hence not downloaded again.
     fgSetString("/sim/terrasync/installation-dir", (globals->get_fg_root() / "Scenery").utf8Str());
 
-    simgear::SGTerraSync* terra_sync = new simgear::SGTerraSync();
+    auto terra_sync = globals->get_subsystem_mgr()->add<simgear::SGTerraSync>();
     terra_sync->setRoot(globals->get_props());
-    globals->add_subsystem("terrasync", terra_sync, SGSubsystemMgr::GENERAL);
 
     terra_sync->bind();
     terra_sync->init();
@@ -313,6 +314,9 @@ static void fgIdleFunction ( void ) {
     // our initializations out of the idle callback so that we can get a
     // splash screen up and running right away.
 
+    // Fetch the subsystem manager.
+    auto mgr = globals->get_subsystem_mgr();
+
     if ( idle_state == 0 ) {
         auto camera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
         if (guiInit(camera->getGraphicsContext())) {
@@ -338,7 +342,7 @@ static void fgIdleFunction ( void ) {
     } else if ( idle_state == 4 ) {
         idle_state++;
 
-        globals->add_new_subsystem<TimeManager>(SGSubsystemMgr::INIT);
+        mgr->add<TimeManager>();
 
         // Do some quick general initializations
         if( !fgInitGeneral()) {
@@ -368,16 +372,16 @@ static void fgIdleFunction ( void ) {
 
         simgear::SGModelLib::init(globals->get_fg_root().utf8Str(), globals->get_props());
 
-        auto timeManager = globals->get_subsystem<TimeManager>();
+        auto timeManager = mgr->get_subsystem<TimeManager>();
         timeManager->init();
 
         ////////////////////////////////////////////////////////////////////
         // Initialize the TG scenery subsystem.
         ////////////////////////////////////////////////////////////////////
 
-        globals->add_new_subsystem<FGScenery>(SGSubsystemMgr::DISPLAY);
-        globals->get_scenery()->init();
-        globals->get_scenery()->bind();
+        auto scenery = mgr->add<FGScenery>();
+        scenery->init();
+        scenery->bind();
 
         fgSplashProgress("creating-subsystems");
     } else if (( idle_state == 7 ) || (idle_state == 2007)) {
@@ -402,12 +406,12 @@ static void fgIdleFunction ( void ) {
         idle_state++;
         SGTimeStamp st;
         st.stamp();
-        globals->get_subsystem_mgr()->bind();
+        mgr->bind();
         SG_LOG(SG_GENERAL, SG_INFO, "Binding subsystems took:" << st.elapsedMSec());
 
         fgSplashProgress("init-subsystems");
     } else if ( idle_state == 9 ) {
-        SGSubsystem::InitStatus status = globals->get_subsystem_mgr()->incrementalInit();
+        SGSubsystem::InitStatus status = mgr->incrementalInit();
         if ( status == SGSubsystem::INIT_DONE) {
           ++idle_state;
           fgSplashProgress("finishing-subsystems");
@@ -705,7 +709,7 @@ int fgMainInit( int argc, char **argv )
     fgInitSecureMode();
     fgInitAircraftPaths(false);
 
-    auto errorManager = globals->add_new_subsystem<flightgear::ErrorReporter>(SGSubsystemMgr::GENERAL);
+    auto errorManager = globals->get_subsystem_mgr()->add<flightgear::ErrorReporter>();
     errorManager->preinit();
 
     configResult = fgInitAircraft(false, didUseLauncher);
@@ -756,7 +760,7 @@ int fgMainInit( int argc, char **argv )
     // Copy the property nodes for the menus added by registered add-ons
     addons::AddonManager::instance()->addAddonMenusToFGMenubar();
 
-    auto presets = globals->add_new_subsystem<flightgear::GraphicsPresets>(SGSubsystemMgr::DISPLAY);
+    auto presets = globals->get_subsystem_mgr()->add<flightgear::GraphicsPresets>();
     presets->applyInitialPreset();
 
     // Initialize the Window/Graphics environment.

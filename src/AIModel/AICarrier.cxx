@@ -801,7 +801,7 @@ std::pair<bool, SGGeod> FGAICarrier::initialPositionForCarrier(const std::string
 
 SGSharedPtr<FGAICarrier> FGAICarrier::findCarrierByNameOrPennant(const std::string& namePennant)
 {
-    const FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+    const auto aiManager = globals->get_subsystem<FGAIManager>();
     if (!aiManager) {
         return {};
     }

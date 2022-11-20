@@ -55,13 +55,13 @@ void TrafficMgrTests::tearDown()
 }
 
 void TrafficMgrTests::testParse() {
-    globals->add_new_subsystem<FGTrafficManager>(SGSubsystemMgr::GENERAL);
+    globals->get_subsystem_mgr()->add<FGTrafficManager>();
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
     globals->get_subsystem_mgr()->postinit();
 
-    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("traffic-manager");
+    auto tmgr = globals->get_subsystem<FGTrafficManager>();
     FGScheduledFlightVecIterator fltBegin, fltEnd;
 
     for (size_t i = 0; i < 1000000; i++)
@@ -107,7 +107,7 @@ void TrafficMgrTests::testTrafficManager()
 
     FGTestApi::setPositionAndStabilise(egeo->geod());
 
-    auto tmgr = globals->add_new_subsystem<FGTrafficManager>(SGSubsystemMgr::GENERAL);
+    auto tmgr = globals->get_subsystem_mgr()->add<FGTrafficManager>();
 
     tmgr->bind();
     tmgr->init();

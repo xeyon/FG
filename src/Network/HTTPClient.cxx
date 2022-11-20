@@ -93,7 +93,7 @@ FGHTTPClient* FGHTTPClient::getOrCreate()
         return ext;
     }
 
-    ext = globals->add_new_subsystem<FGHTTPClient>(SGSubsystemMgr::GENERAL);
+    ext = globals->get_subsystem_mgr()->add<FGHTTPClient>();
     ext->init();
     return ext;
 }
@@ -306,7 +306,7 @@ void FGHTTPClient::postinit()
   
   pkg::Root* packageRoot = globals->packageRoot();
   if (packageRoot) {
-    FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
     nasal::Hash nasalGlobals = nasalSys->getGlobals();
     nasal::Hash nasalPkg = nasalGlobals.createHash("pkg"); // module
     nasalPkg.set("root", packageRoot);

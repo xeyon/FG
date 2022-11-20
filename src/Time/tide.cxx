@@ -57,7 +57,7 @@ void FGTide::unbind()
 #include <Main/fg_props.hxx>
 void FGTide::update(double dt)
 {
-    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    auto l = globals->get_subsystem<FGLight>();
 
     // Don't know where the 60 degrees offset comes from but it matches
     // the tides perfectly at EHAL. Something to figure out.

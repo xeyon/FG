@@ -120,10 +120,10 @@ void GPSTests::testGPS()
 
 
   FGRouteMgr* rm = new FGRouteMgr;
-  globals->add_subsystem( "route-manager", rm );
+  globals->get_subsystem_mgr()->add( "route-manager", rm );
 
  // FGEnvironmentMgr* envMgr = new FGEnvironmentMgr;
- // globals->add_subsystem("environment", envMgr);
+ // globals->get_subsystem_mgr()->add("environment", envMgr);
  // envMgr->init();
 
   fgSetBool("/sim/realism/simple-gps", true);
@@ -132,7 +132,7 @@ void GPSTests::testGPS()
 
   SGPropertyNode* nd = fgGetNode("/instrumentation/gps", true);
   GPS* gps = new GPS(nd);
-  globals->add_subsystem("gps", gps);
+  globals->get_subsystem_mgr()->add("gps", gps);
 
   const FGAirport* egph = fgFindAirportID("EGPH");
   testSetPosition(egph->geod());

@@ -109,13 +109,13 @@ namespace canvas
   SGSubsystem*
   FGCanvasSystemAdapter::getSubsystem(const std::string& name) const
   {
-    return globals->get_subsystem(name.c_str());
+    return globals->get_subsystem_mgr()->get_subsystem(name.c_str());
   }
 
   //----------------------------------------------------------------------------
   simgear::HTTP::Client* FGCanvasSystemAdapter::getHTTPClient() const
   {
-    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
+    auto http = globals->get_subsystem<FGHTTPClient>();
 
     if( http )
       return http->client();

@@ -189,7 +189,7 @@ private:
     void populate()
     {
         SGVec3d cartAirportPos = m_airport->cart();
-        FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+        auto aiManager = globals->get_subsystem<FGAIManager>();
         for (auto ai : aiManager->get_ai_list()) {
             const auto cart = ai->getCartPos();
 
@@ -714,7 +714,7 @@ bool FGAirportDynamics::innerGetActiveRunway(const string & trafficType,
         /*
         FGEnvironment
             stationweather =
-            ((FGEnvironmentMgr *) globals->get_subsystem("environment"))
+            globals->get_subsystem<FGEnvironmentMgr>()
             ->getEnvironment(getLatitude(), getLongitude(),
                              getElevation());
         */

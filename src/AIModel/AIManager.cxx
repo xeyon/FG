@@ -74,7 +74,7 @@ public:
         _unloadScript = nasalScripts->getStringValue("unload");
         std::string loadScript = nasalScripts->getStringValue("load");
         if (!loadScript.empty()) {
-            FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
+            auto nasalSys = globals->get_subsystem<FGNasalSys>();
             std::string moduleName = "scenario_" + _internalName;
             bool ok = nasalSys->createModule(moduleName.c_str(), moduleName.c_str(),
                                              loadScript.c_str(), loadScript.size(),
@@ -94,7 +94,7 @@ public:
                       [](FGAIBasePtr ai) { ai->setDie(true); });
 
 
-        FGNasalSys* nasalSys = globals->get_subsystem<FGNasalSys>();
+        auto nasalSys = globals->get_subsystem<FGNasalSys>();
         if (!nasalSys) // happens during shutdown / reset
             return;
 

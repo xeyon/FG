@@ -201,7 +201,7 @@ void CatalogListModel::refreshCatalog(int index)
 
 void CatalogListModel::installDefaultCatalog(bool showAddFeedback)
 {
-    FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
+    auto http = globals->get_subsystem<FGHTTPClient>();
     CatalogRef cat = Catalog::createFromUrl(m_packageRoot, http->getDefaultCatalogUrl());
     if (showAddFeedback) {
       m_newlyAddedCatalog = cat;
@@ -290,7 +290,7 @@ void CatalogListModel::onCatalogStatusChanged(Catalog* cat)
     // compute the version-specific URL. This is the logic which bounces the UI
     // to the fallback URL.
     if (cat->status() == Delegate::FAIL_NOT_FOUND) {
-        FGHTTPClient* http = globals->get_subsystem<FGHTTPClient>();
+        auto http = globals->get_subsystem<FGHTTPClient>();
         if (cat->url() == http->getDefaultCatalogUrl()) {
             cat->setUrl(http->getDefaultCatalogFallbackUrl());
             cat->refresh(); // and trigger another refresh

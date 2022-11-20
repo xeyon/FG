@@ -779,10 +779,10 @@ readPanel (const SGPropertyNode * root, const SGPath& path)
           
           // Warning - hardwired size!!!
           RenderArea2D* instrument = new RenderArea2D(158, 40, 158, 40, x, y);
-          KLN89* gps = (KLN89*)globals->get_subsystem("kln89");
+          auto gps = globals->get_subsystem<KLN89>();
 		  if (gps == NULL) {
 			  gps = new KLN89(instrument);
-			  globals->add_subsystem("kln89", gps, SGSubsystemMgr::GENERAL);
+			  globals->get_subsystem_mgr()->add("kln89", gps);
 		  }
 		  //gps->init();  // init seems to get called automagically.
 		  FGSpecialInstrument* gpsinst = new FGSpecialInstrument(gps);

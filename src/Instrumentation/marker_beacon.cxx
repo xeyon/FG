@@ -103,7 +103,7 @@ FGMarkerBeacon::init ()
     if (audio_btn->getType() == simgear::props::NONE)
         audio_btn->setBoolValue( true );
 
-    SGSoundMgr *smgr = globals->get_subsystem<SGSoundMgr>();
+    auto smgr = globals->get_subsystem<SGSoundMgr>();
     if (smgr) {
         _audioSampleGroup = smgr->find("avionics", true);
         _audioSampleGroup->tie_to_listener();

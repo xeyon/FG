@@ -77,7 +77,6 @@
 #include <simgear/package/Catalog.hxx>
 
 #include <Add-ons/AddonManager.hxx>
-
 #include <Aircraft/controls.hxx>
 #include <Aircraft/replay.hxx>
 #include <Aircraft/FlightHistory.hxx>
@@ -95,7 +94,7 @@
 
 #include <Cockpit/panel.hxx>
 #include <Cockpit/panel_io.hxx>
-
+ 
 #include <Canvas/canvas_mgr.hxx>
 #include <Canvas/gui_mgr.hxx>
 #include <Canvas/FGCanvasSystemAdapter.hxx>
@@ -981,6 +980,9 @@ void fgCreateSubsystems(bool duringReset) {
 
     SG_LOG( SG_GENERAL, SG_INFO, "== Creating Subsystems");
 
+    // Fetch the subsystem manager.
+    auto mgr = globals->get_subsystem_mgr();
+
     globals->get_event_mgr()->init();
     globals->get_event_mgr()->setRealtimeProperty(fgGetNode("/sim/time/delta-realtime-sec", true));
 
@@ -988,21 +990,20 @@ void fgCreateSubsystems(bool duringReset) {
     {
         // Initialize the property interpolator subsystem. Put into the INIT
         // group because the "nasal" subsystem may need it at GENERAL take-down.
-        globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
-        globals->add_new_subsystem<Highlight>(SGSubsystemMgr::INIT);
-        globals->add_subsystem("gui", new NewGUI, SGSubsystemMgr::INIT);
+        mgr->add<FGInterpolator>();
+        mgr->add<Highlight>();
+        mgr->add<NewGUI>();
     }
 
     // SGSubsystemMgr::GENERAL
     {
-        globals->add_subsystem("properties", new FGProperties, SGSubsystemMgr::GENERAL);
-        globals->add_new_subsystem<flightgear::AirportDynamicsManager>(SGSubsystemMgr::GENERAL);
-        globals->add_subsystem("performance-mon",
+        mgr->add<FGProperties>();
+        mgr->add<flightgear::AirportDynamicsManager>();
+        mgr->add("performance-mon",
                 new SGPerformanceMonitor(
-                        globals->get_subsystem_mgr(),
+                        mgr,
                         fgGetNode("/sim/performance-monitor", true)
-                        ),
-                SGSubsystemMgr::GENERAL
+                        )
                 );
 
         // Initialize the material property subsystem.
@@ -1013,55 +1014,55 @@ void fgCreateSubsystems(bool duringReset) {
         }
 
         // may exist already due to GUI startup or --load-tape=http...
-        if (!globals->get_subsystem<FGHTTPClient>()) {
-            globals->add_new_subsystem<FGHTTPClient>(SGSubsystemMgr::GENERAL);
+        if (!mgr->get_subsystem<FGHTTPClient>()) {
+            mgr->add<FGHTTPClient>();
         }
-        globals->add_new_subsystem<FGDNSClient>(SGSubsystemMgr::GENERAL);
+        mgr->add<FGDNSClient>();
 
         // Initialize the weather modeling subsystem
-        globals->add_subsystem("environment", new FGEnvironmentMgr, SGSubsystemMgr::GENERAL);
-        globals->add_new_subsystem<Ephemeris>(SGSubsystemMgr::GENERAL);
-        globals->add_subsystem( "xml-proprules", FGXMLAutopilotGroup::createInstance("property-rule"), SGSubsystemMgr::GENERAL );
+        mgr->add<FGEnvironmentMgr>();
+        mgr->add<Ephemeris>();
+        mgr->add("xml-proprules", FGXMLAutopilotGroup::createInstance("property-rule"));
 
-        globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::GENERAL);
-        globals->add_subsystem( "io", new FGIO, SGSubsystemMgr::GENERAL );
-        globals->add_subsystem("logger", new FGLogger, SGSubsystemMgr::GENERAL);
+        mgr->add<FGRouteMgr>();
+        mgr->add<FGIO>();
+        mgr->add<FGLogger>();
 
-        globals->add_new_subsystem<FGControls>(SGSubsystemMgr::GENERAL);
-        globals->add_new_subsystem<FGInput>(SGSubsystemMgr::GENERAL);
-        globals->add_subsystem("history", new FGFlightHistory, SGSubsystemMgr::GENERAL);
+        mgr->add<FGControls>();
+        mgr->add<FGInput>();
+        mgr->add<FGFlightHistory>();
 
         {
           SGSubsystem * httpd = flightgear::http::FGHttpd::createInstance( fgGetNode(flightgear::http::PROPERTY_ROOT) );
           if( NULL != httpd ) 
-            globals->add_subsystem("httpd", httpd, SGSubsystemMgr::GENERAL );
+            mgr->add("httpd", httpd);
         }
 
         if (!duringReset) {
-            globals->add_subsystem("tides", new FGTide, SGSubsystemMgr::GENERAL );
+            mgr->add<FGTide>();
         }
     }
     
     // SGSubsystemMgr::FDM
     {
-        globals->add_subsystem("flight", new FDMShell, SGSubsystemMgr::FDM);
+        mgr->add<FDMShell>();
 
         // Initialize the aircraft systems and instrumentation (before the
         // autopilot.)
-        globals->add_subsystem("systems", new FGSystemMgr, SGSubsystemMgr::FDM);
-        globals->add_subsystem("instrumentation", new FGInstrumentMgr, SGSubsystemMgr::FDM);
-        globals->add_subsystem( "xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"), SGSubsystemMgr::FDM );
+        mgr->add<FGSystemMgr>();
+        mgr->add<FGInstrumentMgr>();
+        mgr->add("xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"));
     }
     
     // SGSubsystemMgr::POST_FDM
     {
-        globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::POST_FDM);
-        globals->add_subsystem("ATC", new FGATCManager, SGSubsystemMgr::POST_FDM);
-        globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
-        globals->add_subsystem("mp", new FGMultiplayMgr, SGSubsystemMgr::POST_FDM);
+        mgr->add<PerformanceDB>();
+        mgr->add<FGATCManager>();
+        mgr->add<FGAIManager>();
+        mgr->add<FGMultiplayMgr>();
 
         #ifdef ENABLE_SWIFT
-        globals->add_subsystem("swift", new SwiftConnection, SGSubsystemMgr::POST_FDM);
+        mgr->add<SwiftConnection>();
         #endif
 
         // FGReplay.
@@ -1077,16 +1078,16 @@ void fgCreateSubsystems(bool duringReset) {
         // problem where JSBSim appears to rely on FGReplay creating certain
         // properties before it is initialised. This caused problems when
         // FGReplay was changed to be POST_FDM.
-        globals->add_new_subsystem<FGReplay>(SGSubsystemMgr::POST_FDM)
-                ->init(); // Special case.
+        mgr->add<FGReplay>();
+        mgr->get_subsystem<FGReplay>()->init(); // Special case.
 
-        //globals->add_subsystem("ai-model", new FGAIManager, SGSubsystemMgr::POST_FDM);
-        globals->add_subsystem("submodel-mgr", new FGSubmodelMgr, SGSubsystemMgr::POST_FDM);
+        //mgr->add<FGAIManager>();
+        mgr->add<FGSubmodelMgr>();
 
         // It's probably a good idea to initialize the top level traffic manager
         // After the AI and ATC systems have been initialized properly.
         // AI Traffic manager
-        globals->add_subsystem("traffic-manager", new FGTrafficManager, SGSubsystemMgr::POST_FDM);
+        mgr->add<FGTrafficManager>();
 
         fgSetArchivable("/sim/panel/visibility");
         fgSetArchivable("/sim/panel/x-offset");
@@ -1096,32 +1097,32 @@ void fgCreateSubsystems(bool duringReset) {
     
     // SGSubsystemMgr::DISPLAY
     {
-        globals->add_subsystem("hud", new HUD, SGSubsystemMgr::DISPLAY);
-        globals->add_subsystem("cockpit-displays", new flightgear::CockpitDisplayManager, SGSubsystemMgr::DISPLAY);
+        mgr->add<HUD>();
+        mgr->add<flightgear::CockpitDisplayManager>();
 
         simgear::canvas::Canvas::setSystemAdapter(
           simgear::canvas::SystemAdapterPtr(new canvas::FGCanvasSystemAdapter)
         );
-        globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
+        mgr->add<CanvasMgr>();
         
         auto canvasGui = new GUIMgr;
-        globals->add_subsystem("CanvasGUI", canvasGui, SGSubsystemMgr::DISPLAY);
+        mgr->add("CanvasGUI", canvasGui);
         auto guiCamera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
         canvasGui->setGUIViewAndCamera(globals->get_renderer()->getView(), guiCamera);
 
         #ifdef ENABLE_AUDIO_SUPPORT
-        globals->add_subsystem("voice", new FGVoiceMgr, SGSubsystemMgr::DISPLAY);
+        mgr->add<FGVoiceMgr>();
         #endif
 
         // ordering here is important : Nasal (via events), then models, then views
         if (!duringReset) {
-            globals->add_subsystem("lighting", new FGLight, SGSubsystemMgr::DISPLAY);
-            globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+            mgr->add<FGLight>();
+            mgr->add("events", globals->get_event_mgr());
         }
 
-        globals->add_new_subsystem<FGAircraftModel>(SGSubsystemMgr::DISPLAY);
-        globals->add_new_subsystem<FGModelMgr>(SGSubsystemMgr::DISPLAY);
-        globals->add_new_subsystem<FGViewMgr>(SGSubsystemMgr::DISPLAY);
+        mgr->add<FGAircraftModel>();
+        mgr->add<FGModelMgr>();
+        mgr->add<FGViewMgr>();
     }
     
     // SGSubsystemMgr::SOUND
@@ -1130,7 +1131,7 @@ void fgCreateSubsystems(bool duringReset) {
         // to be updated in every loop.
         // Sound manager is updated last so it can use the CPU while the GPU
         // is processing the scenery (doubled the frame-rate for me) -EMH-
-        globals->add_new_subsystem<FGSoundManager>(SGSubsystemMgr::SOUND);
+        mgr->add<FGSoundManager>();
 
         #ifdef ENABLE_IAX
         // Initialize the FGCom subsystem.
@@ -1138,7 +1139,7 @@ void fgCreateSubsystems(bool duringReset) {
         // depends on OpenAL, which is shutdown when the SOUND group
         // shutdown.
         // Sentry: FLIGHTGEAR-66
-        globals->add_new_subsystem<FGCom>(SGSubsystemMgr::SOUND);
+        mgr->add<FGCom>();
         #endif
     }
 }
@@ -1147,16 +1148,19 @@ void fgPostInitSubsystems()
 {
     SGTimeStamp st;
     st.stamp();
-  
+
+    // Fetch the subsystem manager.
+    auto mgr = globals->get_subsystem_mgr();
+
     ////////////////////////////////////////////////////////////////////////
     // Initialize the Nasal interpreter.
     // Do this last, so that the loaded scripts see initialized state
     ////////////////////////////////////////////////////////////////////////
-    globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
+    mgr->add<FGNasalSys>();
 
     // initialize methods that depend on other subsystems.
     st.stamp();
-    globals->get_subsystem_mgr()->postinit();
+    mgr->postinit();
     SG_LOG(SG_GENERAL, SG_INFO, "Subsystems postinit took:" << st.elapsedMSec());
   
     ////////////////////////////////////////////////////////////////////////
@@ -1189,54 +1193,56 @@ void fgStartReposition()
   // set this signal so Nasal scripts can take action.
   fgSetBool("/sim/signals/reinit", true);
   fgSetBool("/sim/crashed", false);
-  
-  FDMShell* fdm = globals->get_subsystem<FDMShell>();
-  fdm->unbind();
-  
+
+  // Fetch the subsystem manager.
+  auto mgr = globals->get_subsystem_mgr();
+
+  mgr->get_subsystem<FDMShell>()->unbind();
+
   // update our position based on current presets
   // this will mark position as needed finalized which we'll do in the
   // main-loop
   flightgear::initPosition();
   
-  auto terraSync = globals->get_subsystem<simgear::SGTerraSync>();
+  auto terraSync = mgr->get_subsystem<simgear::SGTerraSync>();
   if (terraSync) {
     terraSync->reposition();
   }
   
   // Initialize the FDM
-  globals->get_subsystem<FDMShell>()->reinit();
+  mgr->get_subsystem<FDMShell>()->reinit();
   
   // reset replay buffers
-  globals->get_subsystem<FGReplay>()->reinit();
-  
+  mgr->get_subsystem<FGReplay>()->reinit();
+
   // ugly: finalizePosition waits for METAR to arrive for the new airport.
   // we don't re-init the environment manager here, since historically we did
   // not, and doing so seems to have other issues. All that's needed is to
   // schedule METAR fetch immediately, so it's available for finalizePosition.
   // So we manually extract the METAR-fetching component inside the environment
   // manager, and re-init that.
-  SGSubsystemGroup* envMgr = static_cast<SGSubsystemGroup*>(globals->get_subsystem("environment"));
+  auto envMgr = static_cast<SGSubsystemGroup*>(mgr->get_subsystem<FGEnvironmentMgr>());
   if (envMgr) {
     envMgr->get_subsystem("realwx")->reinit();
   }
   
     // needed for parking assignment to work after reposition
-    auto atcManager = globals->get_subsystem<FGATCManager>();
+    auto atcManager = mgr->get_subsystem<FGATCManager>();
     if (atcManager) {
         atcManager->reposition();
     }
 
   // need to bind FDMshell again
-  fdm->bind();
+  mgr->get_subsystem<FDMShell>()->bind();
 
   // need to reset aircraft (systems/instruments/autopilot)
   // so they can adapt to current environment
-  globals->get_subsystem("systems")->reinit();
-  globals->get_subsystem("instrumentation")->reinit();
-  globals->get_subsystem("xml-autopilot")->reinit();
+  mgr->get_subsystem<FGSystemMgr>()->reinit();
+  mgr->get_subsystem<FGInstrumentMgr>()->reinit();
+  mgr->get_subsystem("xml-autopilot")->reinit();
 
   // need to update the timezone
-  auto timeManager = globals->get_subsystem<TimeManager>();
+  auto timeManager = mgr->get_subsystem<TimeManager>();
   if (timeManager) {
       timeManager->reposition();
   }

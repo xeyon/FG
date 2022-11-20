@@ -69,7 +69,7 @@ void initTestGlobals(const std::string& testName)
 
     fgSetDefaults();
 
-    auto t = globals->add_new_subsystem<TimeManager>(SGSubsystemMgr::INIT);
+    auto t = globals->get_subsystem_mgr()->add<TimeManager>();
     t->bind();
     t->init(); // establish mag-var data
 
@@ -79,7 +79,7 @@ void initTestGlobals(const std::string& testName)
      * Here the event manager is added to the subsystem manager so it can be
      * destroyed via the subsystem manager.
      */
-    globals->add_subsystem("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+    globals->get_subsystem_mgr()->add("events", globals->get_event_mgr());
     
     // necessary to avoid asserts: mark FGLocale as initialized
     globals->get_locale()->selectLanguage({});
@@ -169,10 +169,10 @@ void initStandardNasal(bool withCanvas)
     nasalNode->setBoolValue("local_weather/enabled", false);
 
     // Nasal needs the interpolator running
-    globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
+    globals->get_subsystem_mgr()->add<FGInterpolator>();
 
     // will be inited, since we already did that
-    globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
+    globals->get_subsystem_mgr()->add<FGNasalSys>();
 }
 
 void populateFPWithoutNasal(flightgear::FlightPlanRef f,

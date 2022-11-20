@@ -211,7 +211,7 @@ do_nasal (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_replay (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    FGReplay *r = (FGReplay *)(globals->get_subsystem( "replay" ));
+    auto r = globals->get_subsystem<FGReplay>();
     return r->start();
 }
 
@@ -317,7 +317,7 @@ do_save (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_save_tape (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+    auto replay = globals->get_subsystem<FGReplay>();
     replay->saveTape(arg);
 
     return true;
@@ -329,7 +329,7 @@ do_save_tape (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_load_tape (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    FGReplay* replay = (FGReplay*) globals->get_subsystem("replay");
+    auto replay = globals->get_subsystem<FGReplay>();
     replay->loadTape(arg);
 
     return true;
@@ -807,7 +807,7 @@ do_property_interpolate (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_data_logging_commit (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    FGLogger *log = (FGLogger *)globals->get_subsystem("logger");
+    auto log = globals->get_subsystem<FGLogger>();
     log->reinit();
     return true;
 }
@@ -913,7 +913,7 @@ do_load_xml_to_proptree(const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_load_xml_from_url(const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    FGHTTPClient* http = static_cast<FGHTTPClient*>(globals->get_subsystem("http"));
+    auto http = globals->get_subsystem<FGHTTPClient>();
     if (!http) {
         SG_LOG(SG_IO, SG_ALERT, "xmlhttprequest: HTTP client not running");
         return false;

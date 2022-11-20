@@ -514,7 +514,7 @@ NavDisplay::init ()
     _odg = new FGODGauge;
     _odg->setSize(_Instrument->getIntValue("texture-size", 512));
 
-    _route = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+    _route = globals->get_subsystem<FGRouteMgr>();
     
     _navRadio1Node = fgGetNode("/instrumentation/nav[0]", true);
     _navRadio2Node = fgGetNode("/instrumentation/nav[1]", true);

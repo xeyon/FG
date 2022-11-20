@@ -104,13 +104,13 @@ GPS* GPSTests::setupStandardGPS(SGPropertyNode_ptr config,
     gps->bind();
     gps->init();
     
-    globals->add_subsystem("gps", gps, SGSubsystemMgr::POST_FDM);
+    globals->get_subsystem_mgr()->add("gps", gps);
     return gps;
 }
 
 void GPSTests::setupRouteManager()
 {
-    auto rm = globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::GENERAL);
+    auto rm = globals->get_subsystem_mgr()->add<FGRouteMgr>();
     rm->bind();
     rm->init();
     rm->postinit();

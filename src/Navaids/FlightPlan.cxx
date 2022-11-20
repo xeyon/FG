@@ -1528,7 +1528,7 @@ void FlightPlan::activate()
         return;
     }
     
-  FGRouteMgr* routeManager = globals->get_subsystem<FGRouteMgr>();
+  auto routeManager = globals->get_subsystem<FGRouteMgr>();
   if (routeManager) {
     if (routeManager->flightPlan() != this) {
       SG_LOG(SG_NAVAID, SG_DEBUG, "setting new flight-plan on route-manager");

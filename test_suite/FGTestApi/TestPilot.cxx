@@ -49,7 +49,7 @@ TestPilot::TestPilot(SGPropertyNode_ptr props) :
     _groundspeedKnotsProp = _propRoot->getNode("velocities/groundspeed-kt", true);
     _verticalFPMProp = _propRoot->getNode("velocities/vertical-fpm", true);
     
-    globals->add_subsystem("flight", this, SGSubsystemMgr::FDM);
+    globals->get_subsystem_mgr()->add("flight", this);
 }
 
 TestPilot::~TestPilot()

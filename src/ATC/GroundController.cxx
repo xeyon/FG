@@ -156,7 +156,7 @@ bool FGGroundController::checkTransmissionState(int minState, int maxState, Traf
                 trans_num->setIntValue(-1);
                 // PopupCallback(n);
                 SG_LOG(SG_ATC, SG_DEBUG, "Selected transmission message " << n);
-                //FGATCManager *atc = (FGATCManager*) globals->get_subsystem("atc");
+                //auto atc = globals->get_subsystem<FGATCManager>();
                 //FGATCDialogNew::instance()->removeEntry(1);
             } else {
                 SG_LOG(SG_ATC, SG_DEBUG, "creating message for " << i->getAircraft()->getCallSign());

@@ -178,8 +178,8 @@ public:
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushClientAttrib(~0u);
 
-    // HUD can be NULL
-      HUD *hud = static_cast<HUD*>(globals->get_subsystem("hud"));
+      // HUD can be NULL
+      auto hud = globals->get_subsystem<HUD>();
       if (hud) {
           hud->draw(state);
       }
@@ -214,7 +214,7 @@ public:
     osg::LightSource* lightSource = static_cast<osg::LightSource*>(node);
     osg::Light* light = lightSource->getLight();
 
-    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    auto l = globals->get_subsystem<FGLight>();
       if (!l) {
           // lighting is down during re-init
           return;
@@ -274,7 +274,7 @@ public:
     lightModel = static_cast<osg::LightModel*>(stateAttribute);
 
 #if 0
-    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    auto l = globals->get_subsystem<FGLight>();
     lightModel->setAmbientIntensity(toOsg(l->scene_ambient());
 #else
     lightModel->setAmbientIntensity(osg::Vec4(0, 0, 0, 1));
@@ -626,7 +626,7 @@ FGRenderer::setupView( void )
     setupRoot();
 
     // build the sky
-    Ephemeris* ephemerisSub = globals->get_subsystem<Ephemeris>();
+    auto ephemerisSub = globals->get_subsystem<Ephemeris>();
 
 
     // The sun and moon radius are scaled down numbers of the actual
@@ -817,7 +817,7 @@ FGRenderer::update( ) {
         fgSetBool("/sim/menubar/overlap-hide", false);
     }
 
-    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    auto l = globals->get_subsystem<FGLight>();
 
     // update fog params
     double actual_visibility;
@@ -895,7 +895,7 @@ FGRenderer::updateSky()
     double altitude_m = _altitude_ft->getDoubleValue() * SG_FEET_TO_METER;
     _sky->modify_vis( altitude_m, 0.0 /* time factor, now unused */);
 
-    FGLight *l = static_cast<FGLight*>(globals->get_subsystem("lighting"));
+    auto l = globals->get_subsystem<FGLight>();
 
     // The sun and moon distances are scaled down versions of the
     // actual distance. See FGRenderer::setupView() for more details.
@@ -920,7 +920,7 @@ FGRenderer::updateSky()
     scolor.moon_angle  = l->get_moon_angle();
     scolor.altitude_m =  altitude_m;
     
-    Ephemeris* ephemerisSub = globals->get_subsystem<Ephemeris>();
+    auto ephemerisSub = globals->get_subsystem<Ephemeris>();
     double delta_time_sec = _sim_delta_sec->getDoubleValue();
     _sky->reposition( sstate, *ephemerisSub->data(), delta_time_sec );
     _sky->repaint( scolor, *ephemerisSub->data() );
@@ -1019,7 +1019,7 @@ PickList FGRenderer::pick(const osg::Vec2& windowPos)
     
     // We attempt to highlight nodes until Highlight::highlight_nodes()
     // succeeds and returns +ve, or highlighting is disabled and it returns -1.
-    Highlight* highlight = globals->get_subsystem<Highlight>();
+    auto highlight = globals->get_subsystem<Highlight>();
     int higlight_num_props = 0;
     
     for (Intersections::iterator hit = intersections.begin(),

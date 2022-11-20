@@ -124,7 +124,7 @@ public:
     
     if (prop->getNameString() == "flightplan-changed") {
       _fp = 
-        static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"))->flightPlan();
+        globals->get_subsystem<FGRouteMgr>()->flightPlan();
     }
   }
 private:
@@ -169,7 +169,7 @@ WaypointList::WaypointList(int x, int y, int width, int height) :
   // pretend to be a list, so fgPopup doesn't mess with our mouse events
   type |= PUCLASS_LIST;  
   flightgear::FlightPlan* fp = 
-    static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"))->flightPlan();
+    globals->get_subsystem<FGRouteMgr>()->flightPlan();
   setModel(new FlightPlanWaypointModel(fp));
   setSize(width, height);
   setValue(-1);

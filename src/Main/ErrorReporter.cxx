@@ -942,3 +942,7 @@ std::string ErrorReporter::threadSpecificContextValue(const std::string& key)
 
 
 } // namespace flightgear
+
+// Register the subsystem.
+SGSubsystemMgr::Registrant<flightgear::ErrorReporter> registrantErrorReporter(
+    SGSubsystemMgr::GENERAL);

@@ -243,7 +243,7 @@ do_reinit (const SGPropertyNode * arg, SGPropertyNode * root)
     } else {
         for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
             std::string name = subsystems[i]->getStringValue();
-            SGSubsystem * subsystem = globals->get_subsystem(name.c_str());
+            SGSubsystem * subsystem = globals->get_subsystem_mgr()->get_subsystem(name.c_str());
             if (subsystem == 0) {
                 result = false;
                 SG_LOG( SG_GENERAL, SG_ALERT,
@@ -272,7 +272,7 @@ do_suspend (const SGPropertyNode * arg, SGPropertyNode * root)
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
     for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
         std::string name = subsystems[i]->getStringValue();
-        SGSubsystem * subsystem = globals->get_subsystem(name.c_str());
+        SGSubsystem * subsystem = globals->get_subsystem_mgr()->get_subsystem(name.c_str());
         if (subsystem == 0) {
             result = false;
             SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << " not found");
@@ -296,7 +296,7 @@ do_resume (const SGPropertyNode * arg, SGPropertyNode * root)
     vector<SGPropertyNode_ptr> subsystems = arg->getChildren("subsystem");
     for ( unsigned int i = 0; i < subsystems.size(); i++ ) {
         std::string name = subsystems[i]->getStringValue();
-        SGSubsystem * subsystem = globals->get_subsystem(name.c_str());
+        SGSubsystem * subsystem = globals->get_subsystem_mgr()->get_subsystem(name.c_str());
         if (subsystem == 0) {
             result = false;
             SG_LOG(SG_GENERAL, SG_ALERT, "Subsystem " << name << " not found");

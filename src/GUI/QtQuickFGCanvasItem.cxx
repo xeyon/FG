@@ -212,7 +212,7 @@ void QtQuickFGCanvasItem::setCanvas(QString canvas)
     _canvasName = canvas;
 
     if (!_canvasName.isEmpty()) {
-        CanvasMgr* canvasManager = globals->get_subsystem<CanvasMgr>();
+        auto canvasManager = globals->get_subsystem<CanvasMgr>();
         _canvas = canvasManager->createCanvas("");
 
         SGPropertyNode* cprops = _canvas->getProps();
@@ -232,7 +232,7 @@ void QtQuickFGCanvasItem::initCanvasNasalModules()
     if( !nasal )
       return;
 
-    FGNasalSys *nas = globals->get_subsystem<FGNasalSys>();
+    auto nas = globals->get_subsystem<FGNasalSys>();
     if( !nas )
       SG_LOG( SG_GENERAL,
               SG_ALERT,

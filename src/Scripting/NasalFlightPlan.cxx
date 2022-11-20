@@ -1123,7 +1123,7 @@ static naRef f_createFlightplan(naContext c, naRef me, int argc, naRef* args)
 static naRef f_flightplan(naContext c, naRef me, int argc, naRef* args)
 {
     if (argc == 0) {
-        FGRouteMgr* rm = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+        auto rm = globals->get_subsystem<FGRouteMgr>();
         return ghostForFlightPlan(c, rm->flightPlan());
     }
 

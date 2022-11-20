@@ -464,7 +464,7 @@ const int SHOW_DETAIL2_ZOOM = 5;
 MapWidget::MapWidget(int x, int y, int maxX, int maxY) :
   puObject(x,y,maxX, maxY)
 {
-  _route = static_cast<FGRouteMgr*>(globals->get_subsystem("route-manager"));
+  _route = globals->get_subsystem<FGRouteMgr>();
   _gps = fgGetNode("/instrumentation/gps");
 
   _width = maxX - x;
@@ -687,7 +687,7 @@ void MapWidget::update()
     // symbols.
     _drawRangeNm = SGGeodesy::distanceNm(_projectionCenter, topLeft) + 10.0;
   
-    FGFlightHistory* history = (FGFlightHistory*) globals->get_subsystem("history");
+    auto history = globals->get_subsystem<FGFlightHistory>();
     if (history && _root->getBoolValue("draw-flight-history")) {
         _flightHistoryPath = history->pathForHistory();
     } else {
@@ -2038,7 +2038,7 @@ MapWidget::DrawAIObject::DrawAIObject(SGPropertyNode* m, const SGGeod& g) :
         // try to access the flight-plan of the aircraft. There are several layers
         // of potential NULL-ness here, so we have to be defensive at each stage.
         std::string originICAO, destinationICAO;
-        FGAIManager* aiManager = globals->get_subsystem<FGAIManager>();
+        auto aiManager = globals->get_subsystem<FGAIManager>();
         FGAIBasePtr aircraft = aiManager ? aiManager->getObjectFromProperty(model) : NULL;
         if (aircraft) {
             FGAIAircraft* p = static_cast<FGAIAircraft*>(aircraft.get());

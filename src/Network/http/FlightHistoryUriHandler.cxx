@@ -219,8 +219,7 @@ bool FlightHistoryUriHandler::handleRequest(const HTTPRequest & request,
 		return true; // OPTIONS only needs the headers
 	}
 
-	FGFlightHistory* history =
-			static_cast<FGFlightHistory*>(globals->get_subsystem("history"));
+	auto history = globals->get_subsystem<FGFlightHistory>();
 
 	double minEdgeLengthM = 50;
 	string requestPath = request.Uri.substr(getUri().length());

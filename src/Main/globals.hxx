@@ -161,6 +161,8 @@ private:
 
     SGSharedPtr<simgear::pkg::Root> _packageRoot;
 
+    SGSubsystem *get_subsystem (const char * name) const;
+
 public:
 
     FGGlobals();
@@ -171,27 +173,12 @@ public:
 
     SGSubsystemMgr *get_subsystem_mgr () const;
 
-    SGSubsystem *get_subsystem (const char * name) const;
-
     template<class T>
     T* get_subsystem() const
     {
         return dynamic_cast<T*>(get_subsystem(T::staticSubsystemClassId()));
     }
 
-
-    void add_subsystem (const char * name,
-                                SGSubsystem * subsystem,
-                                SGSubsystemMgr::GroupType type,
-                                double min_time_sec = 0);
-
-    template<class T>
-    T* add_new_subsystem (SGSubsystemMgr::GroupType type, double min_time_sec = 0)
-    {
-        T* sub = new T;
-        add_subsystem(T::staticSubsystemClassId(), sub, type, min_time_sec);
-        return sub;
-    }
 
     SGEventMgr *get_event_mgr () const;
 

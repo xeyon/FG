@@ -50,7 +50,7 @@ void RouteManagerTests::setUp()
         globals->append_fg_scenery(proceduresPath);
     }
 
-    globals->add_new_subsystem<FGRouteMgr>(SGSubsystemMgr::FDM);
+    globals->get_subsystem_mgr()->add<FGRouteMgr>();
 
     // setup the default GPS, which is needed for waypoint
     // sequencing to work
@@ -63,7 +63,7 @@ void RouteManagerTests::setUp()
     SGPropertyNode_ptr node = globals->get_props()->getNode("instrumentation", true)->getChild("gps", 0, true);
   //  node->setBoolValue("serviceable", true);
    // globals->get_props()->setDoubleValue("systems/electrical/outputs/gps", 6.0);
-    globals->add_subsystem("gps", gps, SGSubsystemMgr::POST_FDM);
+    globals->get_subsystem_mgr()->add("gps", gps);
     
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();

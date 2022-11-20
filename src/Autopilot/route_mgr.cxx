@@ -59,14 +59,14 @@ namespace su = simgear::strutils;
 
 static bool commandLoadFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
-  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  auto self = globals->get_subsystem<FGRouteMgr>();
   SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
   return self->loadRoute(path);
 }
 
 static bool commandSaveFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
-  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  auto self = globals->get_subsystem<FGRouteMgr>();
   SGPath path = SGPath::fromUtf8(arg->getStringValue("path"));
   const SGPath authorizedPath = SGPath(path).validate(true /* write */);
 
@@ -88,7 +88,7 @@ static bool commandSaveFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 
 static bool commandActivateFlightPlan(const SGPropertyNode* arg, SGPropertyNode *)
 {
-  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  auto self = globals->get_subsystem<FGRouteMgr>();
   bool activate = arg->getBoolValue("activate", true);
   if (activate) {
     self->activate();
@@ -101,14 +101,14 @@ static bool commandActivateFlightPlan(const SGPropertyNode* arg, SGPropertyNode 
 
 static bool commandClearFlightPlan(const SGPropertyNode*, SGPropertyNode *)
 {
-  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  auto self = globals->get_subsystem<FGRouteMgr>();
   self->clearRoute();
   return true;
 }
 
 static bool commandSetActiveWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
-  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  auto self = globals->get_subsystem<FGRouteMgr>();
   int index = arg->getIntValue("index");
   if ((index < 0) || (index >= self->numLegs())) {
     return false;
@@ -120,7 +120,7 @@ static bool commandSetActiveWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 
 static bool commandInsertWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
-    FGRouteMgr* self = globals->get_subsystem<FGRouteMgr>();
+    auto self = globals->get_subsystem<FGRouteMgr>();
     const bool haveIndex = arg->hasChild("index");
     int index = arg->getIntValue("index");
 
@@ -234,7 +234,7 @@ static bool commandInsertWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 
 static bool commandDeleteWaypt(const SGPropertyNode* arg, SGPropertyNode *)
 {
-  FGRouteMgr* self = (FGRouteMgr*) globals->get_subsystem("route-manager");
+  auto self = globals->get_subsystem<FGRouteMgr>();
   int index = arg->getIntValue("index");
   self->removeLegAtIndex(index);
   return true;
@@ -673,7 +673,7 @@ void FGRouteMgr::update_mirror()
 {
     _routePath.reset(); // wipe this so we re-compute on next update()
   mirror->removeChildren("wp");
-  NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+  auto gui = globals->get_subsystem<NewGUI>();
   FGDialog* rmDlg = gui ? gui->getDialog("route-manager") : NULL;
 
   if (!_plan) {

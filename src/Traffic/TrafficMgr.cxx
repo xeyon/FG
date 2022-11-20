@@ -613,7 +613,7 @@ void FGTrafficManager::finishInit()
     assert(doingInit);
     SG_LOG(SG_AI, SG_INFO, "finishing AI-Traffic init");
     loadHeuristics();
-    PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
+    auto perfDB = globals->get_subsystem<PerformanceDB>();
     // Do sorting and scoring separately, to take advantage of the "homeport" variable
     for (auto schedule : scheduledAircraft) {
         schedule->setScore();

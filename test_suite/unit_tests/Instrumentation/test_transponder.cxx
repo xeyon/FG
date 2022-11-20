@@ -40,7 +40,7 @@ SGSubsystemRef TransponderTests::setupStandardTransponder(const std::string& nam
     r->bind();
     r->init();
 
-    globals->add_subsystem("transponder", r, SGSubsystemMgr::FDM);
+    globals->get_subsystem_mgr()->add("transponder", r);
 
     return r;
 }

@@ -94,7 +94,7 @@ FGAirportDynamicsRef AirportDynamicsManager::find(const std::string &icao)
     if (icao.empty())
         return FGAirportDynamicsRef();
 
-    AirportDynamicsManager* instance = globals->get_subsystem<AirportDynamicsManager>();
+    auto instance = globals->get_subsystem<AirportDynamicsManager>();
     if (!instance)
         return FGAirportDynamicsRef();
 

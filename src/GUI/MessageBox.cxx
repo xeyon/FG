@@ -158,7 +158,7 @@ MessageBoxResult modalMessageBox(const std::string& caption,
         s += "\n( " +  moreText + ")";
     }
 
-    NewGUI* gui = globals->get_subsystem<NewGUI>();
+    auto gui = globals->get_subsystem<NewGUI>();
     if (!gui || (fgGetBool("/sim/rendering/initialized", false) == false)) {
         SG_LOG(SG_GENERAL, SG_POPUP, s);
     } else {
@@ -202,7 +202,7 @@ MessageBoxResult fatalMessageBoxWithoutExit(const std::string& caption,
     if (fgGetBool("/sim/rendering/initialized", false) == false) {
         std::cerr << s << std::endl;
     } else {
-        NewGUI* _gui = (NewGUI *)globals->get_subsystem("gui");
+        auto _gui = globals->get_subsystem<NewGUI>();
         SGPropertyNode_ptr dlg = _gui->getDialogProperties("popup");
         dlg->setStringValue("text/label", s  );
         _gui->showDialog("popup");

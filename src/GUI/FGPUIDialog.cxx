@@ -576,7 +576,7 @@ static void
 action_callback(puObject* object)
 {
     GUIInfo* info = (GUIInfo*)object->getUserData();
-    NewGUI* gui = (NewGUI*)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     gui->setActiveDialog(info->dialog);
     int nBindings = info->bindings.size();
     for (int i = 0; i < nBindings; i++) {
@@ -1087,7 +1087,7 @@ FGPUIDialog::makeObject(SGPropertyNode* props, int parentWidth, int parentHeight
                 obj->setBuffer(tsync->log());
             }
         } else {
-            FGNasalSys* nasal = (FGNasalSys*)globals->get_subsystem("nasal");
+            auto nasal = globals->get_subsystem<FGNasalSys>();
             obj->setBuffer(nasal->log());
         }
 

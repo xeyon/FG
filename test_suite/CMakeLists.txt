@@ -69,7 +69,9 @@ include(Dart)
 # System test suites.
 add_test(AeroMeshSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s AeroMeshTests)
 #add_test(GPSSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s GPSTests)
+add_test(InstancedSubsystemSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s InstancedSubsystemTests)
 #add_test(NavaidsSystemTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -s NavaidsTests)
+add_test(NonInstancedSubsystemSystemTests ${TESTSUITE_OUTPUT_DIR}/run_test_suite --ctest -s NonInstancedSubsystemTests)
 
 # Unit test suites.
 add_test(AddonManagementUnitTests ${TESTSUITE_OUTPUT_DIR}/fgfs_test_suite --ctest -u AddonManagementTests)

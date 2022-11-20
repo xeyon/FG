@@ -222,7 +222,7 @@ naRef PUICompatObject::property() const
     if (!_value)
         return naNil();
     
-    FGNasalSys* nas = globals->get_subsystem<FGNasalSys>();
+    auto nas = globals->get_subsystem<FGNasalSys>();
     return nas->wrappedPropsNode(_value.get());
 }
 
@@ -234,7 +234,7 @@ naRef PUICompatObject::propertyValue(naContext ctx) const
 
 naRef PUICompatObject::config() const
 {
-    FGNasalSys* nas = globals->get_subsystem<FGNasalSys>();
+    auto nas = globals->get_subsystem<FGNasalSys>();
     return nas->wrappedPropsNode(_config.get());
 }
 

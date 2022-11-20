@@ -85,9 +85,10 @@ void AeroMeshTests::testLiftComputation()
     props->setDoubleValue("geometry/wing/chord-ft", c);
     props->setDoubleValue("geometry/weight-lbs", weight);
 
-    globals->add_new_subsystem<PerformanceDB>(SGSubsystemMgr::POST_FDM);
-    globals->get_subsystem<PerformanceDB>()->bind();
-    globals->get_subsystem<PerformanceDB>()->init();
+    auto subsystem_mgr = globals->get_subsystem_mgr();
+    subsystem_mgr->add<PerformanceDB>();
+    subsystem_mgr->get_subsystem<PerformanceDB>()->bind();
+    subsystem_mgr->get_subsystem<PerformanceDB>()->init();
 
     FGAIManager *aiManager = new FGAIManager;
     FGAIAircraft *ai = new FGAIAircraft;

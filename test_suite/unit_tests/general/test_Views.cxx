@@ -49,7 +49,7 @@ void ViewsTests::tearDown()
 
 void ViewsTests::testBasic()
 {
-    auto vm = globals->add_new_subsystem<FGViewMgr>(SGSubsystemMgr::DISPLAY);
+    auto vm = globals->get_subsystem_mgr()->add<FGViewMgr>();
 
     CPPUNIT_ASSERT_EQUAL(static_cast<flightgear::View*>(nullptr), vm->get_current_view());
 

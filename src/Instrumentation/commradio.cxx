@@ -133,7 +133,7 @@ void AtisSpeaker::valueChanged(SGPropertyNode * node)
     }
   }
 
-  FGSoundManager * smgr = globals->get_subsystem<FGSoundManager>();
+  auto smgr = globals->get_subsystem<FGSoundManager>();
   if (!smgr) {
       return;
   }

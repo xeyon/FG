@@ -239,7 +239,7 @@ do_tile_cache_reload (const SGPropertyNode * arg, SGPropertyNode * root)
         master_freeze->setBoolValue(true);
     }
 
-    globals->get_subsystem("scenery")->reinit();
+    globals->get_subsystem<FGScenery>()->reinit();
 
     if ( !freeze ) {
         master_freeze->setBoolValue(false);
@@ -284,7 +284,7 @@ do_materials_reload (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_dialog_new (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     if (!gui) {
       return false;
     }
@@ -424,7 +424,7 @@ do_dialog_apply (const SGPropertyNode * arg, SGPropertyNode * root)
 static bool
 do_gui_redraw (const SGPropertyNode * arg, SGPropertyNode * root)
 {
-    NewGUI * gui = (NewGUI *)globals->get_subsystem("gui");
+    auto gui = globals->get_subsystem<NewGUI>();
     gui->redraw();
     return true;
 }

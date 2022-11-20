@@ -42,12 +42,12 @@ void NasalSysTests::setUp()
     fgInitAllowedPaths();
     globals->get_props()->getNode("nasal", true);
 
-    globals->add_subsystem("prop-interpolator", new FGInterpolator, SGSubsystemMgr::INIT);
+    globals->get_subsystem_mgr()->add<FGInterpolator>();
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();
 
-    globals->add_new_subsystem<FGNasalSys>(SGSubsystemMgr::INIT);
+    globals->get_subsystem_mgr()->add<FGNasalSys>();
 
     globals->get_subsystem_mgr()->postinit();
 }

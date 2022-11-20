@@ -581,7 +581,7 @@ FGScheduledFlight* FGAISchedule::findAvailableFlight (const string &currentDesti
 {
     time_t now = globals->get_time_params()->get_cur_time();
 
-    FGTrafficManager *tmgr = (FGTrafficManager *) globals->get_subsystem("traffic-manager");
+    auto tmgr = globals->get_subsystem<FGTrafficManager>();
     FGScheduledFlightVecIterator fltBegin, fltEnd;
     fltBegin = tmgr->getFirstFlight(req);
     fltEnd   = tmgr->getLastFlight(req);

@@ -402,7 +402,7 @@ void FGGlobals::append_fg_scenery (const SGPath &path)
         return;
     }
 
-    // tell the ResouceManager about the scenery path
+    // tell the ResourceManager about the scenery path
     // needed to load Models from this scenery path
     simgear::ResourceManager::instance()->addBasePath(abspath, simgear::ResourceManager::PRIORITY_DEFAULT);
 
@@ -416,6 +416,35 @@ void FGGlobals::append_fg_scenery (const SGPath &path)
 
     // temporary fix so these values survive reset
     n->setAttribute(SGPropertyNode::PRESERVE, true);
+
+    // Add any sources.xml file to the property tree so we can provide attribution through the GUI
+    SGPath sources = SGPath(abspath);
+    sources.append("sources.xml");
+    SG_LOG(SG_TERRAIN, SG_DEBUG, "Looking for source file " << sources << ". Exists ? " << sources.exists());
+    if (sources.exists()) {
+        // Determine the next free indice under /scenery/sources
+        SGPropertyNode* sourcesProp = fgGetNode("/scenery/sources", true);
+        int propIndex = 0;
+        while (sourcesProp->getChild("directory", propIndex) != NULL) {
+            ++propIndex;
+        }
+
+        sourcesProp = sourcesProp->getChild("directory", propIndex++, true);
+
+        // Add a reference to the path itself
+        sourcesProp->setStringValue("path", abspath.utf8Str());
+
+        // Now load the sources file into /scenery/sources/source[n]
+        if(!fgLoadProps(sources.utf8Str(), sourcesProp, false))
+        {
+            SG_LOG(SG_TERRAIN, SG_ALERT, "Unable to load sources file " << sources.utf8Str());
+        }
+
+        // Ensure these properties cannot be over-ridden, and preserve them across a reset.
+        sourcesProp->setAttribute(SGPropertyNode::WRITE, false);
+        sourcesProp->setAttribute(SGPropertyNode::PRESERVE, true);
+    }
+
 }
 
 void FGGlobals::append_read_allowed_paths(const SGPath &path)
@@ -571,15 +600,6 @@ FGGlobals::get_subsystem (const char * name) const
     }
 
     return subsystem_mgr->get_subsystem(name);
-}
-
-void
-FGGlobals::add_subsystem (const char * name,
-                          SGSubsystem * subsystem,
-                          SGSubsystemMgr::GroupType type,
-                          double min_time_sec)
-{
-    subsystem_mgr->add(name, subsystem, type, min_time_sec);
 }
 
 SGEventMgr *
@@ -927,12 +947,12 @@ void FGGlobals::set_warp_delta( long int d )
 
 FGScenery* FGGlobals::get_scenery () const
 {
-    return get_subsystem<FGScenery>();
+    return subsystem_mgr->get_subsystem<FGScenery>();
 }
 
 FGViewMgr *FGGlobals::get_viewmgr() const
 {
-    return get_subsystem<FGViewMgr>();
+    return subsystem_mgr->get_subsystem<FGViewMgr>();
 }
 
 flightgear::View* FGGlobals::get_current_view () const
@@ -948,7 +968,7 @@ void FGGlobals::set_matlib( SGMaterialLib *m )
 
 FGControls *FGGlobals::get_controls() const
 {
-    return get_subsystem<FGControls>();
+    return subsystem_mgr->get_subsystem<FGControls>();
 }
 
 void FGGlobals::addListenerToCleanup(SGPropertyChangeListener* l)

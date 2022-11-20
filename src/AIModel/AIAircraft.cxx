@@ -94,7 +94,8 @@ FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI A
     prevSpeed = 0.0;
     prev_dist_to_go = 0.0;
 
-    PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
+    auto perfDB = globals->get_subsystem<PerformanceDB>();
+
     if (perfDB) {
         _performance = perfDB->getDefaultPerformance();
     } else {
@@ -184,7 +185,7 @@ void FGAIAircraft::unbind()
 
 void FGAIAircraft::setPerformance(const std::string& acType, const std::string& acclass)
 {
-    PerformanceDB* perfDB = globals->get_subsystem<PerformanceDB>();
+    auto perfDB = globals->get_subsystem<PerformanceDB>();
     if (perfDB) {
         _performance = perfDB->getDataFor(acType, acclass);
     }

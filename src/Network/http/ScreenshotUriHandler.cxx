@@ -347,7 +347,7 @@ public:
         if (NULL == osgDB::Registry::instance()->getReaderWriterForExtension(_type))
             throw sg_format_exception("Unsupported image type: " + type, type);
 
-        CanvasMgr* canvas_mgr = static_cast<CanvasMgr*> (globals->get_subsystem("Canvas"));
+        auto canvas_mgr = globals->get_subsystem<CanvasMgr>();
         if (!canvas_mgr) {
             SG_LOG(SG_NETWORK, SG_WARN, "CanvasImage:CanvasMgr not found");
         } else {

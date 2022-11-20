@@ -60,7 +60,7 @@ public:
     INIT, LOADING_SRV_RECORDS, LOAD_NEXT_TXT_RECORD, LOADING_TXT_RECORDS, DONE,
   } _state = INIT;
 
-  FGDNSClient * _dnsClient = globals->get_subsystem<FGDNSClient> ();
+  FGDNSClient* _dnsClient = globals->get_subsystem<FGDNSClient>();
   DNS::Request_ptr _dnsRequest;
   PropertyList _serverNodes;
   PropertyList::const_iterator _serverNodes_it;

@@ -31,7 +31,7 @@ void CanvasTests::setUp()
        simgear::canvas::SystemAdapterPtr(new canvas::FGCanvasSystemAdapter)
      );
     
-    globals->add_subsystem("Canvas", new CanvasMgr, SGSubsystemMgr::DISPLAY);
+    globals->get_subsystem_mgr()->add<CanvasMgr>();
 
     globals->get_subsystem_mgr()->bind();
     globals->get_subsystem_mgr()->init();

@@ -63,7 +63,7 @@ bool FGNative::open() {
 // process work for this port
 bool FGNative::process()
 {
-    FDMShell* fdm = static_cast<FDMShell*>(globals->get_subsystem("flight"));
+    auto fdm = globals->get_subsystem<FDMShell>();
     FGInterface* fdmState = fdm->getInterface();
     if (!fdmState) {
         return false;
