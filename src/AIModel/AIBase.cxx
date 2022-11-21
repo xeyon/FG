@@ -273,6 +273,8 @@ void FGAIBase::readFromScenario(SGPropertyNode* scFileNode)
     setLatitude(scFileNode->getDoubleValue("latitude", 0.0));
     setBank(scFileNode->getDoubleValue("roll", 0.0));
     setPitch(scFileNode->getDoubleValue("pitch", 0.0));
+    setCollisionHeight(scFileNode->getDoubleValue("collision-height", 0.0));
+    setCollisionLength(scFileNode->getDoubleValue("collision-length", 0.0));
 
     SGPropertyNode* submodels = scFileNode->getChild("submodels");
 

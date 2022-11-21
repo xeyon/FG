@@ -708,9 +708,6 @@ FGAIManager::loadScenarioFile(const std::string& scenarioName, SGPath& outPath)
 const FGAIBase *
 FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range)
 {
-    // we specify tgt extent (ft) according to the AIObject type
-    double tgt_ht[]     = {0,  50, 100, 250, 0, 100, 0, 0,  50,  50, 20, 100,  50};
-    double tgt_length[] = {0, 100, 200, 750, 0,  50, 0, 0, 200, 100, 40, 200, 100};
     ai_list_iterator ai_list_itr = ai_list.begin();
     ai_list_iterator end = ai_list.end();
 
@@ -718,11 +715,12 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
     SGVec3d cartPos(SGVec3d::fromGeod(pos));
 
     while (ai_list_itr != end) {
-        double tgt_alt = (*ai_list_itr)->_getAltitude();
-        FGAIBase::object_type type = (*ai_list_itr)->getType();
-        tgt_ht[static_cast<int>(type)] += fuse_range;
+        FGAIBasePtr aiModel = *ai_list_itr;
+        FGAIBase::object_type type = aiModel->getType();
+        double tgt_alt = aiModel->_getAltitude();
+        int tgt_ht = aiModel->getCollisionHeight() + fuse_range;
 
-        if (fabs(tgt_alt - alt) > tgt_ht[static_cast<int>(type)] || type == FGAIBase::object_type::otBallistic
+        if (fabs(tgt_alt - alt) > tgt_ht || type == FGAIBase::object_type::otBallistic
             || type == FGAIBase::object_type::otStorm || type == FGAIBase::object_type::otThermal ) {
                 //SG_LOG(SG_AI, SG_DEBUG, "AIManager: skipping "
                 //    << fabs(tgt_alt - alt)
@@ -746,16 +744,17 @@ FGAIManager::calcCollision(double alt, double lat, double lon, double fuse_range
         //    << " alt " << tgt_alt
         //    );
 
-        tgt_length[static_cast<int>(type)] += fuse_range;
+        int tgt_length = aiModel->getCollisionLength() + fuse_range;
 
-        if (range < tgt_length[static_cast<int>(type)]){
+        if (range < tgt_length){
             SG_LOG(SG_AI, SG_DEBUG, "AIManager: HIT! "
+                << " (h:" << tgt_ht << ", w:" << tgt_length << ")"
                 << " type " << static_cast<int>(type)
                 << " ID " << id
                 << " range " << range
                 << " alt " << tgt_alt
                 );
-            return (*ai_list_itr).get();
+            return aiModel.get();
         }
         ++ai_list_itr;
     }
