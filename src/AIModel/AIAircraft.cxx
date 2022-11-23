@@ -327,7 +327,12 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
     // Initialize the flightplan
     //////////////////////////////////////////////////////////////////////////
     if (!prev||repositioned) {
-        handleFirstWaypoint();
+        if (!fp->empty()) {
+            handleFirstWaypoint();
+        } else {
+            SG_LOG(SG_AI, SG_WARN, getCallSign() << " didn't have a valid flightplan and was killed");
+            setDie(true);
+        }
         return;
     }                            // end of initialization
     if (!fpExecutable(now)) {
