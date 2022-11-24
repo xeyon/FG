@@ -151,6 +151,47 @@ double FGAtmo::a_vs_p(const double press, const double qnh) {
     return T0 * ( pow(qnh/P0,nn) - pow(press/P0,nn) ) / lam0;
 }
 
+
+double FGAtmo::ISATemperatureKAtAltitudeFt(const double alt, const double Tsl)
+{
+    double pressure, temp;
+    std::tie(pressure, temp) = PT_vs_hpt(alt * SG_FEET_TO_METER, atmodel::ISA::P0, Tsl);
+    return temp;
+}
+
+double FGAtmo::CSMetersPerSecondAtAltitudeFt(const double alt, const double Tsl)
+{
+    const double oatK = ISATemperatureKAtAltitudeFt(alt, Tsl);
+    // calculate the speed of sound at altitude
+    const double g = 1.4; // specific heat ratio of air
+    const double R = 287.053; // specific gas constant (J/kgK)
+    return sqrt (g * R * oatK);
+}
+
+double FGAtmo::densityAtAltitudeFt(const double alt, const double Tsl)
+{
+    double pressure, temp;
+    std::tie(pressure, temp) = PT_vs_hpt(alt * SG_FEET_TO_METER, atmodel::ISA::P0, Tsl);
+    const double R = 287.053; // specific gas constant (J/kgK)
+    return pressure / (temp * R);
+}
+
+double FGAtmo::machFromKnotsAtAltitudeFt(const double knots,
+                                                const double altFt,
+                                                const double Tsl)
+{
+    const auto cs = CSMetersPerSecondAtAltitudeFt(altFt, Tsl);
+    return (knots * SG_KT_TO_MPS) / cs;
+}
+
+double FGAtmo::knotsFromMachAtAltitudeFt(const double mach,
+                                        const double altFt,
+                                        const double Tsl)
+{
+    const auto cs = CSMetersPerSecondAtAltitudeFt(altFt, Tsl);
+    return mach * cs * SG_MPS_TO_KT;
+}
+
 // force retabulation
 void FGAtmoCache::tabulate() {
     using namespace atmodel;

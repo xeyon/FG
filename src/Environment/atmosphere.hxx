@@ -117,6 +117,30 @@ public:
  * or millibars 
  */
     static double fieldPressure(const double field_elev, const double qnh);
+    
+    /**
+    Compute the outisde temperature at an altitude, according to the standard atmosphere
+     model. Optionally allow offseting the temperature at seal level, but default to the ISA standard
+     for that value as well
+     */
+    static double ISATemperatureKAtAltitudeFt(const double alt,
+                                             const double Tsl = atmodel::ISA::T0);
+    
+    /**
+        Compute the speed of sound at an altitude
+     */
+    static double CSMetersPerSecondAtAltitudeFt(const double alt,
+                                 const double Tsl = atmodel::ISA::T0);
+    
+    static double densityAtAltitudeFt(const double alt, const double Tsl = atmodel::ISA::T0);
+    
+    static double machFromKnotsAtAltitudeFt(const double knots,
+                                                    const double altFt,
+                                                    const double Tsl = atmodel::ISA::T0);
+    
+    static double knotsFromMachAtAltitudeFt(const double mach,
+                                            const double altFt,
+                                            const double Tsl = atmodel::ISA::T0);
 };
 
 
