@@ -181,12 +181,14 @@ FGNasalModelData* FGNasalModelData::getByModuleId(unsigned int id)
 //------------------------------------------------------------------------------
 FGNasalModelDataProxy::~FGNasalModelDataProxy()
 {
-    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+    if (globals) {
+      auto nasalSys = globals->get_subsystem<FGNasalSys>();
 
-    // when necessary, register Nasal module to be destroyed/unloaded
-    // in the main thread.
-    if ((_data.valid())&&(nasalSys))
-        nasalSys->registerToUnload(_data);
+      // when necessary, register Nasal module to be destroyed/unloaded
+      // in the main thread.
+      if ((_data.valid())&&(nasalSys))
+          nasalSys->registerToUnload(_data);
+    }
 }
 
 //------------------------------------------------------------------------------
