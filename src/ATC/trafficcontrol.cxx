@@ -264,7 +264,7 @@ FGTrafficRecord::~FGTrafficRecord()
 void FGTrafficRecord::setPositionAndIntentions(int pos,
         FGAIFlightPlan * route)
 {
-    SG_LOG(SG_AI, SG_DEBUG, "Traffic record position: " << pos);
+    SG_LOG(SG_AI, SG_BULK, "Traffic record position: " << pos);
     currentPos = pos;
     if (!intentions.empty()) {
         intVecIterator i = intentions.begin();

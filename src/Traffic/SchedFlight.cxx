@@ -18,18 +18,18 @@
  *
  *
  **************************************************************************/
- 
+
 /* This a prototype version of a top-level flight plan manager for Flightgear.
- * It parses the fgtraffic.txt file and determine for a specific time/date, 
- * where each aircraft listed in this file is at the current time. 
- * 
+ * It parses the fgtraffic.txt file and determine for a specific time/date,
+ * where each aircraft listed in this file is at the current time.
+ *
  * I'm currently assuming the following simplifications:
  * 1) The earth is a perfect sphere
  * 2) Each aircraft flies a perfect great circle route.
  * 3) Each aircraft flies at a constant speed (with infinite accelerations and
- *    decelerations) 
- * 4) Each aircraft leaves at exactly the departure time. 
- * 5) Each aircraft arrives at exactly the specified arrival time. 
+ *    decelerations)
+ * 4) Each aircraft leaves at exactly the departure time.
+ * 5) Each aircraft arrives at exactly the specified arrival time.
  *
  * TODO:
  * - Check the code for known portability issues
@@ -71,6 +71,8 @@ using std::string;
  * FGScheduledFlight stuff
  *****************************************************************************/
 
+std::map<std::string, std::string> FGScheduledFlight::missingAirports = std::map<std::string, std::string>();
+
 FGScheduledFlight::FGScheduledFlight()
 {
     departureTime  = 0;
@@ -82,7 +84,7 @@ FGScheduledFlight::FGScheduledFlight()
     departurePort = NULL;
     arrivalPort = NULL;
 }
-  
+
 FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)
 {
   callsign          = other.callsign;
@@ -102,10 +104,10 @@ FGScheduledFlight::FGScheduledFlight(const FGScheduledFlight &other)
 
 /**
  * @param cs The callsign
- * @param fr The flightrules 
+ * @param fr The flightrules
  * @param depPrt The departure ICAO
  * @param arrPrt The arrival ICAO
- */ 
+ */
 
 FGScheduledFlight::FGScheduledFlight(const string& cs,
 		   const string& fr,
@@ -150,10 +152,10 @@ FGScheduledFlight::FGScheduledFlight(const string& cs,
       available = false;
       return;
   }
-  
-  
+
+
   // What we still need to do is preprocess the departure and
-  // arrival times. 
+  // arrival times.
   departureTime = processTimeString(deptime);
   arrivalTime   = processTimeString(arrtime);
   //departureTime += rand() % 300; // Make sure departure times are not limited to 5 minute increments.
@@ -218,7 +220,7 @@ time_t FGScheduledFlight::processTimeString(const string& theTime)
   //tm *temp = currTimeDate->getGmt();
   //char buffer[512];
   //sgTimeFormatTime(&targetTimeDate, buffer);
-  //cout << "Scheduled Time " << buffer << endl; 
+  //cout << "Scheduled Time " << buffer << endl;
   //cout << "Time :" << time(NULL) << " SGTime : " << sgTimeGetGMT(temp) << endl;
   return processedTime;
 }
@@ -231,7 +233,7 @@ void FGScheduledFlight::update()
 
 /**
  * //FIXME Doesn't have to be an iteration / when sitting at departure why adjust based on arrival
- */ 
+ */
 
 void FGScheduledFlight::adjustTime(time_t now)
 {
@@ -279,24 +281,30 @@ FGAirport * FGScheduledFlight::getArrivalAirport  ()
 
 // Upon the first time of requesting airport information
 // for this scheduled flight, these data need to be
-// looked up in the main FlightGear database. 
+// looked up in the main FlightGear database.
 // Missing or bogus Airport codes are currently ignored,
 // but we should improve that. The best idea is probably to cancel
 // this flight entirely by removing it from the schedule, if one
-// of the airports cannot be found. 
+// of the airports cannot be found.
 bool FGScheduledFlight::initializeAirports()
 {
   //cerr << "Initializing using : " << depId << " " << arrId << endl;
   departurePort = FGAirport::findByIdent(depId);
   if(departurePort == NULL)
     {
-      SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find departure airport : " << depId);
+      if (!FGScheduledFlight::missingAirports.count(depId)) {
+        FGScheduledFlight::missingAirports.insert(std::pair<std::string,std::string>(depId, depId));
+        SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find airport : " << depId);
+      }
       return false;
     }
   arrivalPort = FGAirport::findByIdent(arrId);
   if(arrivalPort == NULL)
     {
-      SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find arrival airport   : " << arrId);
+      if (!FGScheduledFlight::missingAirports.count(arrId)) {
+        FGScheduledFlight::missingAirports.insert(std::pair<std::string,std::string>(arrId, arrId));
+        SG_LOG( SG_AI, SG_DEBUG, "Traffic manager could not find airport : " << arrId);
+      }
       return false;
     }
 
@@ -306,7 +314,7 @@ bool FGScheduledFlight::initializeAirports()
   return true;
 }
 
-bool compareScheduledFlights(FGScheduledFlight *a, FGScheduledFlight *b) 
-{ 
-  return (*a) < (*b); 
+bool compareScheduledFlights(FGScheduledFlight *a, FGScheduledFlight *b)
+{
+  return (*a) < (*b);
 };

@@ -773,8 +773,11 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac,
     double heading = ac->getTrueHeadingDeg();
     apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
                                         heading);
-    if (!apt->hasRunwayWithIdent(activeRunway))
+    if (!apt->hasRunwayWithIdent(activeRunway)) {
+        SG_LOG(SG_AI, SG_WARN, ac->getCallSign() <<
+                           "| FGAIFlightPlan::createLanding: No such runway " << activeRunway << " at " << apt->ident());
         return false;
+    }
 
     FGRunwayRef rwy = apt->getRunwayByIdent(activeRunway);
     if (waypoints.size()==0 && ac->getTrueHeadingDeg()==0) {

@@ -375,7 +375,7 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunwayExit(const SGGeod & aGeod,
     if(result) {
         return result;
     } else {
-        SG_LOG(SG_AI, SG_WARN, "No Exit found");
+        SG_LOG(SG_AI, SG_WARN, "No runway exit found " << aRunway->airport()->getId() << "/" << aRunway->name());
         return 0;
     }
 }
