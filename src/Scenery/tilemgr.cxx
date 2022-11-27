@@ -311,6 +311,25 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
         {
             // create a new entry
             v = new VPBTileEntry( b );
+
+            // If we put the tile on the queue blindly and it doesn't exist,
+            // OSG created huge amounts of log spam and WARN level.  So
+            // do a quick check here and drop out if the file doesn't exist.
+            bool found = false;
+            auto filePathList = _options->getDatabasePathList();
+            for (auto path : filePathList) {
+                SGPath p(path, v->tileFileName);
+                if (p.exists()) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (! found) {
+                delete v;
+                return false;
+            }
+
             SG_LOG( SG_TERRAIN, SG_INFO, "sched_tile: new VPB tile entry for:" << b );
 
             // insert the tile into the cache, update will generate load request
@@ -328,7 +347,7 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
             SG_LOG( SG_TERRAIN, SG_DEBUG, "  New tile cache size " << (int)tile_cache.get_size() );
         }
 
-        // update tile's properties.  We ensure VPB tiles have maximum priority - priority is calcualated as
+        // update tile's properties.  We ensure VPB tiles have maximum priority - priority is calculated as
         // _negative_ the square of the distance from the viewer to the tile.
         // so by multiplying by 0.1 we increase the number towards 0.
         tile_cache.request_tile(v,priority * 0.1,current_view,duration);
