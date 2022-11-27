@@ -95,11 +95,6 @@ public:
     void prep_ssg_node(float vis);
 
     /**
-     * Transition to OSG database pager
-     */
-    static osg::Node* loadTileByFileName(const std::string& index_str,
-                                         const osgDB::Options*);
-    /**
      * Return true if the tile entry is loaded, otherwise return false
      * indicating that the loading thread is still working on this.
      */
