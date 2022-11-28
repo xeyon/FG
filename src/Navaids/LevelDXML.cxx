@@ -12,6 +12,7 @@
 
 #include <Navaids/waypoint.hxx>
 #include <Airports/airport.hxx>
+#include <Navaids/route.hxx>
 
 using std::string;
 using std::vector;
@@ -203,15 +204,7 @@ void NavdataVisitor::endElement(const char* name)
   } else if (tag == "Altitude") {
     _altitude = atof(_text.c_str());
   } else if (tag == "AltitudeRestriction") {
-    if (_text == "at") {
-      _altRestrict = RESTRICT_AT;
-    } else if (_text == "above") {
-      _altRestrict = RESTRICT_ABOVE;
-    } else if (_text == "below") {
-      _altRestrict = RESTRICT_BELOW;
-    } else {
-      throw sg_format_exception("Unrecognized altitude restriction", _text);
-    }
+      _altRestrict = restrictionFromString(_text);
   } else if (tag == "Hld_Rad_or_Inbd") {
     if (_text == "Inbd") {
       _holdRadial = -1.0;

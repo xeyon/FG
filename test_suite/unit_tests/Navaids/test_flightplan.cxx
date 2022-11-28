@@ -702,6 +702,77 @@ void FlightplanTests::testLoadSaveMachRestriction()
     CPPUNIT_ASSERT_EQUAL(8, f2->legAtIndex(2)->holdCount());
 }
 
+void FlightplanTests::testLoadSaveBetweenRestriction()
+{
+    const std::string fpXML = R"(<?xml version="1.0" encoding="UTF-8"?>
+       <PropertyList>
+           <version type="int">2</version>
+           <departure>
+               <airport type="string">SAWG</airport>
+               <runway type="string">25</runway>
+           </departure>
+           <destination>
+               <airport type="string">SUMU</airport>
+           </destination>
+           <route>
+                <wp n="0">
+                  <type type="string">navaid</type>
+                  <ident type="string">PUGLI</ident>
+                  <lon type="double">-60.552200</lon>
+                  <lat type="double">-40.490000</lat>
+                </wp>
+                <wp n="1">
+                  <type type="string">basic</type>
+                  <alt-restrict type="string">between</alt-restrict>
+                  <altitude-ft type="double">36000</altitude-ft>
+                  <constraint-altitude type="double">32000</constraint-altitude>
+                  <ident type="string">SV002</ident>
+                  <lon type="double">-115.50531</lon>
+                  <lat type="double">37.89523</lat>
+                </wp>
+                <wp n="2">
+                     <type type="string">navaid</type>
+                     <ident type="string">SIGUL</ident>
+                     <lon type="double">-60.552200</lon>
+                     <lat type="double">-40.490000</lat>
+                   </wp>
+           </route>
+       </PropertyList>
+     )";
+    
+     std::istringstream stream(fpXML);
+    FlightPlanRef f = FlightPlan::create();
+     bool ok = f->load(stream);
+     CPPUNIT_ASSERT(ok);
+
+     auto leg = f->legAtIndex(1);
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_BETWEEN, leg->altitudeRestriction());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(36000, leg->altitudeFt(), 0.01);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(32000, leg->waypoint()->constraintAltitude(ALTITUDE_FEET), 0.01);
+}
+
+void FlightplanTests::testRestrictionUnits()
+{
+    FlightPlanRef fp1 = makeTestFP("LIRF"s, "34L"s, "LEBL"s, "25R"s,
+                                   "ESINO GITRI BALEN MUREN TOSNU"s);
+    auto leg = fp1->legAtIndex(2);
+    leg->setAltitude(RESTRICT_ABOVE, 120, ALTITUDE_FLIGHTLEVEL);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(leg->altitude(), 12000.0, 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(leg->altitude(ALTITUDE_METER), 12000.0 * SG_FEET_TO_METER, 0.1);
+
+    leg->setSpeed(RESTRICT_AT, 300);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(leg->speedKts(), 300, 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(leg->speed(), 300, 0.1);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(leg->speed(SPEED_KPH), 300 * SG_KT_TO_MPS * SG_MPS_TO_KMH, 0.1);
+
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(leg->speedMach(), 0.473, 0.1);
+
+    // setting a mach restriction assumes Mach units by default
+    leg->setSpeed(SPEED_RESTRICT_MACH, 0.7);
+    leg->setAltitude(RESTRICT_AT, 38000);
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(leg->speedKts(), 401, 1);
+}
+
 void FlightplanTests::testBasicDiscontinuity()
 {
     FlightPlanRef fp1 = makeTestFP("LIRF"s, "34L"s, "LEBL"s, "25R"s,

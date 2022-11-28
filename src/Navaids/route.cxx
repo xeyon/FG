@@ -44,6 +44,7 @@
 #include <Navaids/LevelDXML.hxx>
 #include <Airports/airport.hxx>
 #include <Navaids/airways.hxx>
+#include <Environment/atmosphere.hxx> // for Mach conversions
 
 using std::string;
 using std::vector;
@@ -123,7 +124,67 @@ WayptRef viaFromString(const SGGeod& basePosition, const std::string& target)
     return new Via(nullptr, airway, nav);
 }
 
-} // namespace
+static double convertSpeedToKnots(RouteUnits aUnits, double aAltitudeFt, double aValue)
+{
+    switch (aUnits) {
+    case SPEED_KNOTS:   return aValue;
+    case SPEED_KPH:     return aValue * SG_KMH_TO_MPS * SG_MPS_TO_KT;
+    case SPEED_MACH:    return FGAtmo::knotsFromMachAtAltitudeFt(aValue, aAltitudeFt);
+                
+    default:
+        throw sg_format_exception("Can't convert unit to Knots", "convertSpeedToKnots");
+    }
+}
+
+static double convertSpeedFromKnots(RouteUnits aUnits, double aAltitudeFt, double aValue)
+{
+    if (aUnits == DEFAULT_UNITS) {
+        // TODO : use KPH is simulator is in metric
+        aUnits = SPEED_KNOTS;
+    }
+    
+    switch (aUnits) {
+    case SPEED_KNOTS:   return aValue;
+    case SPEED_KPH:     return aValue * SG_KT_TO_MPS * SG_MPS_TO_KMH;
+    case SPEED_MACH:    return FGAtmo::machFromKnotsAtAltitudeFt(aValue, aAltitudeFt);
+                
+    default:
+        throw sg_format_exception("Can't convert to unit", "convertSpeedFromKnots");
+    }
+}
+
+} // anonymous namespace
+
+double convertSpeedUnits(RouteUnits aSrc, RouteUnits aDest, double aAltitudeFt, double aValue)
+{
+    const double valueKnots = convertSpeedToKnots(aSrc, aAltitudeFt, aValue);
+    return convertSpeedFromKnots(aDest, aAltitudeFt, valueKnots);
+}
+
+double convertAltitudeUnits(RouteUnits aSrc, RouteUnits aDest, double aValue)
+{
+    if (aDest == DEFAULT_UNITS) {
+        // TODO : use meters if sim is in metric
+        aDest = ALTITUDE_FEET;
+    }
+    
+    double altFt = 0.0;
+    switch (aSrc) {
+    case ALTITUDE_FEET: altFt = aValue; break;
+    case ALTITUDE_METER: altFt = aValue * SG_METER_TO_FEET; break;
+    case ALTITUDE_FLIGHTLEVEL: altFt = aValue * 100; break;
+    default:
+        throw sg_format_exception("Unsupported source altitude units", "convertAltitudeUnits");
+    }
+    
+    switch (aDest) {
+    case ALTITUDE_FEET: return altFt;
+    case ALTITUDE_METER: return altFt * SG_FEET_TO_METER;
+    case ALTITUDE_FLIGHTLEVEL: return round(altFt / 100);
+    default:
+        throw sg_format_exception("Unsupported destination altitude units", "convertAltitudeUnits");
+    }
+}
 
 Waypt::Waypt(RouteBase* aOwner) :
   _owner(aOwner),
@@ -184,28 +245,80 @@ bool Waypt::matches(const SGGeod& aPos) const
   return (d < 100.0); // 100 metres seems plenty
 }
 
-void Waypt::setAltitude(double aAlt, RouteRestriction aRestrict)
+void Waypt::setAltitude(double aAlt, RouteRestriction aRestrict, RouteUnits aUnit)
 {
-  _altitudeFt = aAlt;
+    if (aUnit == DEFAULT_UNITS) {
+        aUnit = ALTITUDE_FEET;
+    }
+    
+  _altitude = aAlt;
+    _altitudeUnits = aUnit;
   _altRestrict = aRestrict;
 }
 
-void Waypt::setSpeed(double aSpeed, RouteRestriction aRestrict)
+void Waypt::setConstraintAltitude(double aAlt)
 {
+    _constraintAltitude = aAlt;
+}
+
+void Waypt::setSpeed(double aSpeed, RouteRestriction aRestrict, RouteUnits aUnit)
+{
+    if (aUnit == DEFAULT_UNITS) {
+        if ((aRestrict == SPEED_RESTRICT_MACH) || (aRestrict == SPEED_RESTRICT_MACH)) {
+            aUnit = SPEED_MACH;
+        } else {
+            aUnit = SPEED_KNOTS;
+        }
+    }
+    
   _speed = aSpeed;
+  _speedUnits = aUnit;
   _speedRestrict = aRestrict;
 }
 
 double Waypt::speedKts() const
 {
-  assert(_speedRestrict != SPEED_RESTRICT_MACH);
-  return speed();
+  return speed(SPEED_KNOTS);
 }
 
 double Waypt::speedMach() const
 {
-  assert(_speedRestrict == SPEED_RESTRICT_MACH);
-  return speed();
+  return speed(SPEED_MACH);
+}
+
+double Waypt::altitudeFt() const
+{
+    return altitude(ALTITUDE_FEET);
+}
+
+double Waypt::speed(RouteUnits aUnits) const
+{
+    if (aUnits == _speedUnits) {
+        return _speed;
+    }
+    
+    return convertSpeedUnits(_speedUnits, aUnits, altitudeFt(), _speed);
+}
+
+double Waypt::altitude(RouteUnits aUnits) const
+{
+    if (aUnits == _altitudeUnits) {
+        return _altitude;
+    }
+    
+    return convertAltitudeUnits(_altitudeUnits, aUnits, _altitude);
+}
+
+double Waypt::constraintAltitude(RouteUnits aUnits) const
+{
+    if (!_constraintAltitude.has_value())
+        return 0.0;
+    
+    if (aUnits == _altitudeUnits) {
+        return _constraintAltitude.value_or(0.0);
+    }
+    
+    return convertAltitudeUnits(_altitudeUnits, aUnits, _constraintAltitude.value_or(0.0));
 }
 
 double Waypt::magvarDeg() const
@@ -234,13 +347,14 @@ std::string Waypt::icaoDescription() const
 ///////////////////////////////////////////////////////////////////////////
 // persistence
 
-static RouteRestriction restrictionFromString(const char* aStr)
+RouteRestriction restrictionFromString(const std::string& aStr)
 {
   std::string l = simgear::strutils::lowercase(aStr);
 
   if (l == "at") return RESTRICT_AT;
   if (l == "above") return RESTRICT_ABOVE;
   if (l == "below") return RESTRICT_BELOW;
+  if (l == "between") return RESTRICT_BETWEEN;
   if (l == "none") return RESTRICT_NONE;
   if (l == "mach") return SPEED_RESTRICT_MACH;
 
@@ -256,6 +370,7 @@ const char* restrictionToString(RouteRestriction aRestrict)
   case RESTRICT_BELOW: return "below";
   case RESTRICT_ABOVE: return "above";
   case RESTRICT_NONE: return "none";
+  case RESTRICT_BETWEEN: return "between";
   case SPEED_RESTRICT_MACH: return "mach";
 
   default:
@@ -382,16 +497,22 @@ WayptRef Waypt::createFromString(RouteBase* aOwner, const std::string& s, const 
 
     auto target = simgear::strutils::uppercase(s);
     // extract altitude
-    double altFt = 0.0;
+    double alt = 0.0;
     RouteRestriction altSetting = RESTRICT_NONE;
-
+    RouteUnits altitudeUnits = ALTITUDE_FEET;
+    
     size_t pos = target.find('@');
     if (pos != string::npos) {
-        altFt = std::stof(target.substr(pos + 1));
-        target = target.substr(0, pos);
-        if (fgGetString("/sim/startup/units") == "meter") {
-            altFt *= SG_METER_TO_FEET;
+        auto altStr = simgear::strutils::uppercase(target.substr(pos + 1));
+        if (simgear::strutils::starts_with(altStr, "FL")) {
+            altitudeUnits = ALTITUDE_FLIGHTLEVEL;
+            altStr = altStr.substr(2); // trim leading 'FL'
+        } else if (fgGetString("/sim/startup/units") == "meter") {
+            altitudeUnits = ALTITUDE_METER;
         }
+        
+        alt = std::stof(altStr);
+        target = target.substr(0, pos);
         altSetting = RESTRICT_AT;
     }
 
@@ -448,7 +569,7 @@ WayptRef Waypt::createFromString(RouteBase* aOwner, const std::string& s, const 
     }
 
     if (altSetting != RESTRICT_NONE) {
-        wpt->setAltitude(altFt, altSetting);
+        wpt->setAltitude(alt, altSetting, altitudeUnits);
     }
     return wpt;
 }
@@ -462,42 +583,70 @@ void Waypt::saveAsNode(SGPropertyNode* n) const
 
 bool Waypt::initFromProperties(SGPropertyNode_ptr aProp)
 {
-  if (aProp->hasChild("generated")) {
-    setFlag(WPT_GENERATED, aProp->getBoolValue("generated"));
-  }
-
-  if (aProp->hasChild("overflight")) {
-    setFlag(WPT_OVERFLIGHT, aProp->getBoolValue("overflight"));
-  }
-
-  if (aProp->hasChild("arrival")) {
-    setFlag(WPT_ARRIVAL, aProp->getBoolValue("arrival"));
-  }
-
-  if (aProp->hasChild("approach")) {
-    setFlag(WPT_APPROACH, aProp->getBoolValue("approach"));
-  }
-
-  if (aProp->hasChild("departure")) {
-    setFlag(WPT_DEPARTURE, aProp->getBoolValue("departure"));
-  }
-
-  if (aProp->hasChild("miss")) {
-    setFlag(WPT_MISS, aProp->getBoolValue("miss"));
-  }
-
-  if (aProp->hasChild("airway")) {
-      setFlag(WPT_VIA, true);
-  }
-
-  if (aProp->hasChild("alt-restrict")) {
-    _altRestrict = restrictionFromString(aProp->getStringValue("alt-restrict").c_str());
-    _altitudeFt = aProp->getDoubleValue("altitude-ft");
+    if (aProp->hasChild("generated")) {
+        setFlag(WPT_GENERATED, aProp->getBoolValue("generated"));
+    }
+    
+    if (aProp->hasChild("overflight")) {
+        setFlag(WPT_OVERFLIGHT, aProp->getBoolValue("overflight"));
+    }
+    
+    if (aProp->hasChild("arrival")) {
+        setFlag(WPT_ARRIVAL, aProp->getBoolValue("arrival"));
+    }
+    
+    if (aProp->hasChild("approach")) {
+        setFlag(WPT_APPROACH, aProp->getBoolValue("approach"));
+    }
+    
+    if (aProp->hasChild("departure")) {
+        setFlag(WPT_DEPARTURE, aProp->getBoolValue("departure"));
+    }
+    
+    if (aProp->hasChild("miss")) {
+        setFlag(WPT_MISS, aProp->getBoolValue("miss"));
+    }
+    
+    if (aProp->hasChild("airway")) {
+        setFlag(WPT_VIA, true);
+    }
+    
+    if (aProp->hasChild("alt-restrict")) {
+        _altRestrict = restrictionFromString(aProp->getStringValue("alt-restrict"));
+        if (aProp->hasChild("altitude-ft")) {
+            _altitude = aProp->getDoubleValue("altitude-ft");
+            _altitudeUnits = ALTITUDE_FEET;
+        } else if (aProp->hasChild("altitude-m")) {
+            _altitude = aProp->getDoubleValue("altitude-m");
+            _altitudeUnits = ALTITUDE_METER;
+        } else if (aProp->hasChild("flight-level")) {
+            _altitude = aProp->getIntValue("flight-level");
+            _altitudeUnits = ALTITUDE_FLIGHTLEVEL;
+        }
+        
+        if (aProp->hasChild("constraint-altitude")) {
+            _constraintAltitude = aProp->getDoubleValue("constraint-altitude");
+        }
   }
 
   if (aProp->hasChild("speed-restrict")) {
-    _speedRestrict = restrictionFromString(aProp->getStringValue("speed-restrict").c_str());
-    _speed = aProp->getDoubleValue("speed");
+    _speedRestrict = restrictionFromString(aProp->getStringValue("speed-restrict"));
+    RouteUnits units = SPEED_KNOTS;
+      if (_speedRestrict == SPEED_RESTRICT_MACH) {
+          units = SPEED_MACH;
+      }
+      
+      if (aProp->hasChild("speed-mach")) {
+          units = SPEED_MACH;
+          _speed = aProp->getDoubleValue("speed-mach");
+      } else if (aProp->hasChild("speed-kph")) {
+        units = SPEED_KPH;
+        _speed = aProp->getDoubleValue("speed-kph");
+    } else {
+        _speed = aProp->getDoubleValue("speed");
+    }
+    
+      _speedUnits = units;
   }
 
   return true;
@@ -537,8 +686,19 @@ void Waypt::writeToProperties(SGPropertyNode_ptr aProp) const
 
   if (_altRestrict != RESTRICT_NONE) {
     aProp->setStringValue("alt-restrict", restrictionToString(_altRestrict));
-    aProp->setDoubleValue("altitude-ft", _altitudeFt);
+      if (_altitudeUnits == ALTITUDE_METER) {
+          aProp->setDoubleValue("altitude-m", _altitude);
+      } else if (_altitudeUnits == ALTITUDE_FLIGHTLEVEL) {
+          aProp->setDoubleValue("flight-level", _altitude);
+
+      } else {
+          aProp->setDoubleValue("altitude-ft", _altitude);
+      }
   }
+    
+    if (_constraintAltitude.has_value()) {
+        aProp->setDoubleValue("constraint-altitude", _constraintAltitude.value_or(0.0));
+    }
 
   if (_speedRestrict != RESTRICT_NONE) {
     aProp->setStringValue("speed-restrict", restrictionToString(_speedRestrict));

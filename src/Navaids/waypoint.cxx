@@ -96,7 +96,7 @@ NavaidWaypoint::NavaidWaypoint(RouteBase* aOwner) :
 
 SGGeod NavaidWaypoint::position() const
 {
-  return SGGeod::fromGeodFt(_navaid->geod(), _altitudeFt);
+  return SGGeod::fromGeodFt(_navaid->geod(), altitudeFt());
 }  
  
 std::string NavaidWaypoint::ident() const
@@ -170,7 +170,7 @@ void OffsetNavaidWaypoint::init()
   SGGeod offset;
   double az2;
   SGGeodesy::direct(_navaid->geod(), _radial, _distanceNm * SG_NM_TO_METER, offset, az2);
-  _geod = SGGeod::fromGeodFt(offset, _altitudeFt);
+  _geod = SGGeod::fromGeodFt(offset, altitude(ALTITUDE_FEET));
 }
 
 bool OffsetNavaidWaypoint::initFromProperties(SGPropertyNode_ptr aProp)
