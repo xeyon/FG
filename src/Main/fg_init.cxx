@@ -1051,7 +1051,7 @@ void fgCreateSubsystems(bool duringReset) {
         // autopilot.)
         mgr->add<FGSystemMgr>();
         mgr->add<FGInstrumentMgr>();
-        mgr->add("xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"));
+        mgr->add("xml-autopilot", FGXMLAutopilotGroup::createInstance("autopilot"), SGSubsystemMgr::FDM);
     }
     
     // SGSubsystemMgr::POST_FDM
@@ -1106,7 +1106,7 @@ void fgCreateSubsystems(bool duringReset) {
         mgr->add<CanvasMgr>();
         
         auto canvasGui = new GUIMgr;
-        mgr->add("CanvasGUI", canvasGui);
+        mgr->add("CanvasGUI", canvasGui, SGSubsystemMgr::DISPLAY);
         auto guiCamera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
         canvasGui->setGUIViewAndCamera(globals->get_renderer()->getView(), guiCamera);
 
@@ -1117,7 +1117,7 @@ void fgCreateSubsystems(bool duringReset) {
         // ordering here is important : Nasal (via events), then models, then views
         if (!duringReset) {
             mgr->add<FGLight>();
-            mgr->add("events", globals->get_event_mgr());
+            mgr->add("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
         }
 
         mgr->add<FGAircraftModel>();
