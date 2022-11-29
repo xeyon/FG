@@ -1035,7 +1035,7 @@ void fgCreateSubsystems(bool duringReset) {
         {
           SGSubsystem * httpd = flightgear::http::FGHttpd::createInstance( fgGetNode(flightgear::http::PROPERTY_ROOT) );
           if( NULL != httpd ) 
-            mgr->add("httpd", httpd);
+            mgr->add(httpd);
         }
 
         if (!duringReset) {
@@ -1106,7 +1106,7 @@ void fgCreateSubsystems(bool duringReset) {
         mgr->add<CanvasMgr>();
         
         auto canvasGui = new GUIMgr;
-        mgr->add("CanvasGUI", canvasGui, SGSubsystemMgr::DISPLAY);
+        mgr->add(canvasGui);
         auto guiCamera = flightgear::getGUICamera(flightgear::CameraGroup::getDefault());
         canvasGui->setGUIViewAndCamera(globals->get_renderer()->getView(), guiCamera);
 
@@ -1117,7 +1117,7 @@ void fgCreateSubsystems(bool duringReset) {
         // ordering here is important : Nasal (via events), then models, then views
         if (!duringReset) {
             mgr->add<FGLight>();
-            mgr->add("events", globals->get_event_mgr(), SGSubsystemMgr::DISPLAY);
+            mgr->add(globals->get_event_mgr());
         }
 
         mgr->add<FGAircraftModel>();
