@@ -1246,6 +1246,7 @@ void FGJSBsim::init_gear(void )
 {
     FGGroundReactions* gr=fdmex->GetGroundReactions();
     int Ngear=GroundReactions->GetNumGearUnits();
+    double max = 1.0;
     for (int i=0;i<Ngear;i++) {
       FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
@@ -1263,7 +1264,14 @@ void FGJSBsim::init_gear(void )
       node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
       node->setDoubleValue("position-norm", gear->GetGearUnitPos());
 //    node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
-      node->setDoubleValue("compression-norm", gear->GetCompLen());
+      max = node->getDoubleValue("max-compression-ft");
+      if (max < 0.00001) {
+        max = node->getDoubleValue("max-compression-m");
+        if (max < 0.00001) max = 1.0;
+        else max /= .3048;
+      }
+      node->setDoubleValue("compression-norm", gear->GetCompLen() / max);
+      node->setDoubleValue("compression-m", gear->GetCompLen() * .3048);
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
         node->setDoubleValue("steering-norm", gear->GetSteerNorm());
@@ -1274,6 +1282,7 @@ void FGJSBsim::update_gear(void)
 {
     FGGroundReactions* gr=fdmex->GetGroundReactions();
     int Ngear=GroundReactions->GetNumGearUnits();
+    double max = 1.0;
     for (int i=0;i<Ngear;i++) {
       FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
@@ -1281,7 +1290,14 @@ void FGJSBsim::update_gear(void)
       node->getChild("rollspeed-ms", 0, true)->setDoubleValue(gear->GetWheelRollVel()*0.3043);
       node->getChild("position-norm", 0, true)->setDoubleValue(gear->GetGearUnitPos());
 //    gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
-      node->setDoubleValue("compression-norm", gear->GetCompLen());
+      max = node->getDoubleValue("max-compression-ft");
+      if (max < 0.00001) {
+        max = node->getDoubleValue("max-compression-m");
+        if (max < 0.00001) max = 1.0;
+        else max /= .3048;
+      }
+      node->setDoubleValue("compression-norm", gear->GetCompLen() / max);
+      node->setDoubleValue("compression-m", gear->GetCompLen() * .3048);
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
         node->setDoubleValue("steering-norm", gear->GetSteerNorm());
