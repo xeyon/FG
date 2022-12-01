@@ -44,6 +44,8 @@ void SimgearTimingTests::testBadZoneDetectPosition()
     // can happen at sea level.
     // https://sourceforge.net/p/flightgear/codetickets/2780/
 
+    // this was fixed by updating the timezone data from
+    // https://github.com/BertoldVdb/ZoneDetect into FGData/Timezone/timezone16.bin
     const auto pos = SGGeod::fromDeg(-69.0, 12.0);
-    CPPUNIT_ASSERT(t->updateLocal(pos, rootPath / "Timezone") == false);
+    CPPUNIT_ASSERT(t->updateLocal(pos, rootPath / "Timezone"));
 }
