@@ -2054,6 +2054,30 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
             if (argc > 2) {
                 units = routeUnitsFromArg(args[2]);
             }
+        } else if (naIsVector(args[0])) {
+            const auto altTuple = args[0];
+            // we need a second restriction type arg, and the tuple should be of length 2
+            if ((argc < 2) || (naVec_size(altTuple) != 2)) {
+                naRuntimeError(c, "missing/bad arguments to leg.setAltitude");
+            }
+            
+            rr = routeRestrictionFromArg(args[1]);
+            if (rr != RESTRICT_BETWEEN) {
+                naRuntimeError(c, "leg.setAltitude: passed a 2-tuple, but restriction type is not 'between'");
+            }
+            
+            double constraintAltitude;
+            const auto ok = convertToNum(naVec_get(altTuple, 0), constraintAltitude)
+                && convertToNum(naVec_get(altTuple, 1), altitude);
+            if (!ok) {
+                naRuntimeError(c, "leg.setAltitude: tuple members not convertible to numeric altitudes");
+            }
+            
+            if (argc > 2) {
+                units = routeUnitsFromArg(args[2]);
+            }
+            
+            // TODO: store constraint altitude
         }
 
         leg->setAltitude(rr, altitude, units);
@@ -2077,7 +2101,10 @@ static naRef f_leg_altitude(naContext c, naRef me, int argc, naRef* args)
     }
 
     if (leg->altitudeRestriction() == RESTRICT_BETWEEN) {
-        // make a 2-tuple for the between case
+        naRef result = naNewVector(c);
+        naVec_append(result, naNum(leg->waypoint()->constraintAltitude(units)));
+        naVec_append(result, naNum(leg->altitude(units)));
+        return result;
     }
 
     return naNum(leg->altitude(units));

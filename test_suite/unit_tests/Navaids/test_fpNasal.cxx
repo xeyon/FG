@@ -197,6 +197,19 @@ void FPNasalTests::testRestrictions()
     CPPUNIT_ASSERT(ok);
 
     CPPUNIT_ASSERT_EQUAL(RESTRICT_DELETE, fp1->legAtIndex(3)->speedRestriction());
+    
+    ok = FGTestApi::executeNasal(R"(
+        var fp = flightplan(); # retrieve the global flightplan
+        var leg = fp.getWP(3);
+        leg.setSpeed(0.8, 'at', "Mach");
+        leg.setAltitude(300, 'above', 'FL');
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_AT, fp1->legAtIndex(3)->speedRestriction());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(0.8, fp1->legAtIndex(3)->speedMach(), 0.01);
+    CPPUNIT_ASSERT_EQUAL(RESTRICT_ABOVE, fp1->legAtIndex(3)->altitudeRestriction());
+    CPPUNIT_ASSERT_DOUBLES_EQUAL(30000, fp1->legAtIndex(3)->altitudeFt(), 1.0);
 }
 
 void FPNasalTests::testSegfaultWaypointGhost() 
