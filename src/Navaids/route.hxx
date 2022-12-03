@@ -4,32 +4,16 @@
  * owns a collection (list, tree, graph) of route elements - such as airways,
  * procedures or a flight plan.
  */
- 
-// Written by James Turner, started 2009.
-//
-// Copyright (C) 2009  Curtis L. Olson
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+// Copyright (C) 2009 James Turner
+// SPDX-License-Identifier: GPL-2.0-or-later
 
-#ifndef FG_ROUTE_HXX
-#define FG_ROUTE_HXX
+#pragma once
 
 // std
 #include <vector>
 #include <map>
 #include <iosfwd>
+#include <optional>
 
 // Simgear
 #include <simgear/structure/SGReferenced.hxx>
@@ -88,14 +72,30 @@ typedef enum {
 	RESTRICT_AT,
 	RESTRICT_ABOVE,
 	RESTRICT_BELOW,
+    RESTRICT_BETWEEN,
   SPEED_RESTRICT_MACH,  ///< encode an 'AT' restriction in Mach, not IAS
   RESTRICT_DELETE,      ///< ignore underlying restriction (on a leg)
   RESTRICT_COMPUTED,    ///< data is computed, not a real restriction
   SPEED_COMPUTED_MACH   ///< variant on above to encode a Mach value
 } RouteRestriction;
 
+typedef enum {
+    DEFAULT_UNITS = 0,
+    ALTITUDE_FEET,
+    ALTITUDE_METER,
+    ALTITUDE_FLIGHTLEVEL,
+    SPEED_KNOTS,
+    SPEED_MACH,
+    SPEED_KPH
+} RouteUnits;
+
+RouteRestriction restrictionFromString(const std::string& t);
+
 bool isMachRestrict(RouteRestriction rr);
-  
+
+double convertSpeedUnits(RouteUnits aSrc, RouteUnits aDest, double aAltitudeFt, double aValue);
+double convertAltitudeUnits(RouteUnits aSrc, RouteUnits aDest, double aValue);
+
 /**
  * Abstract base class for waypoints (and things that are treated similarly
  * by navigation systems). More precisely this is route path elements,
@@ -117,12 +117,14 @@ public:
 	virtual FGPositioned* source() const
         { return nullptr; }
 	
-	virtual double altitudeFt() const 
-		{ return _altitudeFt; }
+    double altitudeFt() const;
 		
-  virtual double speed() const
-    { return _speed; }
+    double speed(RouteUnits aUnits = DEFAULT_UNITS) const;
   
+    double altitude(RouteUnits aUnits = DEFAULT_UNITS) const;
+
+    double constraintAltitude(RouteUnits aUnits = DEFAULT_UNITS) const;
+
 // wrapper - asserts if restriction type is _MACH
   double speedKts() const;
   
@@ -135,9 +137,11 @@ public:
 	virtual RouteRestriction speedRestriction() const
 		{ return _speedRestrict; }
 	
-  void setAltitude(double aAlt, RouteRestriction aRestrict);
-  void setSpeed(double aSpeed, RouteRestriction aRestrict);
+  void setAltitude(double aAlt, RouteRestriction aRestrict, RouteUnits aUnits = DEFAULT_UNITS);
+  void setSpeed(double aSpeed, RouteRestriction aRestrict, RouteUnits aUnits = DEFAULT_UNITS);
   
+    void setConstraintAltitude(double aAlt);
+
   /**
    * Identifier assoicated with the waypoint. Human-readable, but
    * possibly quite terse, and definitiely not unique.
@@ -230,8 +234,16 @@ protected:
     typedef Waypt*(FactoryFunction)(RouteBase* aOwner);
     static void registerFactory(const std::string aNodeType, FactoryFunction* aFactory);
 
-    double _altitudeFt = 0.0;
-	double _speed = 0.0; // knots IAS or mach
+    double _altitude = 0.0;
+    /// some restriction types specify two altitudes, in which case this is the second value, corresponding to
+    ///  AltitudeCons in the level-D XML procedures format.
+    std::optional<double> _constraintAltitude;
+    
+    RouteUnits _altitudeUnits = ALTITUDE_FEET;
+
+	double _speed = 0.0;
+    RouteUnits _speedUnits = SPEED_KNOTS;
+    
 	RouteRestriction _altRestrict = RESTRICT_NONE;
 	RouteRestriction _speedRestrict = RESTRICT_NONE;
 private:
@@ -269,5 +281,3 @@ private:
 };
 
 } // of namespace flightgear
-
-#endif // of FG_ROUTE_HXX

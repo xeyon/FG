@@ -464,8 +464,26 @@ static RouteRestriction routeRestrictionFromArg(naRef arg)
     if (u == "mach") return SPEED_RESTRICT_MACH;
     if (u == "computed-mach") return SPEED_COMPUTED_MACH;
     if (u == "delete") return RESTRICT_DELETE;
+    if (u == "between") return RESTRICT_BETWEEN;
     return RESTRICT_NONE;
 };
+
+static RouteUnits routeUnitsFromArg(naRef arg)
+{
+    if (naIsNil(arg) || !naIsString(arg)) {
+        return DEFAULT_UNITS;
+    }
+
+    const auto u = simgear::strutils::lowercase(naStr_data(arg));
+    if ((u == "knots") || (u == "kt")) return SPEED_KNOTS;
+    if (u == "kph") return SPEED_KPH;
+    if (u == "mach") return SPEED_MACH;
+    if ((u == "ft") || (u == "\'") || (u == "feet")) return ALTITUDE_FEET;
+    if ((u == "m") || (u == "meter") || (u == "meters")) return ALTITUDE_METER;
+    if ((u == "fl") || (u == "flight-level")) return ALTITUDE_FLIGHTLEVEL;
+
+    throw sg_format_exception("routeUnitsFromArg: unknown units", u);
+}
 
 naRef routeRestrictionToNasal(naContext c, RouteRestriction rr)
 {
@@ -478,6 +496,7 @@ naRef routeRestrictionToNasal(naContext c, RouteRestriction rr)
     case RESTRICT_COMPUTED: return stringToNasal(c, "computed");
     case SPEED_COMPUTED_MACH: return stringToNasal(c, "computed-mach");
     case RESTRICT_DELETE: return stringToNasal(c, "delete");
+    case RESTRICT_BETWEEN: return stringToNasal(c, "between");
     }
 
     return naNil();
@@ -1984,6 +2003,8 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
 
     double           speed = 0.0;
     RouteRestriction rr = RESTRICT_AT;
+    RouteUnits units = DEFAULT_UNITS;
+
     if (argc > 0) {
         if (naIsNil(args[0])) {
             // clear the restriction to NONE
@@ -1994,9 +2015,13 @@ static naRef f_leg_setSpeed(naContext c, naRef me, int argc, naRef* args)
             } else {
                 naRuntimeError(c, "bad arguments to setSpeed");
             }
+
+            if (argc > 2) {
+                units = routeUnitsFromArg(args[2]);
+            }
         }
 
-        leg->setSpeed(rr, speed);
+        leg->setSpeed(rr, speed, units);
     } else {
         naRuntimeError(c, "bad arguments to setSpeed");
     }
@@ -2013,6 +2038,8 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
 
     double           altitude = 0.0;
     RouteRestriction rr = RESTRICT_AT;
+    RouteUnits units = DEFAULT_UNITS;
+
     if (argc > 0) {
         if (naIsNil(args[0])) {
             // clear the restriction to NONE
@@ -2023,14 +2050,79 @@ static naRef f_leg_setAltitude(naContext c, naRef me, int argc, naRef* args)
             } else {
                 naRuntimeError(c, "bad arguments to leg.setAltitude");
             }
+
+            if (argc > 2) {
+                units = routeUnitsFromArg(args[2]);
+            }
+        } else if (naIsVector(args[0])) {
+            const auto altTuple = args[0];
+            // we need a second restriction type arg, and the tuple should be of length 2
+            if ((argc < 2) || (naVec_size(altTuple) != 2)) {
+                naRuntimeError(c, "missing/bad arguments to leg.setAltitude");
+            }
+            
+            rr = routeRestrictionFromArg(args[1]);
+            if (rr != RESTRICT_BETWEEN) {
+                naRuntimeError(c, "leg.setAltitude: passed a 2-tuple, but restriction type is not 'between'");
+            }
+            
+            double constraintAltitude;
+            const auto ok = convertToNum(naVec_get(altTuple, 0), constraintAltitude)
+                && convertToNum(naVec_get(altTuple, 1), altitude);
+            if (!ok) {
+                naRuntimeError(c, "leg.setAltitude: tuple members not convertible to numeric altitudes");
+            }
+            
+            if (argc > 2) {
+                units = routeUnitsFromArg(args[2]);
+            }
+            
+            // TODO: store constraint altitude
         }
 
-        leg->setAltitude(rr, altitude);
+        leg->setAltitude(rr, altitude, units);
     } else {
         naRuntimeError(c, "bad arguments to setleg.setAltitude");
     }
 
     return naNil();
+}
+
+static naRef f_leg_altitude(naContext c, naRef me, int argc, naRef* args)
+{
+    FlightPlan::Leg* leg = fpLegGhost(me);
+    if (!leg) {
+        naRuntimeError(c, "leg.altitude called on non-flightplan-leg object");
+    }
+
+    RouteUnits units = DEFAULT_UNITS;
+    if (argc > 0) {
+        units = routeUnitsFromArg(args[9]);
+    }
+
+    if (leg->altitudeRestriction() == RESTRICT_BETWEEN) {
+        naRef result = naNewVector(c);
+        naVec_append(result, naNum(leg->waypoint()->constraintAltitude(units)));
+        naVec_append(result, naNum(leg->altitude(units)));
+        return result;
+    }
+
+    return naNum(leg->altitude(units));
+}
+
+static naRef f_leg_speed(naContext c, naRef me, int argc, naRef* args)
+{
+    FlightPlan::Leg* leg = fpLegGhost(me);
+    if (!leg) {
+        naRuntimeError(c, "leg.speed called on non-flightplan-leg object");
+    }
+
+    RouteUnits units = DEFAULT_UNITS;
+    if (argc > 0) {
+        units = routeUnitsFromArg(args[9]);
+    }
+
+    return naNum(leg->speed(units));
 }
 
 static naRef f_leg_courseAndDistanceFrom(naContext c, naRef me, int argc, naRef* args)
@@ -2301,6 +2393,8 @@ naRef initNasalFlightPlan(naRef globals, naContext c)
     naSave(c, fpLegPrototype);
     hashset(c, fpLegPrototype, "setSpeed", naNewFunc(c, naNewCCode(c, f_leg_setSpeed)));
     hashset(c, fpLegPrototype, "setAltitude", naNewFunc(c, naNewCCode(c, f_leg_setAltitude)));
+    hashset(c, fpLegPrototype, "altitude", naNewFunc(c, naNewCCode(c, f_leg_altitude)));
+    hashset(c, fpLegPrototype, "speed", naNewFunc(c, naNewCCode(c, f_leg_speed)));
     hashset(c, fpLegPrototype, "path", naNewFunc(c, naNewCCode(c, f_leg_path)));
     hashset(c, fpLegPrototype, "courseAndDistanceFrom", naNewFunc(c, naNewCCode(c, f_leg_courseAndDistanceFrom)));
 

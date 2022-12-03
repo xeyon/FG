@@ -19,9 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <simgear/math/sg_random.hxx>
 #include <simgear/math/sg_geodesy.hxx>
@@ -33,6 +31,7 @@
 
 #include <Main/util.hxx>
 #include <Environment/gravity.hxx>
+#include <Environment/atmosphere.hxx>
 #include <Main/fg_props.hxx>
 
 using namespace simgear;
@@ -695,6 +694,10 @@ void FGAIBallistic::Run(double dt) {
     // for a conventional shell/bullet (no boat-tail).
     double Cdm;
 
+    const double Mach = FGAtmo::machFromKnotsAtAltitudeFt(speed, altitude_ft);
+    const double rhoKgM3 =  FGAtmo::densityAtAltitudeFt(altitude_ft);
+    const double rho = rhoKgM3 / SG_SLUGFT3_TO_KGPM3;
+    
     if (Mach < 0.7)
         Cdm = 0.0125 * Mach + _cd;
     else if (Mach < 1.2)

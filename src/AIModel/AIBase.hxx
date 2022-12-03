@@ -292,7 +292,6 @@ protected:
 
     ModelSearchOrder _searchOrder = ModelSearchOrder::DATA_ONLY;
     void Transform();
-    void CalculateMach();
     double UpdateRadar(FGAIManager* manager);
 
     void removeModel();
@@ -376,13 +375,6 @@ public:
     const char* _getName() const;
     const char* _getSubmodel() const;
     int _getFallbackModelIndex() const;
-
-    // These are used in the Mach number calculations
-    double rho;
-    double T;                             // temperature, degs farenheit
-    double p;                             // pressure lbs/sq ft
-    double a;                             // speed of sound at altitude (ft/s)
-    double Mach;                          // Mach number
 
     static const double e;
     static const double lbs_to_slugs;

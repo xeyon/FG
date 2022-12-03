@@ -123,4 +123,5 @@ void FGReplay::resetStatisticsProperties()
 
 
 // Register the subsystem.
-SGSubsystemMgr::Registrant<FGReplay> registrantFGReplay;
+SGSubsystemMgr::Registrant<FGReplay> registrantFGReplay(
+    SGSubsystemMgr::POST_FDM);

@@ -1246,6 +1246,7 @@ void FGJSBsim::init_gear(void )
 {
     FGGroundReactions* gr=fdmex->GetGroundReactions();
     int Ngear=GroundReactions->GetNumGearUnits();
+    double max = 1.0;
     for (int i=0;i<Ngear;i++) {
       FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
@@ -1254,16 +1255,23 @@ void FGJSBsim::init_gear(void )
       node->setDoubleValue("yoffset-in", gear->GetBodyLocation()(2) * 12);
       node->setDoubleValue("zoffset-in", gear->GetBodyLocation()(3) * 12);
 
-      node->setDoubleValue("xoffset-m", gear->GetBodyLocation()(1) * 0.08333333);
-      node->setDoubleValue("yoffset-m", gear->GetBodyLocation()(2) * 0.08333333);
-      node->setDoubleValue("zoffset-m", gear->GetBodyLocation()(3) * 0.08333333);
+      node->setDoubleValue("xoffset-m", gear->GetBodyLocation()(1) * SG_FEET_TO_METER);
+      node->setDoubleValue("yoffset-m", gear->GetBodyLocation()(2) * SG_FEET_TO_METER);
+      node->setDoubleValue("zoffset-m", gear->GetBodyLocation()(3) * SG_FEET_TO_METER);
 
       node->setBoolValue("wow", gear->GetWOW());
-      node->setDoubleValue("rollspeed-ms", gear->GetWheelRollVel()*0.3043);
+      node->setDoubleValue("rollspeed-ms", gear->GetWheelRollVel() * SG_FEET_TO_METER);
       node->setBoolValue("has-brake", gear->GetBrakeGroup() > 0);
       node->setDoubleValue("position-norm", gear->GetGearUnitPos());
 //    node->setDoubleValue("tire-pressure-norm", gear->GetTirePressure());
-      node->setDoubleValue("compression-norm", gear->GetCompLen());
+      max = node->getDoubleValue("max-compression-ft");
+      if (max < 0.00001) {
+        max = node->getDoubleValue("max-compression-m");
+        if (max < 0.00001) max = 1.0;
+        else max /= SG_FEET_TO_METER;
+      }
+      node->setDoubleValue("compression-norm", gear->GetCompLen() / max);
+      node->setDoubleValue("compression-m", gear->GetCompLen() * SG_FEET_TO_METER);
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
         node->setDoubleValue("steering-norm", gear->GetSteerNorm());
@@ -1274,14 +1282,22 @@ void FGJSBsim::update_gear(void)
 {
     FGGroundReactions* gr=fdmex->GetGroundReactions();
     int Ngear=GroundReactions->GetNumGearUnits();
+    double max = 1.0;
     for (int i=0;i<Ngear;i++) {
       FGLGear *gear = gr->GetGearUnit(i);
       SGPropertyNode * node = fgGetNode("gear/gear", i, true);
       node->getChild("wow", 0, true)->setBoolValue( gear->GetWOW());
-      node->getChild("rollspeed-ms", 0, true)->setDoubleValue(gear->GetWheelRollVel()*0.3043);
+      node->getChild("rollspeed-ms", 0, true)->setDoubleValue(gear->GetWheelRollVel() * SG_FEET_TO_METER);
       node->getChild("position-norm", 0, true)->setDoubleValue(gear->GetGearUnitPos());
 //    gear->SetTirePressure(node->getDoubleValue("tire-pressure-norm"));
-      node->setDoubleValue("compression-norm", gear->GetCompLen());
+      max = node->getDoubleValue("max-compression-ft");
+      if (max < 0.00001) {
+        max = node->getDoubleValue("max-compression-m");
+        if (max < 0.00001) max = 1.0;
+        else max /= SG_FEET_TO_METER;
+      }
+      node->setDoubleValue("compression-norm", gear->GetCompLen() / max);
+      node->setDoubleValue("compression-m", gear->GetCompLen() * SG_FEET_TO_METER);
       node->setDoubleValue("compression-ft", gear->GetCompLen());
       if ( gear->GetSteerable() )
         node->setDoubleValue("steering-norm", gear->GetSteerNorm());

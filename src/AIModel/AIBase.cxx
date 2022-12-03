@@ -193,12 +193,6 @@ FGAIBase::FGAIBase(object_type ot, bool enableHot) : replay_time(fgGetNode("sim/
 
     serviceable = false;
 
-    rho = 1;
-    T = 280;
-    p = 1e5;
-    a = 340;
-    Mach = 0;
-
     // explicitly disable HOT for (most) AI models
     if (!enableHot)
         aip.getSceneGraph()->setNodeMask(~SG_NODEMASK_TERRAIN_BIT);
@@ -308,9 +302,6 @@ void FGAIBase::update(double dt) {
         return;
     if (_otype == object_type::otStatic)
         return;
-
-    if (_otype == object_type::otBallistic)
-        CalculateMach();
 
     ft_per_deg_lat = 366468.96 - 3717.12 * cos(pos.getLatitudeRad());
     ft_per_deg_lon = 365228.16 * cos(pos.getLatitudeRad());
@@ -1191,38 +1182,6 @@ const char* FGAIBase::_getSubmodel() const {
 
 int FGAIBase::_getFallbackModelIndex() const {
     return _fallback_model_index;
-}
-
-void FGAIBase::CalculateMach() {
-    // Calculate rho at altitude, using standard atmosphere
-    // For the temperature T and the pressure p,
-    double altitude = altitude_ft;
-
-    if (altitude < 36152) {		// curve fits for the troposphere
-        T = 59 - 0.00356 * altitude;
-        p = 2116 * pow( ((T + 459.7) / 518.6) , 5.256);
-    } else if ( 36152 < altitude && altitude < 82345 ) {    // lower stratosphere
-        T = -70;
-        p = 473.1 * pow( e , 1.73 - (0.000048 * altitude) );
-    } else {                                    //  upper stratosphere
-        T = -205.05 + (0.00164 * altitude);
-        p = 51.97 * pow( ((T + 459.7) / 389.98) , -11.388);
-    }
-
-    rho = p / (1718 * (T + 459.7));
-
-    // calculate the speed of sound at altitude
-    // a = sqrt ( g * R * (T + 459.7))
-    // where:
-    // a = speed of sound [ft/s]
-    // g = specific heat ratio, which is usually equal to 1.4
-    // R = specific gas constant, which equals 1716 ft-lb/slug/R
-    a = sqrt ( 1.4 * 1716 * (T + 459.7));
-
-    // calculate Mach number
-    Mach = speed/a;
-
-    // cout  << "Speed(ft/s) "<< speed <<" Altitude(ft) "<< altitude << " Mach " << Mach << endl;
 }
 
 int FGAIBase::_newAIModelID() {

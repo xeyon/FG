@@ -4,6 +4,7 @@ foreach( simgear_test_category
         props
         canvas 
         structure
+        timing
     )
 
     add_subdirectory(${simgear_test_category})
