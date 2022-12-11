@@ -173,8 +173,8 @@ public:
     QOpenGLContext* qtContext = nullptr;
     osg::GraphicsContext* osgContext = nullptr;
     
-    std::atomic_bool renderControlInited;
-    std::atomic_bool syncPending;
+    std::atomic_int renderControlInited;
+    std::atomic_int syncPending;
     
     void frameEvent()
     {
