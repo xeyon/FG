@@ -41,9 +41,6 @@ FGLogger::init ()
     if (!child->getBoolValue("enabled", false))
         continue;
 
-    _logs.emplace_back(new Log());
-    Log &log = *_logs.back();
-
     string filename = child->getStringValue("filename");
     if (filename.empty()) {
         filename = "fg_log.csv";
@@ -66,8 +63,11 @@ FGLogger::init ()
         "folder (" + (globals->get_fg_home() / "Export").utf8Str() + ").";
 
       SG_LOG(SG_GENERAL, SG_ALERT, msg);
-      exit(EXIT_FAILURE);
+      return;
     }
+
+    _logs.emplace_back(new Log());
+    Log &log = *_logs.back();
 
     string delimiter = child->getStringValue("delimiter");
     if (delimiter.empty()) {
