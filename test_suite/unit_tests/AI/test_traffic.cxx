@@ -1031,7 +1031,7 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
     int startSpeed = aiAircraft->GetFlightPlan()->getCurrentWaypoint()->getSpeed();
     aiAircraft->AccelTo(startSpeed);
 
-    for (size_t i = 0; i < 12000000 && !(aiAircraft->getDie()) && aiAircraft->GetFlightPlan()->getLeg() < 10; i++) {
+    for (size_t i = 0; i < 12000000 && !(aiAircraft->getDie()) && aiAircraft->GetFlightPlan()->getLeg() <= AILeg::PARKING; i++) {
         CPPUNIT_ASSERT_EQUAL(aiAircraft->GetFlightPlan()->isValidPlan(), true);
         if (!aiAircraft->getDie()) {
             // collect position
@@ -1072,7 +1072,7 @@ FGAIAircraft * TrafficTests::flyAI(SGSharedPtr<FGAIAircraft> aiAircraft, std::st
         aiAircraft->dumpCSV(csvFile, lineIndex++);
         // A flight without loops should never reach 400°
         CPPUNIT_ASSERT_LESSEQUAL(400.0, headingSum);
-        CPPUNIT_ASSERT_LESSEQUAL(10, aiAircraft->GetFlightPlan()->getLeg());
+        CPPUNIT_ASSERT_LESSEQUAL( 10, aiAircraft->GetFlightPlan()->getLeg());
         CPPUNIT_ASSERT_MESSAGE( "Aircraft has not completed test in time.", i < 3000000);
         // Arrived at a parking
         int beforeNextDepTime = aiAircraft->getTrafficRef()->getDepartureTime() - 30;

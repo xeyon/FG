@@ -185,7 +185,7 @@ public:
 
    double checkTrackLength(const std::string& wptName) const;
   time_t getStartTime() const { return start_time; }
-   time_t getArrivalTime() const { return arrivalTime; }
+  time_t getArrivalTime() const { return arrivalTime; }
 
   bool    create(FGAIAircraft *, FGAirport *dep, FGAirport *arr, int leg, double alt, double speed, double lat, double lon,
 		 bool firstLeg, double radius, const std::string& fltType, const std::string& aircraftType, const std::string& airline, double distance);
@@ -268,6 +268,7 @@ private:
   bool createClimb(FGAIAircraft *, bool, FGAirport *, FGAirport* arrival, double, double, const std::string&);
   bool createCruise(FGAIAircraft *, bool, FGAirport*, FGAirport*, const SGGeod& current, double, double, const std::string&);
   bool createDescent(FGAIAircraft *, FGAirport *, const SGGeod& current, double speed, double alt,const std::string&, double distance);
+  bool createHold(FGAIAircraft *, FGAirport *, const SGGeod& current, double speed, double alt,const std::string&, double distance);
   bool createLanding(FGAIAircraft *, FGAirport *, const std::string&);
   bool createParking(FGAIAircraft *, FGAirport *, double radius);
   void deleteWaypoints();

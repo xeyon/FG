@@ -67,12 +67,23 @@ ActiveRunway::ActiveRunway(const std::string& r, int cc) :
     distanceToFinal = 6.0 * SG_NM_TO_METER;
 };
 
+void ActiveRunway::removeFromDepartureQueue(int id) {
+    if (id!=currentlyCleared) {
+        printDepartureQueue();
+        SG_LOG(SG_ATC, SG_WARN, "Not cleared id being removed from DepartureQueue " << id << " currently cleared " << currentlyCleared);
+    } else {
+        setCleared(0);
+        updateDepartureQueue();
+        printDepartureQueue();
+    }
+}
+
 void ActiveRunway::updateDepartureQueue()
 {
     departureQueue.erase(departureQueue.begin());
 }
 
-/*
+/**
 * Fetch next slot for the active runway
 * @param eta time of slot requested
 * @return newEta: next slot available; starts at eta paramater
@@ -92,12 +103,12 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
     // if the aircraft is the first arrival, add to the vector and return eta directly
     if (estimatedArrivalTimes.empty()) {
         estimatedArrivalTimes.push_back(eta);
-        SG_LOG(SG_ATC, SG_DEBUG, getRunwayName() << "Checked eta slots, using " << eta);
+        SG_LOG(SG_ATC, SG_BULK, getRunwayName() << " Checked eta slots, using " << eta);
         return eta;
     } else {
         // First check the already assigned slots to see where we need to fit the flight in
         TimeVectorIterator i = estimatedArrivalTimes.begin();
-        SG_LOG(SG_ATC, SG_DEBUG, getRunwayName() << " Checking eta slots " << eta << " : " << estimatedArrivalTimes.size() << " Timediff " << (eta - globals->get_time_params()->get_cur_time()));
+        SG_LOG(SG_ATC, SG_BULK, getRunwayName() << " Checking eta slots " << eta << " : " << estimatedArrivalTimes.size() << " Timediff : " << (eta - globals->get_time_params()->get_cur_time()));
 
         // is this needed - just a debug output?
         for (i = estimatedArrivalTimes.begin();
@@ -110,7 +121,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
         if ((eta + separation) < (*i)) {
             newEta = eta;
             SG_LOG(SG_ATC, SG_BULK, "Storing at beginning");
-            SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta);
+            SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta );
             slotHousekeeping(newEta);
             return newEta;
         }
@@ -128,7 +139,7 @@ time_t ActiveRunway::requestTimeSlot(time_t eta)
                     newEta = (*i) + separation;
                     SG_LOG(SG_ATC, SG_BULK, "Storing at end + separation");
                 }
-                SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta);
+                SG_LOG(SG_ATC, SG_DEBUG, "Done. New ETA : " << newEta << " Timediff : " << (newEta-eta));
                 slotHousekeeping(newEta);
                 return newEta;
             } else {
@@ -197,7 +208,7 @@ void ActiveRunway::slotHousekeeping(time_t newEta)
     }
 }
 
-/* Output the contents of the departure queue vector nicely formatted*/
+/** Output the contents of the departure queue vector nicely formatted*/
 void ActiveRunway::printDepartureQueue()
 {
     SG_LOG(SG_ATC, SG_DEBUG, "Departure queue for " << rwy << ": ");
@@ -208,7 +219,7 @@ void ActiveRunway::printDepartureQueue()
 
 }
 
-/* Fetch the first aircraft in the departure queue with a certain status */
+/** Fetch the first aircraft in the departure queue with a certain status */
 SGSharedPtr<FGAIAircraft>ActiveRunway::getFirstOfStatus(int stat) const
 {
     auto it = std::find_if(departureQueue.begin(), departureQueue.end(), [stat](const SGSharedPtr<FGAIAircraft>& acft) {
@@ -316,10 +327,14 @@ bool FGTrafficRecord::isDead() const {
 bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
 {
     bool result = false;
-    SG_LOG(SG_ATC, SG_BULK, getCallsign() << "|checkPositionAndIntentions");
+    SG_LOG(SG_ATC, SG_BULK, getCallsign() << "| checkPositionAndIntentions CurrentPos : " << currentPos << " Other : " << other.currentPos << " Leg : " << leg << " Other Leg : " << other.leg );
     if (currentPos == other.currentPos && getId() != other.getId() ) {
-        SG_LOG(SG_ATC, SG_BULK, getCallsign() << "|Check Position and intentions: " << other.getCallsign() << " we are on the same taxiway; Index = " << currentPos);
-        result = true;
+        SG_LOG(SG_ATC, SG_BULK, getCallsign() << "| Check Position and intentions: " << other.getCallsign() << " we are on the same taxiway; Index = " << currentPos);
+        int headingTowards = SGGeodesy::courseDeg( other.getPos(), getPos() );
+        int headingDiff = SGMiscd::normalizePeriodic(-180, 180, headingTowards - getHeading() );
+        SG_LOG(SG_ATC, SG_BULK, getCallsign() << "| " << heading << "\t" << headingTowards << "\t" << headingDiff);
+        // getHeading()
+        result = abs(headingDiff) < 89;
     }
     //  else if (! other.intentions.empty())
     //     {
@@ -331,8 +346,8 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
     //    SG_LOG(SG_ATC, SG_BULK, "Check Position and intentions: current matches other.intentions");
     //     result = true;
     //       }
-    else if (! intentions.empty()) {
-        SG_LOG(SG_ATC, SG_BULK, getCallsign() << "|Itentions " << intentions.size());
+    else if (!intentions.empty()) {
+        SG_LOG(SG_ATC, SG_BULK, getCallsign() << "| Itentions Size " << intentions.size());
         intVecIterator i = intentions.begin();
         //while (!((i == intentions.end()) || ((*i) == other.currentPos)))
         while (i != intentions.end()) {
@@ -343,7 +358,13 @@ bool FGTrafficRecord::checkPositionAndIntentions(FGTrafficRecord & other)
         }
         if (i != intentions.end()) {
             SG_LOG(SG_ATC, SG_BULK, getCallsign() << "| Check Position and intentions: " << other.getCallsign()<< " matches Index = " << (*i));
-            result = true;
+            int headingTowards = SGGeodesy::courseDeg( other.getPos(), getPos() );
+            int distanceM = SGGeodesy::distanceM( other.getPos(), getPos() );
+            int headingDiff = SGMiscd::normalizePeriodic(-180, 180, headingTowards - getHeading() );
+            SG_LOG(SG_ATC, SG_BULK, getCallsign() << "| Heading : " << heading << "\t Heading Other->Current" << headingTowards << "\t Heading Diff :" << headingDiff << "\t Distance : " << distanceM);
+            // difference of heading is small and it's actually near
+            result = abs(headingDiff) < 89 && distanceM < 400;
+//            result = true;
         }
     }
     return result;

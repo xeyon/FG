@@ -101,6 +101,10 @@ bool FGAIFlightPlan::create(FGAIAircraft * ac, FGAirport * dep,
         retVal = createDescent(ac, arr, SGGeod::fromDeg(longitude, latitude), speed, alt, fltType,
                       distance);
         break;
+    case AILeg::HOLD:
+        retVal = createHold(ac, arr, SGGeod::fromDeg(longitude, latitude), speed, alt, fltType,
+                      distance);
+        break;
     case AILeg::LANDING:
         retVal = createLanding(ac, arr, fltType);
         break;
@@ -775,7 +779,7 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac,
                                         heading);
     if (!apt->hasRunwayWithIdent(activeRunway)) {
         SG_LOG(SG_AI, SG_WARN, ac->getCallSign() <<
-                           "| FGAIFlightPlan::createLanding: No such runway " << activeRunway << " at " << apt->ident());
+                           "| FGAIFlightPlan::createDescent: No such runway " << activeRunway << " at " << apt->ident());
         return false;
     }
 
@@ -1018,63 +1022,56 @@ bool FGAIFlightPlan::createDescent(FGAIAircraft * ac,
         createArc(ac, secondaryTarget, ac->_getHeading()+rightAngle, heading+rightAngle, firstTurnIncrement, initialTurnRadius, ac->getAltitude(), altDiff/3, vDescent, "straight_turn_%03d");
     }
 
-    // To prevent absurdly steep approaches, compute the origin from where the approach should have started
-    SGGeod origin;
-
-    if (distance < requiredDistance * 0.8) {
-        reposition = true;
-        SGGeodesy::direct(waypoints.back()->getPos(), azimuth,
-                          requiredDistance, origin, dummyAz2);
-
-        double addDD = SGGeodesy::courseDeg(refPoint, initialTarget);
-        distance = SGGeodesy::distanceM(current, initialTarget);
-        azimuth = SGGeodesy::courseDeg(current, initialTarget);
-    } else {
-        // We project a new point out of line so the aircraft has room to turn to new heading.
-        origin = SGGeodesy::direct(current, ac->getTrueHeadingDeg(), initialTurnRadius);
-        distance = SGGeodesy::distanceM(origin, initialTarget);
-        azimuth = SGGeodesy::courseDeg(origin, initialTarget);
-    }
-
-    // Calculate the ETA at final, based on remaining distance, and approach speed.
-    // distance should really consist of flying time to terniary target, plus circle
-    // but the distance to secondary target should work as a reasonable approximation
-    // aditionally add the amount of distance covered by making a turn of "side"
-    time_t remaining =
-        (initialTurnRadius + distance) / ((vDescent * SG_NM_TO_METER) / 3600.0);
     time_t now = globals->get_time_params()->get_cur_time();
 
-    //if (ac->getTrafficRef()->getCallSign() == fgGetString("/ai/track-callsign")) {
-    //     cerr << "   Arrival time estimation: turn angle " <<  side << ". Turn distance " << turnDistance << ". Linear distance " << distance << ". Time to go " << remaining << endl;
-    //     //exit(1);
-    //}
-
-    time_t eta = now + remaining;
+    arrivalTime = now;
     //choose a distance to the runway such that it will take at least 60 seconds more
     // time to get there than the previous aircraft.
     // Don't bother when aircraft need to be repositioned, because that marks the initialization phased...
-
-    time_t newEta;
-
-    if (reposition == false) {
-        newEta =
-            apt->getDynamics()->getApproachController()->getRunway(rwy->name())->requestTimeSlot(eta);
-    } else {
-        newEta = eta;
-    }
-
-    arrivalTime = newEta;
-    time_t additionalTimeNeeded = newEta - eta;
-    SG_LOG(SG_AI, SG_BULK, "Additional time required " << additionalTimeNeeded << " ");
-
-    //Number of holds
-    double holdsPatterns = (additionalTimeNeeded-additionalTimeNeeded%240)/240;
-
-    additionalTimeNeeded -= holdsPatterns*240;
-
     return true;
 }
 
+/*******************************************************************
+ * CreateHold
+ * Generate a hold flight path from the permission to land point
+ * Exactly one hold pattern
+ ******************************************************************/
+bool FGAIFlightPlan::createHold(FGAIAircraft * ac,
+                                   FGAirport * apt,
+                                   const SGGeod& current,
+                                   double speed,
+                                   double alt,
+                                   const string & fltType,
+                                   double requiredDistance)
+{
+    //Beginning of Descent
+    const string& rwyClass = getRunwayClassFromTrafficType(fltType);
+    double vDescent = ac->getPerformance()->vDescent();
+    double vApproach = ac->getPerformance()->vApproach();
+    double initialTurnRadius = getTurnRadius(vDescent, true);
+    double heading = ac->getTrueHeadingDeg();
+    apt->getDynamics()->getActiveRunway(rwyClass, 2, activeRunway,
+                                        heading);
+    if (!apt->hasRunwayWithIdent(activeRunway)) {
+        SG_LOG(SG_AI, SG_WARN, ac->getCallSign() <<
+                           "| FGAIFlightPlan::createHold: No such runway " << activeRunway << " at " << apt->ident());
+        return false;
+    }
+    FGRunwayRef rwy = apt->getRunwayByIdent(activeRunway);
+    double currentAltitude = waypoints.back()->getAltitude();
+    double distanceOut = apt->getDynamics()->getApproachController()->getRunway(rwy->name())->getApproachDistance();    //12 * SG_NM_TO_METER;
+    double lateralOffset = initialTurnRadius;
+
+    SGGeod secondaryTarget = rwy->pointOffCenterline(-2 * distanceOut, lateralOffset);
+    SGGeod secondHoldCenter = rwy->pointOffCenterline(-4 * distanceOut, lateralOffset);
+
+    createArc(ac, secondaryTarget, rwy->headingDeg()-90, rwy->headingDeg()+90, 5, initialTurnRadius,
+    currentAltitude, 0, vDescent, "hold_1_%03d");
+    createArc(ac, secondHoldCenter, rwy->headingDeg()+90, rwy->headingDeg()-90, 5, initialTurnRadius,
+    currentAltitude, 0, vDescent, "hold_2_%03d");
+
+    return true;
+}
 /**
  * compute the distance along the centerline, to the ILS glideslope
  * transmitter. Return -1 if there's no GS for the runway

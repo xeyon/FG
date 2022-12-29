@@ -44,9 +44,10 @@ namespace AILeg
       CLIMB = 4,
       CRUISE = 5,
       APPROACH = 6,
-      LANDING = 7,
-      PARKING_TAXI = 8,
-      PARKING = 9
+      HOLD = 7,
+      LANDING = 8,
+      PARKING_TAXI = 9,
+      PARKING = 10
     };
 }
 
@@ -122,7 +123,7 @@ public:
     int getTakeOffStatus() { return takeOffStatus; };
     void setTakeOffSlot(time_t timeSlot) { takeOffTimeSlot = timeSlot;};
     time_t getTakeOffSlot(){return takeOffTimeSlot;};
-    void scheduleForATCTowerDepartureControl(int state);
+    void scheduleForATCTowerDepartureControl();
 
     const std::string& GetTransponderCode() { return transponderCode; };
     void SetTransponderCode(const std::string& tc) { transponderCode = tc;};
@@ -200,6 +201,8 @@ private:
     /**Handle special cases for the User AI shadow*/
     void updateUserFlightPlan(double dt);
 
+    /**Calculate the next leg (hold or not)*/
+    int determineNextLeg(int leg);
     void handleATCRequests(double dt);
 
     inline bool isStationary() {

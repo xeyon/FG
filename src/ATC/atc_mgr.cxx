@@ -59,9 +59,9 @@ FGATCManager::~FGATCManager() {
 }
 
 /**
-Sets up ATC subsystem parts depending on other subsystems
-Override of SGSubsystem::postinit()
-Will set private boolean flag "initSucceeded" to true upon conclusion
+* Sets up ATC subsystem parts depending on other subsystems
+* Override of SGSubsystem::postinit()
+* Will set private boolean flag "initSucceeded" to true upon conclusion
 */
 void FGATCManager::postinit()
 {

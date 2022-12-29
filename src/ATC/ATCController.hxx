@@ -39,28 +39,35 @@ namespace ATCMessageState
 {
     enum Type
     {
-// 0 =  Normal; no action required
-NORMAL = 0,
-// 1 = "Acknowledge "Hold position
-ACK_HOLD = 1,
-// 2 = "Acknowledge "Resume taxi".
-ACK_RESUME_TAXI = 2,
-// 3 = "Issue TaxiClearance"
-TAXI_CLEARED = 3,
-// 4 = Acknowledge Taxi Clearance"
-ACK_TAXI_CLEARED = 4,
-// 5 = Post acknowlegde taxiclearance: Start taxiing
-START_TAXI = 5,
-// 6 = Report runway
-REPORT_RUNWAY = 6,
-// 7 = Acknowledge report runway
-ACK_REPORT_RUNWAY = 7,
-// 8 = Switch tower frequency
-SWITCH_TOWER = 8,
-// 9 = Acknowledge switch tower frequency
-ACK_SWITCH_TOWER = 9,
-// 10 = Cleared for takeoff
-CLEARED_TAKEOFF = 10,
+        // 0 =  Normal; no action required
+        NORMAL,
+        // 1 = "Acknowledge "Hold position
+        ACK_HOLD,
+        // 2 = "Acknowledge "Resume taxi".
+        ACK_RESUME_TAXI,
+        // 3 = "Issue TaxiClearance"
+        TAXI_CLEARED = 3,
+        // 4 = Acknowledge Taxi Clearance"
+        ACK_TAXI_CLEARED = 4,
+        // 5 = Post acknowlegde taxiclearance: Start taxiing
+        START_TAXI = 5,
+        // 6 = Report runway
+        REPORT_RUNWAY = 6,
+        // 7 = Acknowledge report runway
+        ACK_REPORT_RUNWAY = 7,
+        // 8 = Switch tower frequency
+        SWITCH_GROUND_TOWER = 8,
+        // 9 = Acknowledge switch tower frequency
+        ACK_SWITCH_GROUND_TOWER = 9,
+        // 10 = Cleared for takeoff
+        CLEARED_TAKEOFF,
+        ACK_CLEARED_TAKEOFF,
+        ANNOUNCE_ARRIVAL,
+        ACK_ARRIVAL,
+        HOLD,
+        CLEARED_TO_LAND,
+        ACK_CLEARED_TO_LAND,
+        LANDING_TAXI
     };
 }
 
@@ -118,7 +125,13 @@ public:
         MSG_CLEARED_FOR_TAKEOFF,
         MSG_ACKNOWLEDGE_CLEARED_FOR_TAKEOFF,
         MSG_SWITCH_TOWER_FREQUENCY,
-        MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY
+        MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY,
+        MSG_ARRIVAL,
+        MSG_ACKNOWLEDGE_ARRIVAL,
+        MSG_HOLD,
+        MSG_ACKNOWLEDGE_HOLD,
+        MSG_CLEARED_TO_LAND,
+        MSG_ACKNOWLEDGE_CLEARED_TO_LAND
     } AtcMsgId;
 
     typedef enum {
@@ -135,6 +148,8 @@ public:
                                   FGAIAircraft *aircraft) = 0;
     virtual void             updateAircraftInformation(int id, SGGeod geod,
             double heading, double speed, double alt, double dt) = 0;
+    bool checkTransmissionState(int minState, int MaxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
+                                AtcMsgDir msgDir);
 
     virtual void signOff(int id);
     bool hasInstruction(int id);

@@ -69,10 +69,10 @@ FGAIAircraft::FGAIAircraft(FGAISchedule* ref) : /* HOT must be disabled for AI A
         groundOffset = 0;
     }
 
-    fp              = 0;
-    controller      = 0;
-    prevController  = 0;
-    towerController = 0;
+    fp              = nullptr;
+    controller      = nullptr;
+    prevController  = nullptr;
+    towerController = nullptr;
     dt_count = 0;
     dt_elev_count = 0;
     use_perf_vs = true;
@@ -604,11 +604,13 @@ bool FGAIAircraft::loadNextLeg(double distance) {
     } else {
         double cruiseAlt = trafficRef->getCruiseAlt() * 100;
 
-        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Loading Leg " << leg+1);
+        int nextLeg = determineNextLeg(leg);
+
+        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Loading Leg " << nextLeg);
         bool ok = fp->create (this,
                     dep,
                     arr,
-                    leg+1,
+                    nextLeg,
                     cruiseAlt,
                     trafficRef->getSpeed(),
                     _getLatitude(),
@@ -721,10 +723,10 @@ void FGAIAircraft::announcePositionToController() {
         }
         break;
     case AILeg::APPROACH:
-         if (trafficRef->getArrivalAirport()->getDynamics()) {
-             controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
-          }
-          break;
+        if (trafficRef->getArrivalAirport()->getDynamics()) {
+            controller = trafficRef->getArrivalAirport()->getDynamics()->getApproachController();
+        }
+        break;
     case AILeg::PARKING_TAXI:              // Taxiing for parking
         if (trafficRef->getArrivalAirport()->getDynamics()->getGroundController()->exists())
             controller = trafficRef->getArrivalAirport()->getDynamics()->getGroundController();
@@ -749,7 +751,7 @@ void FGAIAircraft::announcePositionToController() {
     }
 }
 
-void FGAIAircraft::scheduleForATCTowerDepartureControl(int state) {
+void FGAIAircraft::scheduleForATCTowerDepartureControl() {
     if (!takeOffStatus) {
         int leg = fp->getLeg();
         if (trafficRef) {
@@ -765,7 +767,7 @@ void FGAIAircraft::scheduleForATCTowerDepartureControl(int state) {
             }
         }
     }
-    takeOffStatus = state;
+    takeOffStatus = AITakeOffStatus::QUEUED;
 }
 
 // Process ATC instructions and report back
@@ -782,7 +784,17 @@ void FGAIAircraft::processATC(const FGATCInstruction& instruction) {
         // let an offending aircraft take an evasive action
         // for instance taxi back a little bit.
     }
-    if (instruction.getHoldPattern   ()) {}
+    switch (fp->getLeg())
+    {
+        case AILeg::STARTUP_PUSHBACK:
+        case AILeg::APPROACH:
+            break;
+        default:
+            break;
+    }
+    if (instruction.getHoldPattern   ()) {
+        //holdtime = instruction.getHoldTime();
+    }
 
     // Hold Position
     if (instruction.getHoldPosition  ()) {
@@ -1048,11 +1060,14 @@ bool FGAIAircraft::handleAirportEndPoints(FGAIWaypoint* prev, time_t now) {
         AccelTo(0.0);
     }
     if (prev->contains("legend")) {
-        fp->incrementLeg();
+        int nextLeg = determineNextLeg(fp->getLeg());
+        while (nextLeg!=fp->getLeg()) {
+            fp->incrementLeg();
+        }
     }
     if (prev->contains(string("DepartureHold"))) {
         //cerr << "Passing point DepartureHold" << endl;
-        scheduleForATCTowerDepartureControl(1);
+        scheduleForATCTowerDepartureControl();
     }
     if (prev->contains(string("Accel"))) {
         takeOffStatus = AITakeOffStatus::CLEARED_FOR_TAKEOFF;
@@ -1385,6 +1400,20 @@ const string& FGAIAircraft::atGate()
 
      static const string empty;
      return empty;
+}
+
+int FGAIAircraft::determineNextLeg(int leg) {
+    if (leg==AILeg::APPROACH) {
+        time_t now = globals->get_time_params()->get_cur_time();
+        if (controller->getInstruction(getID()).getRunwaySlot()
+           > now) {
+            return AILeg::HOLD;
+        } else {
+            return AILeg::LANDING;
+        }
+    } else {
+        return leg+1;
+    }
 }
 
 void FGAIAircraft::handleATCRequests(double dt)

@@ -61,11 +61,6 @@ public:
     virtual void render(bool);
     virtual std::string getName();
     virtual void update(double dt);
-
-    // Hpoefully, we can move this function to the base class, but I need to verify what is needed for the other controllers before doing so.
-    bool checkTransmissionState(int st, time_t now, time_t startTime, TrafficVectorIterator i, AtcMsgId msgId,
-                                AtcMsgDir msgDir);
-
 };
 
 #endif

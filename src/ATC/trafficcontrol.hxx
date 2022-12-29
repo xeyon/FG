@@ -64,6 +64,7 @@ class FGATCInstruction
 {
 private:
     bool holdPattern;
+    int  requestedArrivalTime;
     bool holdPosition;
     bool changeSpeed;
     bool changeHeading;
@@ -79,6 +80,12 @@ public:
     bool hasInstruction   () const;
     bool getHoldPattern   () const {
         return holdPattern;
+    };
+    void setRunwaySlot (int val) {
+        requestedArrivalTime = val;
+    };
+    int getRunwaySlot () const {
+        return requestedArrivalTime;
     };
     bool getHoldPosition  () const {
         return holdPosition;
@@ -156,6 +163,7 @@ private:
     bool allowTransmission;
     bool allowPushback;
     int priority;
+    int  plannedArrivalTime;
     time_t timer;
     intVec intentions;
     FGATCInstruction instruction;
@@ -186,9 +194,15 @@ public:
     int getId() const {
         return id;
     };
+    /**
+     * Return the current ATC State of type @see ATCMessageState
+    */
     int getState() const {
         return state;
     };
+    /**
+     * Set the current ATC State of type @see ATCMessageState
+    */
     void setState(int s) {
         state = s;
     }
@@ -212,7 +226,23 @@ public:
     bool getSpeedAdjustment() const {
         return instruction.getChangeSpeed();
     };
-
+    void setPlannedArrivalTime   (int val) {
+        plannedArrivalTime    = val;
+    };
+    /**Arrival time planned by aircraft.*/
+    int getPlannedArrivalTime () const {
+        return plannedArrivalTime;
+    };
+    void setRunwaySlot( int val ) {
+        if (plannedArrivalTime) {
+            SG_LOG(SG_ATC, SG_BULK, callsign << "| Runwayslot " << (val-plannedArrivalTime));
+        }
+        instruction.setRunwaySlot(val);
+    };
+    /**Arrival time requested by ATC.*/
+    int getRunwaySlot() {
+        return instruction.getRunwaySlot();
+    };
     SGGeod getPos() {
         return pos;
     }
@@ -251,7 +281,6 @@ public:
     void setHoldPosition (bool inst) {
         instruction.setHoldPosition(inst);
     };
-
     void setWaitsForId(int id) {
         waitsForId = id;
     };
@@ -367,6 +396,8 @@ public:
     SGSharedPtr<FGAIAircraft> getFirstAircraftInDepartureQueue() const;
 
     SGSharedPtr<FGAIAircraft> getFirstOfStatus(int stat) const;
+
+    void removeFromDepartureQueue(int id);
 
     void updateDepartureQueue();
 

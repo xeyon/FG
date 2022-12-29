@@ -102,6 +102,36 @@ bool FGATCController::isUserAircraft(FGAIAircraft* ac)
     return (ac->getCallSign() == fgGetString("/sim/multiplay/callsign")) ? true : false;
 };
 
+bool FGATCController::checkTransmissionState(int minState, int maxState, TrafficVectorIterator i, time_t now, AtcMsgId msgId,
+        AtcMsgDir msgDir)
+{
+    int state = i->getState();
+    if ((state >= minState) && (state <= maxState) && available) {
+        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
+            SG_LOG(SG_ATC, SG_BULK, "Checking state " << state << " for " << i->getAircraft()->getCallSign());
+            SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
+            int n = trans_num->getIntValue();
+            if (n == 0) {
+                trans_num->setIntValue(-1);
+                // PopupCallback(n);
+                SG_LOG(SG_ATC, SG_DEBUG, "Selected transmission message " << n);
+                //auto atc = globals->get_subsystem<FGATCManager>();
+                //FGATCDialogNew::instance()->removeEntry(1);
+            } else {
+                SG_LOG(SG_ATC, SG_BULK, "Sending message for " << i->getAircraft()->getCallSign());
+                transmit(&(*i), parent, msgId, msgDir, false);
+                return false;
+            }
+        }
+        transmit(&(*i), parent, msgId, msgDir, true);
+        i->updateState();
+        lastTransmission = now;
+        available = false;
+        return true;
+    }
+    return false;
+}
+
 void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent, AtcMsgId msgId,
                                AtcMsgDir msgDir, bool audible)
 {
@@ -109,7 +139,6 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     int stationFreq = 0;
     int taxiFreq = 0;
     int towerFreq = 0;
-    int freqId = 0;
     string atisInformation;
     string text;
     string taxiFreqStr;
@@ -133,12 +162,18 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         instructionText = "taxi";
     }
 
-    SG_LOG(SG_ATC, SG_DEBUG, "transmitting for: " << sender << "Leg = " << rec->getLeg());
+    SG_LOG(SG_ATC, SG_BULK, "transmitting for: " << sender << " at Leg " << rec->getLeg());
 
+    //FIXME move departure and arrival to rec
     auto depApt = rec->getAircraft()->getTrafficRef()->getDepartureAirport();
+    auto arrApt = rec->getAircraft()->getTrafficRef()->getArrivalAirport();
 
     if (!depApt) {
         SG_LOG(SG_ATC, SG_DEV_ALERT, "TrafficRec has empty departure airport, can't transmit");
+        return;
+    }
+    if (!arrApt) {
+        SG_LOG(SG_ATC, SG_DEV_ALERT, "TrafficRec has empty arrival airport, can't transmit");
         return;
     }
 
@@ -281,16 +316,12 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
         text = receiver + ". Holding short runway "
                + activeRunway
                + ". " + sender + ".";
-        //text = "test1";
-        SG_LOG(SG_ATC, SG_DEBUG, "1 Currently at leg " << rec->getLeg());
         break;
     case MSG_ACKNOWLEDGE_REPORT_RUNWAY_HOLD_SHORT:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
         text = receiver + " Roger. Holding short runway "
                //                + activeRunway
                + ". " + sender + ".";
-        //text = "test2";
-        SG_LOG(SG_ATC, SG_DEBUG, "2 Currently at leg " << rec->getLeg());
         break;
     case MSG_CLEARED_FOR_TAKEOFF:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
@@ -300,23 +331,40 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     case MSG_ACKNOWLEDGE_CLEARED_FOR_TAKEOFF:
         activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
         text = receiver + " Roger. Cleared for takeoff runway " + activeRunway + ". " + sender + ".";
-        //text = "test2";
         break;
     case MSG_SWITCH_TOWER_FREQUENCY:
         towerFreqStr = formatATCFrequency3_2(towerFreq);
         text = receiver + " Contact Tower at " + towerFreqStr + ". " + sender + ".";
-        //text = "test3";
-        SG_LOG(SG_ATC, SG_DEBUG, "3 Currently at leg " << rec->getLeg());
         break;
     case MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY:
         towerFreqStr = formatATCFrequency3_2(towerFreq);
         text = receiver + " Roger, switching to tower at " + towerFreqStr + ". " + sender + ".";
-        //text = "test4";
-        SG_LOG(SG_ATC, SG_DEBUG, "4 Currently at leg " << rec->getLeg());
+        break;
+    case MSG_ARRIVAL:
+        text = receiver + ". " + sender + " Information delta.";
+        break;
+    case MSG_ACKNOWLEDGE_ARRIVAL:
+        activeRunway = rec->getRunway();
+        text = receiver + " expect ILS approach " + activeRunway + ". " + sender;
+        break;
+    case MSG_CLEARED_TO_LAND:
+        activeRunway = rec->getRunway();
+        //TODO Weather
+        text = receiver + " runway " + activeRunway + " cleared to land. " + sender;
+        break;
+    case MSG_ACKNOWLEDGE_CLEARED_TO_LAND:
+        activeRunway = rec->getAircraft()->GetFlightPlan()->getRunway();
+        text = receiver + " runway " + activeRunway + " cleared to land. " + sender;
+        break;
+    case MSG_HOLD:
+        text = receiver + " hold as published . " + sender;
+        break;
+    case MSG_ACKNOWLEDGE_HOLD:
+        text = receiver + " holding as published . " + sender;
         break;
     default:
         //text = "test3";
-        text = text + sender + ". Transmitting unknown Message.";
+        text = text + sender + ". Transmitting unknown Message. MsgId " + std::to_string(msgId);
         break;
     }
 
@@ -341,12 +389,10 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
             ((onBoardRadioFreqI0 == stationFreq)||
              (onBoardRadioFreqI1 == stationFreq))) {
             if (rec->allowTransmissions()) {
-
                 if( fgGetBool( "/sim/radio/use-itm-attenuation", false ) ) {
                     SG_LOG(SG_ATC, SG_DEBUG, "Using ITM radio propagation");
                     FGRadioTransmission* radio = new FGRadioTransmission();
                     SGGeod sender_pos;
-                    double sender_alt_ft, sender_alt;
                     if(ground_to_air) {
                          sender_pos = parent->parent()->geod();
                     }
@@ -368,6 +414,11 @@ void FGATCController::transmit(FGTrafficRecord * rec, FGAirportDynamics *parent,
     }
 }
 
+/**
+ * Sign off the aircraft with the id from this controller.
+ * @param id the id of the aircraft
+*/
+
 void FGATCController::signOff(int id)
 {
     TrafficVectorIterator i = searchActiveTraffic(id);
@@ -377,8 +428,12 @@ void FGATCController::signOff(int id)
                "AI error: Aircraft without traffic record is signing off from " << getName() << " at " << SG_ORIGIN << " list " << activeTraffic.empty());
         return;
     }
+    SG_LOG(SG_ATC, SG_DEBUG, i->getCallsign() << " (" << i->getId() << ") signing off from " << getName() << "(" << getFrequency() << ")");
+    int oldSize = activeTraffic.size();
     activeTraffic.erase(i);
-    SG_LOG(SG_ATC, SG_DEBUG, i->getCallsign() << " signing off from " << getName() );
+    if ((oldSize-activeTraffic.size()) != 1) {
+        SG_LOG(SG_ATC, SG_WARN, i->getCallsign() << " not removed ");
+    }
 }
 
 bool FGATCController::hasInstruction(int id)

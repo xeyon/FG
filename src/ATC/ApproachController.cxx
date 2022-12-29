@@ -98,9 +98,11 @@ void FGApproachController::announcePosition(int id,
         rec.setLeg(leg);
         rec.setCallsign(ref->getCallSign());
         rec.setAircraft(ref);
+        rec.setPlannedArrivalTime(intendedRoute->getArrivalTime());
         activeTraffic.push_back(rec);
     } else {
         i->setPositionAndHeading(lat, lon, heading, speed, alt);
+        i->setPlannedArrivalTime(intendedRoute->getArrivalTime());
     }
 }
 
@@ -108,6 +110,7 @@ void FGApproachController::updateAircraftInformation(int id, SGGeod geod,
         double heading, double speed, double alt,
         double dt)
 {
+    time_t now = globals->get_time_params()->get_cur_time();
     // Search activeTraffic for a record matching our id
     TrafficVectorIterator i = FGATCController::searchActiveTraffic(id);
     TrafficVectorIterator current;
@@ -115,7 +118,7 @@ void FGApproachController::updateAircraftInformation(int id, SGGeod geod,
     // update position of the current aircraft
     if (i == activeTraffic.end() || activeTraffic.empty()) {
         SG_LOG(SG_ATC, SG_ALERT,
-               "AI error: updating aircraft without traffic record at " << SG_ORIGIN);
+               "FGApproachController updating aircraft without traffic record at " << SG_ORIGIN);
     } else {
         i->setPositionAndHeading(geod.getLatitudeDeg(), geod.getLongitudeDeg(), heading, speed, alt);
         current = i;
@@ -146,13 +149,42 @@ void FGApproachController::updateAircraftInformation(int id, SGGeod geod,
             } else {
                 current->clearSpeedAdjustment();
             }
+            if ((now - lastTransmission) > 15) {
+                available = true;
+            }
+            //Start of our status runimplicit "announce arrival"
+            if (checkTransmissionState(ATCMessageState::NORMAL, ATCMessageState::NORMAL, current, now, MSG_ARRIVAL, ATC_AIR_TO_GROUND)) {
+                current->setRunwaySlot(getRunway(current->getRunway())->requestTimeSlot(current->getPlannedArrivalTime()));
+                current->setState(ATCMessageState::ACK_ARRIVAL);
+            }
+            if (checkTransmissionState(ATCMessageState::ACK_ARRIVAL, ATCMessageState::ACK_ARRIVAL, current, now, MSG_ACKNOWLEDGE_ARRIVAL, ATC_GROUND_TO_AIR)) {
+                if (current->getRunwaySlot() > current->getPlannedArrivalTime()) {
+                    current->setState(ATCMessageState::HOLD);
+                } else {
+                    current->setState(ATCMessageState::CLEARED_TO_LAND);
+                }
+            }
+            if (checkTransmissionState(ATCMessageState::HOLD, ATCMessageState::HOLD, current, now, MSG_ACKNOWLEDGE_HOLD, ATC_AIR_TO_GROUND)) {
+                current->setState(ATCMessageState::ACK_HOLD);
+            }
+            if (checkTransmissionState(ATCMessageState::CLEARED_TO_LAND, ATCMessageState::CLEARED_TO_LAND, current, now, MSG_CLEARED_TO_LAND, ATC_GROUND_TO_AIR)) {
+                current->setState(ATCMessageState::ACK_CLEARED_TO_LAND);
+            }
+            if (checkTransmissionState(ATCMessageState::ACK_CLEARED_TO_LAND, ATCMessageState::ACK_CLEARED_TO_LAND, current, now, MSG_ACKNOWLEDGE_CLEARED_TO_LAND, ATC_AIR_TO_GROUND)) {
+                current->setState(ATCMessageState::SWITCH_GROUND_TOWER);
+            }
+            if (checkTransmissionState(ATCMessageState::SWITCH_GROUND_TOWER, ATCMessageState::SWITCH_GROUND_TOWER, current, now, MSG_SWITCH_TOWER_FREQUENCY, ATC_GROUND_TO_AIR)) {
+            }
+            if (checkTransmissionState(ATCMessageState::ACK_SWITCH_GROUND_TOWER, ATCMessageState::ACK_SWITCH_GROUND_TOWER, current, now, MSG_ACKNOWLEDGE_SWITCH_TOWER_FREQUENCY, ATC_AIR_TO_GROUND)) {
+                current->setState(ATCMessageState::LANDING_TAXI);
+            }
         }
         //current->setSpeedAdjustment(current->getAircraft()->getPerformance()->vDescent() + time_diff);
     }
     setDt(getDt() + dt);
 }
 
-/* Periodically check for and remove dead traffic records */
+/** Periodically check for and remove dead traffic records */
 void FGApproachController::update(double dt)
 {
     FGATCController::eraseDeadTraffic();

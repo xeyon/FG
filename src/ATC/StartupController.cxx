@@ -105,41 +105,7 @@ void FGStartupController::announcePosition(int id,
     }
 }
 
-bool FGStartupController::checkTransmissionState(int st, time_t now, time_t startTime, TrafficVectorIterator i, AtcMsgId msgId,
-        AtcMsgDir msgDir)
-{
-    int state = i->getState();
-    if ((state == st) && available) {
-        if ((msgDir == ATC_AIR_TO_GROUND) && isUserAircraft(i->getAircraft())) {
-
-            SG_LOG(SG_ATC, SG_BULK, "Checking state " << st << " for " << i->getAircraft()->getCallSign());
-            SGPropertyNode_ptr trans_num = globals->get_props()->getNode("/sim/atc/transmission-num", true);
-            int n = trans_num->getIntValue();
-            if (n == 0) {
-                trans_num->setIntValue(-1);
-                // PopupCallback(n);
-                SG_LOG(SG_ATC, SG_BULK, "Selected transmission message " << n);
-                //FGATCDialogNew::instance()->removeEntry(1);
-            } else {
-                SG_LOG(SG_ATC, SG_BULK, "Creating message for " << i->getAircraft()->getCallSign());
-                transmit(&(*i), &(*parent), msgId, msgDir, false);
-                return false;
-            }
-        }
-        if (now > startTime) {
-            SG_LOG(SG_ATC, SG_BULK, "Transmitting startup msg");
-            transmit(&(*i), &(*parent), msgId, msgDir, true);
-            i->updateState();
-            lastTransmission = now;
-            available = false;
-            return true;
-        }
-    }
-    return false;
-}
-
-void FGStartupController::updateAircraftInformation(int id, SGGeod geod,
-        double heading, double speed, double alt,
+void FGStartupController::updateAircraftInformation(int id, SGGeod geod, double heading, double speed, double alt,
         double dt)
 {
     // Search activeTraffic for a record matching our id
@@ -171,7 +137,8 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod,
     time_t now = globals->get_time_params()->get_cur_time();
 
 
-    if ((startTime - now) > 0) {
+    if (((startTime - now) > 60 && (startTime - now)%60 == 0) ||
+         ((startTime - now) < 60 && (startTime - now) > 0)) {
         SG_LOG(SG_ATC, SG_BULK, i->getAircraft()->getTrafficRef()->getCallSign() << " is scheduled to depart in " << startTime - now << " seconds. Available = " << available << " at parking " << getGateName(i->getAircraft()));
     }
 
@@ -179,20 +146,31 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod,
         available = true;
     }
 
-    checkTransmissionState(0, now, (startTime + 0  ), i, MSG_ANNOUNCE_ENGINE_START,                     ATC_AIR_TO_GROUND);
-    checkTransmissionState(1, now, (startTime + 60 ), i, MSG_REQUEST_ENGINE_START,                      ATC_AIR_TO_GROUND);
-    checkTransmissionState(2, now, (startTime + 80 ), i, MSG_PERMIT_ENGINE_START,                       ATC_GROUND_TO_AIR);
-    checkTransmissionState(3, now, (startTime + 100), i, MSG_ACKNOWLEDGE_ENGINE_START,                  ATC_AIR_TO_GROUND);
-    if (checkTransmissionState(4, now, (startTime + 130), i, MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY,       ATC_AIR_TO_GROUND)) {
-        i->nextFrequency();
+    if (now >(startTime + 0)) {
+        checkTransmissionState(ATCMessageState::NORMAL, ATCMessageState::NORMAL, i, now, MSG_ANNOUNCE_ENGINE_START, ATC_AIR_TO_GROUND);
     }
-    checkTransmissionState(5, now, (startTime + 140), i, MSG_INITIATE_CONTACT,                          ATC_AIR_TO_GROUND);
-    checkTransmissionState(6, now, (startTime + 150), i, MSG_ACKNOWLEDGE_INITIATE_CONTACT,              ATC_GROUND_TO_AIR);
-    checkTransmissionState(7, now, (startTime + 180), i, MSG_REQUEST_PUSHBACK_CLEARANCE,                ATC_AIR_TO_GROUND);
-
-
-
-    if ((state == 8) && available) {
+    if (now >(startTime + 60)) {
+        checkTransmissionState(ATCMessageState::ACK_HOLD, ATCMessageState::ACK_HOLD, i, now, MSG_REQUEST_ENGINE_START, ATC_AIR_TO_GROUND);
+    }
+    if (now >(startTime + 80)) {
+        checkTransmissionState(ATCMessageState::ACK_RESUME_TAXI, ATCMessageState::ACK_RESUME_TAXI, i, now, MSG_PERMIT_ENGINE_START, ATC_GROUND_TO_AIR);
+    }
+    if (now >(startTime + 100)) {
+        checkTransmissionState(ATCMessageState::TAXI_CLEARED, ATCMessageState::TAXI_CLEARED, i, now, MSG_ACKNOWLEDGE_ENGINE_START, ATC_AIR_TO_GROUND);
+    }
+    if (now >(startTime + 130)) {
+        checkTransmissionState(ATCMessageState::ACK_TAXI_CLEARED, ATCMessageState::ACK_TAXI_CLEARED, i, now, MSG_ACKNOWLEDGE_SWITCH_GROUND_FREQUENCY, ATC_AIR_TO_GROUND);
+    }
+    if (now >(startTime + 140)) {
+        checkTransmissionState(ATCMessageState::START_TAXI, ATCMessageState::START_TAXI, i, now, MSG_INITIATE_CONTACT, ATC_AIR_TO_GROUND);
+    }
+    if (now >(startTime + 150)) {
+        checkTransmissionState(ATCMessageState::REPORT_RUNWAY, ATCMessageState::REPORT_RUNWAY, i, now, MSG_ACKNOWLEDGE_INITIATE_CONTACT, ATC_GROUND_TO_AIR);
+    }
+    if (now >(startTime + 180)) {
+        checkTransmissionState(ATCMessageState::ACK_REPORT_RUNWAY, ATCMessageState::ACK_REPORT_RUNWAY, i, now, MSG_REQUEST_PUSHBACK_CLEARANCE, ATC_AIR_TO_GROUND);
+    }
+    if ((state == ATCMessageState::SWITCH_GROUND_TOWER) && available) {
         if (now > startTime + 200) {
             if (i->pushBackAllowed()) {
                 i->allowRepeatedTransmissions();
@@ -208,7 +186,7 @@ void FGStartupController::updateAircraftInformation(int id, SGGeod geod,
             available = false;
         }
     }
-    if ((state == 9) && available) {
+    if ((state == ATCMessageState::ACK_SWITCH_GROUND_TOWER) && available) {
         i->setHoldPosition(false);
     }
 }
@@ -230,7 +208,6 @@ static void WorldCoordinate(osg::Matrix& obj_pos, double lat,
 
 void FGStartupController::render(bool visible)
 {
-    SG_LOG(SG_ATC, SG_DEBUG, "Rendering startup controller");
     SGMaterialLib *matlib = globals->get_matlib();
     if (group) {
         //int nr = ;
@@ -245,6 +222,7 @@ void FGStartupController::render(bool visible)
         group = 0;
     }
     if (visible) {
+        SG_LOG(SG_ATC, SG_BULK, "Rendering startup controller");
         group = new osg::Group;
         FGScenery * local_scenery = globals->get_scenery();
         //double elevation_meters = 0.0;
