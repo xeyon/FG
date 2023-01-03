@@ -34,7 +34,7 @@ Hitch::Hitch(const char *name)
     _towLength=60;
     _autoReleaseAngle=0;
     _towElasticConstant=1e5;
-    _towBrakeForce=100000;
+    _towBreakForce=100000;
     _towWeightPerM=1;
     _winchMaxSpeed=40;
     _winchRelSpeed=0;
@@ -78,7 +78,7 @@ Hitch::Hitch(const char *name)
         TIE("automatic-release-angle-deg",SGRawValuePointer<float>(&_autoReleaseAngle));
         TIE("tow/elastic-constant",SGRawValuePointer<float>(&_towElasticConstant));
         TIE("tow/weight-per-m-kg-m",SGRawValuePointer<float>(&_towWeightPerM));
-        TIE("tow/brake-force",SGRawValuePointer<float>(&_towBrakeForce));
+        TIE("tow/break-force",SGRawValuePointer<float>(&_towBreakForce));
         TIE("winch/max-speed-m-s",SGRawValuePointer<float>(&_winchMaxSpeed));
         TIE("winch/rel-speed",SGRawValuePointer<float>(&_winchRelSpeed));
         TIE("winch/initial-tow-length-m",SGRawValuePointer<float>(&_winchInitialTowLength));
@@ -158,7 +158,7 @@ void Hitch::setTowElasticConstant(float sc)
 
 void Hitch::setTowBreakForce(float bf)
 {
-    _towBrakeForce=bf;
+    _towBreakForce=bf;
 }
 
 void Hitch::setWinchMaxForce(float f)
@@ -435,10 +435,10 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
         if(_towLength>1e-3)
             _forceMagnitude=(_dist-_towLength)/_towLength*_towElasticConstant;
         else
-            _forceMagnitude=2*_towBrakeForce;
+            _forceMagnitude=2*_towBreakForce;
     else
         _forceMagnitude=0;
-    if(_forceMagnitude>=_towBrakeForce)
+    if(_forceMagnitude>=_towBreakForce)
     {
         _forceMagnitude=0;
         _open=true;
@@ -529,7 +529,7 @@ void Hitch::calcForce(Ground *g_cb, RigidBody* body, State* s)
     Math::add3(grav_force_v,_towEndForce,_towEndForce);
     s->localToGlobal(_towEndForce,_towEndForce);
 
-    if(_forceMagnitude>=_towBrakeForce)
+    if(_forceMagnitude>=_towBreakForce)
     {
         _forceMagnitude=0;
         _open=true;
@@ -661,7 +661,7 @@ void Hitch::integrate (float dt)
                     gf(_towLength,"sim/hitches/aerotow/tow/length");
                     gf(_towElasticConstant,"sim/hitches/aerotow/tow/elastic-constant");
                     gf(_towWeightPerM,"sim/hitches/aerotow/tow/weight-per-m-kg-m");
-                    gf(_towBrakeForce,"sim/hitches/aerotow/brake-force");
+                    gf(_towBreakForce,"sim/hitches/aerotow/break-force");
                     gb(_open,"sim/hitches/aerotow/open");
                     gb(_mp_is_slave,"sim/hitches/aerotow/is-slave");
 #undef gf

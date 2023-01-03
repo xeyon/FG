@@ -62,7 +62,7 @@ private:
     float _towLength;
     float _autoReleaseAngle;
     float _towElasticConstant;
-    float _towBrakeForce;
+    float _towBreakForce;
     float _towWeightPerM;
     float _winchMaxSpeed;
     float _winchRelSpeed;
