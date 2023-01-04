@@ -361,6 +361,13 @@ static naRef f_customEventGetDetail( sc::CustomEvent& event,
   );
 }
 
+static naRef f_layoutItemSetVisible(sc::LayoutItem& item,
+                                    const nasal::CallContext& ctx)
+{
+  item.setVisible(ctx.getArg<bool>(0, true));
+  return ctx.me;
+}
+
 static naRef f_boxLayoutAddItem( sc::BoxLayout& box,
                                  const nasal::CallContext& ctx )
 {
@@ -599,7 +606,7 @@ naRef initNasalCanvas(naRef globals, naContext c)
       .method("minimumHeightForWidth", &sc::LayoutItem::minimumHeightForWidth)
       .method("setAlignment", &sc::LayoutItem::setAlignment)
       .method("alignment", &sc::LayoutItem::alignment)
-      .method("setVisible", &sc::LayoutItem::setVisible)
+      .method("setVisible", f_layoutItemSetVisible)
       .method("isVisible", &sc::LayoutItem::isVisible)
       .method("isExplicitlyHidden", &sc::LayoutItem::isExplicitlyHidden)
       .method("show", &sc::LayoutItem::show)
