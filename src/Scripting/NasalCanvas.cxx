@@ -364,18 +364,28 @@ static naRef f_customEventGetDetail( sc::CustomEvent& event,
 static naRef f_boxLayoutAddItem( sc::BoxLayout& box,
                                  const nasal::CallContext& ctx )
 {
-  box.addItem( ctx.requireArg<sc::LayoutItemRef>(0),
-               ctx.getArg<int>(1),
-               ctx.getArg<int>(2, sc::AlignFill) );
+  const auto item = ctx.requireArg<sc::LayoutItemRef>(0);
+  if (!item) {
+    ctx.runtimeError("BoxLayout.addItem: argument 0 is not a layout item");
+  }
+
+  box.addItem(item,
+              ctx.getArg<int>(1),
+              ctx.getArg<int>(2, sc::AlignFill));
   return naNil();
 }
 static naRef f_boxLayoutInsertItem( sc::BoxLayout& box,
                                     const nasal::CallContext& ctx )
 {
-  box.insertItem( ctx.requireArg<int>(0),
-                  ctx.requireArg<sc::LayoutItemRef>(1),
-                  ctx.getArg<int>(2),
-                  ctx.getArg<int>(3, sc::AlignFill) );
+  const auto item = ctx.requireArg<sc::LayoutItemRef>(1);
+  if (!item) {
+    ctx.runtimeError("BoxLayout.insertItem: argument 1 is not a layout item");
+  }
+
+  box.insertItem(ctx.requireArg<int>(0),
+                 item,
+                 ctx.getArg<int>(2),
+                 ctx.getArg<int>(3, sc::AlignFill));
   return naNil();
 }
 
@@ -425,7 +435,13 @@ static naRef f_imageSetPixel(sc::Image& img, const nasal::CallContext& ctx)
 static naRef f_gridLayoutAddItem(sc::GridLayout& grid,
                                  const nasal::CallContext& ctx)
 {
-    grid.addItem(ctx.requireArg<sc::LayoutItemRef>(0),
+    const auto item = ctx.requireArg<sc::LayoutItemRef>(0);
+    if (!item) {
+        ctx.runtimeError("GridLayout.addItem: argument 0 is not a layout item");
+    }
+
+
+    grid.addItem(item,
                  ctx.requireArg<int>(1),
                  ctx.requireArg<int>(2),
                  ctx.getArg<int>(3, 1),
