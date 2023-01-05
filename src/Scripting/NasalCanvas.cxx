@@ -551,15 +551,19 @@ naRef initNasalCanvas(naRef globals, naContext c)
   canvas_module.set("_getCanvasGhost", f_getCanvas);
 
   NasalElement::init("canvas.Element")
-    .bases<NasalPropertyBasedElement>()
-    .member("_node_ghost", &elementGetNode<sc::Element>)
-    .method("_getParent", &sc::Element::getParent)
-    .method("_getCanvas", &sc::Element::getCanvas)
-    .method("addEventListener", &sc::Element::addEventListener)
-    .method("setFocus", &sc::Element::setFocus)
-    .method("dispatchEvent", &sc::Element::dispatchEvent)
-    .method("getBoundingBox", &sc::Element::getBoundingBox)
-    .method("getTightBoundingBox", &sc::Element::getTightBoundingBox);
+      .bases<NasalPropertyBasedElement>()
+      .member("_node_ghost", &elementGetNode<sc::Element>)
+      .method("_getParent", &sc::Element::getParent)
+      .method("_getCanvas", &sc::Element::getCanvas)
+      .method("addEventListener", &sc::Element::addEventListener)
+      .method("setFocus", &sc::Element::setFocus)
+      .method("dispatchEvent", &sc::Element::dispatchEvent)
+      .method("getBoundingBox", &sc::Element::getBoundingBox)
+      .method("getTightBoundingBox", &sc::Element::getTightBoundingBox)
+      .method("_posToLocal", &sc::Element::posToLocal)
+      .method("_posFromLocal", &sc::Element::posFromLocal)
+      .method("canvasToLocal", &sc::Element::canvasToLocal)
+      .method("localToCanvas", &sc::Element::localToCanvas);
 
   NasalGroup::init("canvas.Group")
     .bases<NasalElement>()
@@ -662,18 +666,19 @@ naRef initNasalCanvas(naRef globals, naContext c)
   //----------------------------------------------------------------------------
   // Window
 
-  NasalWindow::init("canvas.Window")
-    .bases<NasalElement>()
-    .bases<NasalLayoutItem>()
-    .member("_node_ghost", &elementGetNode<sc::Window>)
-    .method("_getCanvasDecoration", &sc::Window::getCanvasDecoration)
-    .method("setLayout", &sc::Window::setLayout);
+    NasalWindow::init("canvas.Window")
+        .bases<NasalElement>()
+        .bases<NasalLayoutItem>()
+        .member("_node_ghost", &elementGetNode<sc::Window>)
+        .method("_getCanvasDecoration", &sc::Window::getCanvasDecoration)
+        .method("setLayout", &sc::Window::setLayout)
+        .method("toScreenPosition", &sc::Window::toScreenPosition);
 
-  canvas_module.set("_newWindowGhost", f_createWindow);
-  canvas_module.set("_getDesktopGhost", f_getDesktop);
-  canvas_module.set("setInputFocus", f_setInputFocus);
-  canvas_module.set("grabPointer", f_grabPointer);
-  canvas_module.set("ungrabPointer", f_ungrabPointer);
+    canvas_module.set("_newWindowGhost", f_createWindow);
+    canvas_module.set("_getDesktopGhost", f_getDesktop);
+    canvas_module.set("setInputFocus", f_setInputFocus);
+    canvas_module.set("grabPointer", f_grabPointer);
+    canvas_module.set("ungrabPointer", f_ungrabPointer);
 
-  return naNil();
+    return naNil();
 }
