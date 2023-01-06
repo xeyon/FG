@@ -241,3 +241,54 @@ void NasalSysTests::testRange()
     )");
     CPPUNIT_ASSERT(ok);
 }
+
+void NasalSysTests::testKeywordArgInHash()
+{
+    auto nasalSys = globals->get_subsystem<FGNasalSys>();
+    nasalSys->getAndClearErrorList();
+
+    bool ok = FGTestApi::executeNasal(R"(
+        var foo = func(arg1, kw1 = "", kw2 = nil)
+        {
+            return {'a':kw1, 'b':kw2};
+        }
+        
+        var d = foo(arg1:42, kw2:'apples', kw1:'pears');
+        unitTest.assert_equal(d.a, 'pears');
+        unitTest.assert_equal(d.b, 'apples');
+
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    ok = FGTestApi::executeNasal(R"(
+        var bar = func(h) {
+            return h;
+        }
+
+        var foo = func(arg1, kw1 = "", kw2 = nil)
+        {
+            return bar({'a':kw1, 'b':kw2});
+        }
+        
+        var d = foo(arg1:42, kw2:'apples', kw1:'pears');
+        unitTest.assert_equal(d.a, 'pears');
+        unitTest.assert_equal(d.b, 'apples');
+
+    )");
+    CPPUNIT_ASSERT(ok);
+
+    ok = FGTestApi::executeNasal(R"(
+        var bar = func(h) {
+            unitTest.assert_equal(h.a, 'pears');
+            unitTest.assert_equal(h.b, 'apples');
+        }
+
+        var foo = func(arg1, kw1 = "", kw2 = nil)
+        {
+            return bar({'a':kw1, 'b':kw2});
+        }
+        
+        var d = foo(arg1:42, kw2:'apples', kw1:'pears');    
+    )");
+    CPPUNIT_ASSERT(ok);
+}

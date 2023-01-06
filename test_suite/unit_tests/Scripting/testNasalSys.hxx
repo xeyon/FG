@@ -37,6 +37,7 @@ class NasalSysTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testCompileLarge);
     CPPUNIT_TEST(testRoundFloor);
     CPPUNIT_TEST(testRange);
+    CPPUNIT_TEST(testKeywordArgInHash);
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -53,6 +54,7 @@ public:
     void testCompileLarge();
     void testRoundFloor();
     void testRange();
+    void testKeywordArgInHash();
 };
 
 #endif  // _FG_NASALSYS_UNIT_TESTS_HXX
