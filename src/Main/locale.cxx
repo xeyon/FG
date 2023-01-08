@@ -530,7 +530,7 @@ std::string FGLocale::vlocalizedPrintf(const char* id, const char* resource, va_
     std::string format = getLocalizedString(id, resource);
     int len = ::vsnprintf(nullptr, 0, format.c_str(), args);
     char* buf = (char*) alloca(len);
-    ::vsprintf(buf, format.c_str(), args);
+    ::vsnprintf(buf, len, format.c_str(), args);
     return std::string(buf);
 }
 

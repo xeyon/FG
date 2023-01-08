@@ -80,7 +80,7 @@ void YASim::report()
     float cg[3];
     char buf[256];
     a->getModel()->getBody()->getCG(cg);
-    sprintf(buf, "            CG: %.3f, %.3f, %.3f", cg[0], cg[1], cg[2]);
+    snprintf(buf, 256, "            CG: %.3f, %.3f, %.3f", cg[0], cg[1], cg[2]);
     SG_LOG(SG_FLIGHT, SG_INFO, buf);
 
     if(a->getFailureMsg()) {
@@ -101,15 +101,15 @@ void YASim::bind()
 
     char buf[256];
     for(int i=0; i<_fdm->getAirplane()->getModel()->numThrusters(); i++) {
-        sprintf(buf, "/engines/engine[%d]/fuel-flow-gph", i);
+        snprintf(buf, 256, "/engines/engine[%d]/fuel-flow-gph", i);
         fgUntieIfDefined(buf);
-        sprintf(buf, "/engines/engine[%d]/rpm", i);
+        snprintf(buf, 256, "/engines/engine[%d]/rpm", i);
         fgUntieIfDefined(buf);
-        sprintf(buf, "/engines/engine[%d]/mp-osi", i);
+        snprintf(buf, 256, "/engines/engine[%d]/mp-osi", i);
         fgUntieIfDefined(buf);
-        sprintf(buf, "/engines/engine[%d]/egt-degf", i);
+        snprintf(buf, 256, "/engines/engine[%d]/egt-degf", i);
         fgUntieIfDefined(buf);
-        sprintf(buf, "/engines/engine[%d]/oil-temperature-degf", i);
+        snprintf(buf, 256, "/engines/engine[%d]/oil-temperature-degf", i);
         fgUntieIfDefined(buf);
     }
 }

@@ -21,14 +21,9 @@
 // $Id$
 
 
-#ifdef HAVE_CONFIG_H
 #include <config.h>
-#endif
 
 #include <cassert>
-#include <cstdio>  // sprintf()
-#include <cstdlib> // atoi()
-
 #include <simgear/compiler.h>
 
 #include <simgear/props/props.hxx>

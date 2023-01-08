@@ -166,32 +166,32 @@ void FGExternalNet::init()
     char cmd[256];
 
     HTTPClient* http;
-    sprintf(cmd, "/longitude-deg?value=%.8f", lon);
+    snprintf(cmd, 256, "/longitude-deg?value=%.8f", lon);
     http = new HTTPClient(fdm_host.c_str(), cmd_port, cmd);
     while (!http->isDone(1000000)) http->poll(0);
     delete http;
 
-    sprintf(cmd, "/latitude-deg?value=%.8f", lat);
+    snprintf(cmd, 256, "/latitude-deg?value=%.8f", lat);
     http = new HTTPClient(fdm_host.c_str(), cmd_port, cmd);
     while (!http->isDone(1000000)) http->poll(0);
     delete http;
 
-    sprintf(cmd, "/altitude-ft?value=%.8f", alt);
+    snprintf(cmd, 256, "/altitude-ft?value=%.8f", alt);
     http = new HTTPClient(fdm_host.c_str(), cmd_port, cmd);
     while (!http->isDone(1000000)) http->poll(0);
     delete http;
 
-    sprintf(cmd, "/ground-m?value=%.8f", ground);
+    snprintf(cmd, 256, "/ground-m?value=%.8f", ground);
     http = new HTTPClient(fdm_host.c_str(), cmd_port, cmd);
     while (!http->isDone(1000000)) http->poll(0);
     delete http;
 
-    sprintf(cmd, "/speed-kts?value=%.8f", speed);
+    snprintf(cmd, 256, "/speed-kts?value=%.8f", speed);
     http = new HTTPClient(fdm_host.c_str(), cmd_port, cmd);
     while (!http->isDone(1000000)) http->poll(0);
     delete http;
 
-    sprintf(cmd, "/heading-deg?value=%.8f", heading);
+    snprintf(cmd, 256, "/heading-deg?value=%.8f", heading);
     http = new HTTPClient(fdm_host.c_str(), cmd_port, cmd);
     while (!http->isDone(1000000)) http->poll(0);
     delete http;
@@ -199,9 +199,9 @@ void FGExternalNet::init()
     SG_LOG(SG_IO, SG_INFO, "before sending reset command.");
 
     if (fgGetBool("/sim/presets/onground")) {
-        sprintf(cmd, "/reset?value=ground");
+        snprintf(cmd, 256, "/reset?value=ground");
     } else {
-        sprintf(cmd, "/reset?value=air");
+        snprintf(cmd, 256, "/reset?value=air");
     }
     http = new HTTPClient(fdm_host.c_str(), cmd_port, cmd);
     while (!http->isDone(1000000)) http->poll(0);

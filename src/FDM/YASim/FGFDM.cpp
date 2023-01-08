@@ -199,19 +199,19 @@ void FGFDM::init()
     _tank_level_lbs.clear();
     for(int i=0; i<_airplane.numTanks(); i++) {
         char buf[256];
-        sprintf(buf, "/consumables/fuel/tank[%d]/level-lbs", i);
+        snprintf(buf, 256, "/consumables/fuel/tank[%d]/level-lbs", i);
         fgSetDouble(buf, _airplane.getFuel(i) * KG2LBS);
         _tank_level_lbs.push_back(fgGetNode(buf, true));
 
         double density = _airplane.getFuelDensity(i);
-        sprintf(buf, "/consumables/fuel/tank[%d]/density-ppg", i);
+        snprintf(buf, 256, "/consumables/fuel/tank[%d]/density-ppg", i);
         fgSetDouble(buf, density * (KG2LBS/CM2GALS));
 
 // set in TankProperties class
 //        sprintf(buf, "/consumables/fuel/tank[%d]/level-gal_us", i);
 //        fgSetDouble(buf, _airplane.getFuel(i) * CM2GALS / density);
 
-        sprintf(buf, "/consumables/fuel/tank[%d]/capacity-gal_us", i);
+        snprintf(buf, 256, "/consumables/fuel/tank[%d]/capacity-gal_us", i);
         fgSetDouble(buf, CM2GALS * _airplane.getTankCapacity(i)/density);
     }
 
@@ -415,7 +415,7 @@ void FGFDM::getExternalInput(float dt)
 
         if(t->getPropEngine()) {
             PropEngine* p = t->getPropEngine();
-            sprintf(buf, "%s/rpm", er->prefix.c_str());
+            snprintf(buf, 256, "%s/rpm", er->prefix.c_str());
             p->setOmega(fgGetFloat(buf, 500) * RPM2RAD);
         }
     }
@@ -923,7 +923,7 @@ void FGFDM::parsePropeller(const XMLAttributes* a)
     thruster->setGearRatio(attrf(a, "gear-ratio", 1));
 
     char buf[64];
-    sprintf(buf, "/engines/engine[%d]", _nextEngine++);
+    snprintf(buf, 64, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();
     er->eng = thruster;
     er->prefix = buf;
@@ -981,7 +981,7 @@ void FGFDM::parseJet(const XMLAttributes* a)
     j->setPosition(v);
     _airplane.addThruster(j, mass, v);
     char buf[64];
-    sprintf(buf, "/engines/engine[%d]", _nextEngine++);
+    snprintf(buf, 64, "/engines/engine[%d]", _nextEngine++);
     EngRec* er = new EngRec();
     er->eng = j;
     er->prefix = buf;

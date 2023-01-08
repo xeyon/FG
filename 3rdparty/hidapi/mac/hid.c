@@ -720,11 +720,11 @@ hid_device * HID_API_EXPORT hid_open_path(const char *path)
 
 		/* Create the Run Loop Mode for this device.
 		   printing the reference seems to work. */
-		sprintf(str, "HIDAPI_%p", dev->device_handle);
-		dev->run_loop_mode =
-			CFStringCreateWithCString(NULL, str, kCFStringEncodingASCII);
+        snprintf(str, 32, "HIDAPI_%p", dev->device_handle);
+        dev->run_loop_mode =
+            CFStringCreateWithCString(NULL, str, kCFStringEncodingASCII);
 
-		/* Attach the device to a Run Loop */
+        /* Attach the device to a Run Loop */
 		IOHIDDeviceRegisterInputReportCallback(
 			dev->device_handle, dev->input_report_buf, dev->max_input_report_len,
 			&hid_report_callback, dev);

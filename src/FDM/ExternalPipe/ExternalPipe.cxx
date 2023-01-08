@@ -246,32 +246,32 @@ void FGExternalPipe::init_binary() {
     char cmd[256];
     int result;
 
-    sprintf( cmd, "longitude-deg=%.8f", lon );
+    snprintf(cmd, 256, "longitude-deg=%.8f", lon);
     result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "latitude-deg=%.8f", lat );
+    snprintf(cmd, 256, "latitude-deg=%.8f", lat);
     result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "altitude-ft=%.8f", alt );
+    snprintf(cmd, 256, "altitude-ft=%.8f", alt);
     result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "ground-m=%.8f", ground );
+    snprintf(cmd, 256, "ground-m=%.8f", ground);
     result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "speed-kts=%.8f", speed );
+    snprintf(cmd, 256, "speed-kts=%.8f", speed);
     result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
-    sprintf( cmd, "heading-deg=%.8f", heading );
+    snprintf(cmd, 256, "heading-deg=%.8f", heading);
     result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
     if ( weight > 1000.0 ) {
-        sprintf( cmd, "aircraft-weight-lbs=%.2f", weight );
+        snprintf(cmd, 256, "aircraft-weight-lbs=%.2f", weight);
         result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_weight = weight;
 
     if ( cg_offset > -5.0 || cg_offset < 5.0 ) {
-        sprintf( cmd, "aircraft-cg-offset-inches=%.2f", cg_offset );
+        snprintf(cmd, 256, "aircraft-cg-offset-inches=%.2f", cg_offset);
         result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_cg_offset = cg_offset;
@@ -279,9 +279,9 @@ void FGExternalPipe::init_binary() {
     SG_LOG( SG_IO, SG_ALERT, "before sending reset command." );
 
     if( fgGetBool("/sim/presets/onground") ) {
-        sprintf( cmd, "reset=ground" );
+        snprintf(cmd, 256, "reset=ground");
     } else {
-        sprintf( cmd, "reset=air" );
+        snprintf(cmd, 256, "reset=air");
     }
     result = write_binary( '1', pd1, cmd, strlen(cmd) );
 
@@ -311,32 +311,32 @@ void FGExternalPipe::init_property() {
     char cmd[256];
     int result;
 
-    sprintf( cmd, "init longitude-deg=%.8f", lon );
+    snprintf(cmd, 256, "init longitude-deg=%.8f", lon);
     result = write_property( pd1, cmd );
 
-    sprintf( cmd, "init latitude-deg=%.8f", lat );
+    snprintf(cmd, 256, "init latitude-deg=%.8f", lat);
     result = write_property( pd1, cmd );
 
-    sprintf( cmd, "init altitude-ft=%.8f", alt );
+    snprintf(cmd, 256, "init altitude-ft=%.8f", alt);
     result = write_property( pd1, cmd );
 
-    sprintf( cmd, "init ground-m=%.8f", ground );
+    snprintf(cmd, 256, "init ground-m=%.8f", ground);
     result = write_property( pd1, cmd );
 
-    sprintf( cmd, "init speed-kts=%.8f", speed );
+    snprintf(cmd, 256, "init speed-kts=%.8f", speed);
     result = write_property( pd1, cmd );
 
-    sprintf( cmd, "init heading-deg=%.8f", heading );
+    snprintf(cmd, 256, "init heading-deg=%.8f", heading);
     result = write_property( pd1, cmd );
 
     if ( weight > 1000.0 ) {
-        sprintf( cmd, "init aircraft-weight-lbs=%.2f", weight );
+        snprintf(cmd, 256, "init aircraft-weight-lbs=%.2f", weight);
         result = write_property( pd1, cmd );
     }
     last_weight = weight;
 
     if ( cg_offset > -5.0 || cg_offset < 5.0 ) {
-        sprintf( cmd, "init aircraft-cg-offset-inches=%.2f", cg_offset );
+        snprintf(cmd, 256, "init aircraft-cg-offset-inches=%.2f", cg_offset);
         result = write_property( pd1, cmd );
     }
     last_cg_offset = cg_offset;
@@ -344,9 +344,9 @@ void FGExternalPipe::init_property() {
     SG_LOG( SG_IO, SG_ALERT, "before sending reset command." );
 
     if( fgGetBool("/sim/presets/onground") ) {
-        sprintf( cmd, "reset ground" );
+        snprintf(cmd, 256, "reset ground");
     } else {
-        sprintf( cmd, "reset air" );
+        snprintf(cmd, 256, "reset air");
     }
     result = write_property( pd1, cmd );
 
@@ -391,7 +391,7 @@ void FGExternalPipe::update_binary( double dt ) {
     static double last_weight = 0.0;
     if ( fabs( weight - last_weight ) > 0.01 ) {
         char cmd[256];
-        sprintf( cmd, "aircraft-weight-lbs=%.2f", weight );
+        snprintf(cmd, 256, "aircraft-weight-lbs=%.2f", weight);
         result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_weight = weight;
@@ -399,7 +399,7 @@ void FGExternalPipe::update_binary( double dt ) {
     double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
     if ( fabs( cg_offset - last_cg_offset ) > 0.01 ) {
         char cmd[256];
-        sprintf( cmd, "aircraft-cg-offset-inches=%.2f", cg_offset );
+        snprintf(cmd, 256, "aircraft-cg-offset-inches=%.2f", cg_offset);
         result = write_binary( '1', pd1, cmd, strlen(cmd) );
     }
     last_cg_offset = cg_offset;
@@ -504,27 +504,27 @@ void FGExternalPipe::update_property( double dt ) {
     double weight = fgGetDouble( "/sim/aircraft-weight-lbs" );
     static double last_weight = 0.0;
     if ( fabs( weight - last_weight ) > 0.01 ) {
-        sprintf( cmd, "init aircraft-weight-lbs=%.2f", weight );
+        snprintf(cmd, 256, "init aircraft-weight-lbs=%.2f", weight);
         result = write_property( pd1, cmd );
     }
     last_weight = weight;
 
     double cg_offset = fgGetDouble( "/sim/aircraft-cg-offset-inches" );
     if ( fabs( cg_offset - last_cg_offset ) > 0.01 ) {
-        sprintf( cmd, "init aircraft-cg-offset-inches=%.2f", cg_offset );
+        snprintf(cmd, 256, "init aircraft-cg-offset-inches=%.2f", cg_offset);
         result = write_property( pd1, cmd );
     }
     last_cg_offset = cg_offset;
 
     // Send requested property values to fdm
     for ( unsigned int i = 0; i < nodes.size(); i++ ) {
-        sprintf( cmd, "set %s %s", property_names[i].c_str(),
-                 nodes[i]->getStringValue().c_str() );
+        snprintf(cmd, 256, "set %s %s", property_names[i].c_str(),
+                 nodes[i]->getStringValue().c_str());
         // cout << "  sending " << cmd << endl;
         result = write_property( pd1, cmd );
     }
 
-    sprintf( cmd, "update %d", iterations );
+    snprintf(cmd, 256, "update %d", iterations);
     write_property( pd1, cmd );
 
     fflush( pd1 );

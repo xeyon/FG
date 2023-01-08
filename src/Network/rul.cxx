@@ -21,9 +21,7 @@
 //
 // $Id$
 
-#ifdef HAVE_CONFIG_H
-#  include <config.h>
-#endif
+#include <config.h>
 
 #include <stdio.h>		// sprintf()
 
@@ -86,7 +84,7 @@ bool FGRUL::gen_message() {
     int roll = (int)( (roll_deg+180.0) * 255.0 / 360.0) + 1;
     int pitch = (int)( (pitch_deg+180.0) * 255.0 / 360.0) + 1;
 
-    sprintf( buf, "p%c%c\n", roll, pitch);
+    snprintf(buf, 10, "p%c%c\n", roll, pitch);
     length = 4;
 
     SG_LOG( SG_IO, SG_INFO, "p " << roll << " " << pitch );

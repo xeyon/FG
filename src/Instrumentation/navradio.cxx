@@ -378,9 +378,9 @@ void FGNavRadio::updateFormattedFrequencies()
     // Create "formatted" versions of the nav frequencies for
     // instrument displays.
     char tmp[16];
-    sprintf( tmp, "%.2f", freq_node->getDoubleValue() );
+    snprintf(tmp, 16, "%.2f", freq_node->getDoubleValue());
     fmt_freq_node->setStringValue(tmp);
-    sprintf( tmp, "%.2f", alt_freq_node->getDoubleValue() );
+    snprintf(tmp, 16, "%.2f", alt_freq_node->getDoubleValue());
     fmt_alt_freq_node->setStringValue(tmp);
     is_loc_freq_node->setBoolValue( IsLocalizerFrequency( freq_node->getDoubleValue() ));
 }
