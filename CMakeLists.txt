@@ -183,7 +183,7 @@ option(SYSTEM_SPEEX      "Set to ON to build IAXClient with the system's speex a
 option(SYSTEM_GSM        "Set to ON to build IAXClient with the system's GSM library" ${SYSTEM_GSM_DEFAULT})
 option(SYSTEM_FLITE      "Set to ON to build Flightgear with the system's Flite library" ${SYSTEM_FLITE_DEFAULT})
 option(SYSTEM_HTS_ENGINE "Set to ON to build Flightgear with the system's HTS Engine library" ${SYSTEM_HTS_ENGINE_DEFAULT})
-option(SYSTEM_CPPUNIT    "Set to ON to build Flightgear with the system's CppUnit library")
+option(SYSTEM_CPPUNIT    "Set to ON to build Flightgear with the system's CppUnit library" OFF)
 
 # additional utilities
 option(ENABLE_FGELEV     "Set to ON to build the fgelev application (default)" ON)
@@ -266,6 +266,7 @@ endif(EVENT_INPUT)
 include(SetupSwiftLibraries)
 
 if (SYSTEM_CPPUNIT)
+    message(STATUS "Looking for system CppUnit")
     find_package(CppUnit REQUIRED)
 endif()
 
