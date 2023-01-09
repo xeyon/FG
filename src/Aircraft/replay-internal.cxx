@@ -376,7 +376,7 @@ FGReplayInternal::unbind()
 
 /* Returns string such as HH:MM:SS. */
 static void
-printTimeStr(char* pStrBuffer,double _Time, bool ShowDecimal=true)
+printTimeStr(char* pStrBuffer, int bufferSize, double _Time, bool ShowDecimal = true)
 {
     if (_Time<0)
         _Time = 0;
@@ -388,9 +388,9 @@ printTimeStr(char* pStrBuffer,double _Time, bool ShowDecimal=true)
 
     int len;
     if (h>0)
-        len = sprintf(pStrBuffer,"%u:%02u:%02u",h,m,s);
+        len = snprintf(pStrBuffer, bufferSize, "%u:%02u:%02u", h, m, s);
     else
-        len = sprintf(pStrBuffer,"%u:%02u",m,s);
+        len = snprintf(pStrBuffer, bufferSize, "%u:%02u", m, s);
 
     if (len < 0)
     {
@@ -399,14 +399,14 @@ printTimeStr(char* pStrBuffer,double _Time, bool ShowDecimal=true)
     }
 
     if (ShowDecimal)
-        sprintf(&pStrBuffer[len],".%u",d);
+        snprintf(&pStrBuffer[len], bufferSize - len,".%u",d);
 }
 
 /* Sets specified property to representation of the specified time. */
 static void setTimeStr(const char* property_path, double t, bool show_decimal=false)
 {
     char buffer[30];
-    printTimeStr(buffer, t, show_decimal);
+    printTimeStr(buffer, 30, t, show_decimal);
     fgSetString(property_path, buffer);
 }
 
@@ -482,9 +482,9 @@ FGReplayInternal::start(bool new_tape)
     double EndTime = get_end_time(*this);
     m_was_finished_already = false;
     char StrBuffer[30];
-    printTimeStr(StrBuffer, StartTime, false);
+    printTimeStr(StrBuffer, 30, StartTime, false);
     fgSetString("/sim/replay/start-time-str", StrBuffer);
-    printTimeStr(StrBuffer, EndTime, false);
+    printTimeStr(StrBuffer, 30, EndTime, false);
     fgSetString("/sim/replay/end-time-str",   StrBuffer);
 
     unsigned long buffer_elements =  m_short_term.size()+m_medium_term.size()+m_long_term.size();
@@ -672,7 +672,7 @@ SGPropertyNode_ptr saveSetup(
     // add information on the tape's recording duration
     meta->setDoubleValue("tape-duration", duration);
     char buffer[30];
-    printTimeStr(buffer, duration, false);
+    printTimeStr(buffer, 30, duration, false);
     meta->setStringValue("tape-duration-str", buffer);
 
     // add simulator version
@@ -1070,7 +1070,7 @@ FGReplayInternal::update( double dt )
             m_replay_time->setDoubleValue(current_time);
             m_replay_time_prev = current_time;
             char StrBuffer[30];
-            printTimeStr(StrBuffer,current_time);
+            printTimeStr(StrBuffer, 30, current_time);
             m_replay_time_str->setStringValue((const char*)StrBuffer);
 
             // when time skipped (looped replay), trigger listeners to reset views etc
