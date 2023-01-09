@@ -1,8 +1,17 @@
 // FGPUIDialog.hxx - XML-configured dialog box.
+/*
+ * SPDX-FileCopyrightText: 2012 (C) James Turner <james@flightgear.org>
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
 #pragma once
 
 #include "dialog.hxx"
+
+// ensure we include this before puAux.h, so that 
+// #define _PU_H_ 1 has been done, and hence we don't
+// include the un-modified system pu.h
+#include "FlightGear_pu.h"
 
 #include <plib/puAux.h>
 

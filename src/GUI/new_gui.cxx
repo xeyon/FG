@@ -1,5 +1,9 @@
 // new_gui.cxx: implementation of XML-configurable GUI support.
 
+/*
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
 #include <config.h>
 
 #include "new_gui.hxx"
@@ -35,6 +39,11 @@
 #endif
 
 #if defined(HAVE_PUI)
+    // ensure we include this before puAux.h, so that 
+    // #define _PU_H_ 1 has been done, and hence we don't
+    // include the un-modified system pu.h
+    #include "FlightGear_pu.h"
+
     #include <plib/puAux.h>
 #endif
 

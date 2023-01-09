@@ -1,5 +1,9 @@
-#ifndef GUI_MAPWIDGET_HXX
-#define GUI_MAPWIDGET_HXX
+/*
+ * SPDX-FileCopyrightText: (C) 2010 James Turner <james@flightgear.org>
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
+#pragma once
 
 #include <map>
 #include <simgear/compiler.h>
@@ -158,5 +162,3 @@ private:
   double _gridSpacing;
   SGGeod _gridCenter;
 };
-
-#endif // of GUI_MAPWIDGET_HXX

@@ -377,6 +377,10 @@ protected:
   int *   getIntegerp ( void ) { return res_integer != NULL ? res_integer : &integer ; }
   float * getFloaterp ( void ) { return res_floater != NULL ? res_floater : &floater ; }
   char *  getStringp  ( void ) { return res_string != NULL ? res_string : string ; }
+
+  // added by James to allow sprintf -> snprintf migration
+  int     getStringLength()    { return res_string != NULL ? res_string_sz : string_size ;}
+
   bool *  getBooleanp ( void ) { return res_bool != NULL ? res_bool : &boolean ; }
 
   void enableConversion  ( void ) { convert = TRUE  ; }
@@ -468,7 +472,9 @@ public:
 
     if ( convert == TRUE )
     {
-      *getFloaterp () = (float) i ; sprintf ( getStringp (), "%d", i ) ; *getBooleanp () = ( i != 0 ) ;
+      *getFloaterp () = (float) i ; 
+      snprintf ( getStringp (), getStringLength(), "%d", i ) ; 
+      *getBooleanp () = ( i != 0 ) ;
     }
 
     puPostRefresh () ;
@@ -480,7 +486,9 @@ public:
 
     if ( convert == TRUE )
     {
-      *getIntegerp () = (int) f ; sprintf ( getStringp (), "%g", f ) ; *getBooleanp () = ( f != 0.0 ) ;
+      *getIntegerp () = (int) f ; 
+      snprintf ( getStringp (), getStringLength(), "%g", f ) ; 
+      *getBooleanp () = ( f != 0.0 ) ;
     }
 
     puPostRefresh () ;
@@ -494,7 +502,9 @@ public:
 
     if ( convert == TRUE )
     {
-      *getIntegerp () = b ? 1 : 0 ; *getFloaterp () = b ? 1.0f : 0.0f ; sprintf ( getStringp (), "%s", b ? "1" : "0" ) ;
+      *getIntegerp () = b ? 1 : 0 ; 
+      *getFloaterp () = b ? 1.0f : 0.0f ; 
+      snprintf ( getStringp (), getStringLength(), "%s", b ? "1" : "0" ) ;
     }
 
     puPostRefresh () ;
