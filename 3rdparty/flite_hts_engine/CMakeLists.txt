@@ -75,6 +75,10 @@ if (X86_64)
     target_compile_definitions(flightgear_flite_hts PRIVATE -DSIZEOF_VOID_P=8)
 endif()
 
+if (NOT MSVC)
+    target_compile_options(flightgear_flite_hts PRIVATE -Wno-unused-function )
+endif()
+
 # link against HTSEngine: either our own one, or the system one
 target_link_libraries(flightgear_flite_hts PUBLIC Flightgear::HTSEngine)
 
