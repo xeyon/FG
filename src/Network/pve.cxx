@@ -90,7 +90,7 @@ bool FGPVE::gen_message() {
     heave_b1 = heave >> 8;
     heave_b2 = heave & 0x00ff;
 
-    sprintf( buf, "p%c%c%c%c%c%c\n", 
+    snprintf( buf, 10, "p%c%c%c%c%c%c\n", 
 	     roll_b1, roll_b2, pitch_b1, pitch_b2, heave_b1, heave_b2 );
     length = 8;
 
