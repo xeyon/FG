@@ -66,9 +66,9 @@ bool FGGarmin::gen_message()
 
         // $PGRMZ,AAAA.A,F,T*XX
         if (mMetric)
-            sprintf( nmea, "$PGRMZ,%.1f,M,3", altitude_ft * SG_FEET_TO_METER );
+            snprintf(nmea, 256, "$PGRMZ,%.1f,M,3", altitude_ft * SG_FEET_TO_METER);
         else
-            sprintf( nmea, "$PGRMZ,%.1f,F,3", altitude_ft );
+            snprintf(nmea, 256, "$PGRMZ,%.1f,F,3", altitude_ft);
         add_with_checksum(nmea, 256);
     }
 

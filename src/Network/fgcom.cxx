@@ -694,17 +694,17 @@ std::string FGCom::computePhoneNumber(const double& freq, const std::string& ica
   char tmp[5];
 
   /*Convert ICAO to ASCII */
-  sprintf( tmp, "%4s", icao.c_str() );
+  snprintf(tmp, 5, "%4s", icao.c_str());
 
   /*Built the phone number */
-  sprintf( exten,
+  snprintf(exten, 32,
            "%02d%02d%02d%02d%02d%06d",
            01,
            tmp[0],
-	   tmp[1],
+           tmp[1],
            tmp[2],
            tmp[3],
-	   (int) (freq * 1000 + 0.5) );
+           (int)(freq * 1000 + 0.5));
   exten[16] = '\0';
 
   snprintf( phoneNumber,
