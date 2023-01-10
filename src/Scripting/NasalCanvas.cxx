@@ -439,6 +439,18 @@ static naRef f_imageSetPixel(sc::Image& img, const nasal::CallContext& ctx)
     return naNil();
 }
 
+static naRef f_canvasImageSize(sc::Image& img, const nasal::CallContext& ctx)
+{
+    auto osgImage = img.getImage();
+    osg::Vec2f sz{0.0f, 0.0f};
+    if (osgImage) {
+        sz = osg::Vec2f{static_cast<float>(osgImage->s()),
+                        static_cast<float>(osgImage->t())};
+    }
+
+    return ctx.to_nasal(sz);
+}
+
 static naRef f_gridLayoutAddItem(sc::GridLayout& grid,
                                  const nasal::CallContext& ctx)
 {
@@ -580,11 +592,12 @@ naRef initNasalCanvas(naRef globals, naContext c)
     .method("getCursorPos", &sc::Text::getCursorPos);
 
   NasalImage::init("canvas.Image")
-    .bases<NasalElement>()
-    .method("fillRect", &f_imageFillRect)
-    .method("setPixel", &f_imageSetPixel)
-    .method("dirtyPixels", &sc::Image::dirtyPixels);
-    
+      .bases<NasalElement>()
+      .method("fillRect", &f_imageFillRect)
+      .method("setPixel", &f_imageSetPixel)
+      .method("dirtyPixels", &sc::Image::dirtyPixels)
+      .method("imageSize", &f_canvasImageSize);
+
   //----------------------------------------------------------------------------
   // Layouting
 
