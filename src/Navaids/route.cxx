@@ -712,7 +712,7 @@ RouteBase::~RouteBase()
     
 void RouteBase::dumpRouteToKML(const WayptVec& aRoute, const std::string& aName)
 {
-  SGPath p = "/Users/jmt/Desktop/" + aName + ".kml";
+  SGPath p = SGPath::desktop() / (aName + ".kml");
   sg_ofstream f(p);
   if (!f.is_open()) {
     SG_LOG(SG_NAVAID, SG_WARN, "unable to open:" << p);

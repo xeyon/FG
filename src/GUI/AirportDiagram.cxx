@@ -591,11 +591,6 @@ void AirportDiagram::mouseReleaseEvent(QMouseEvent* me)
             return;
         }
     }
-
-
-#if 0
-    img.save("/Users/jmt/Desktop/img.png");
-#endif
 }
 
 QPainterPath AirportDiagram::pathForRunway(const RunwayData& r, const QTransform& t,

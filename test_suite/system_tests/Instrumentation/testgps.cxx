@@ -281,7 +281,7 @@ void GPSTests::testGPS()
   WayptRef awy6 = new NavaidWaypoint(
     (FGPositioned*) fgFindAirportID("KJFK"), NULL);
 
-  SGPath p("/Users/jmt/Desktop/airways.kml");
+  SGPath p SGPath::desktop() / "airways.kml";
   sg_ofstream f;
   f.open(p, fstream::out | fstream::trunc);
 
@@ -312,7 +312,7 @@ void GPSTests::testGPS()
   f.close();
 
 // procedures
-  SGPath op("/Users/jmt/Desktop/procedures.kml");
+  SGPath op SGPath::desktop() / "procedures.kml";
   f.open(op, fstream::out | fstream::trunc);
 
   FGAirport* eham = (FGAirport*) fgFindAirportID("EHAM");
