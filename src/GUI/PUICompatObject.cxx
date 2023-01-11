@@ -241,7 +241,7 @@ naRef PUICompatObject::config() const
 naRef PUICompatObject::nasalGetConfigValue(const nasal::CallContext ctx) const
 {
     auto name = ctx.requireArg<std::string>(0);
-    naRef defaultVal = ctx.getArg(0, naNil());
+    naRef defaultVal = ctx.getArg(1, naNil());
     SGPropertyNode_ptr nd = _config->getChild(name);
     if (!nd || !nd->hasValue())
         return defaultVal;
