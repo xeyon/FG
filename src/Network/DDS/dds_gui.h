@@ -41,7 +41,7 @@ typedef struct FG_DDS_GUI
   float ground_elev;
   float tuned_freq;
   float nav_radial;
-  bool in_range;
+  char in_range;
   float dist_nm;
   float course_deviation_deg;
   float gs_deviation_deg;

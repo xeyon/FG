@@ -43,7 +43,7 @@ typedef struct FG_propValue
   FG_propType _d;
   union
   {
-    bool Bool;
+    char Bool;
     int32_t Int32;
     int64_t Int64;
     float Float32;
@@ -60,7 +60,7 @@ typedef struct FG_DDS_prop
 {
   int32_t id;
   uint8_t version;
-  bool mode;
+  char mode;
   FG_propValue val;
   uint8_t guid[16];
 } FG_DDS_prop;

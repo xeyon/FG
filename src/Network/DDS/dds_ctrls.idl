@@ -30,13 +30,13 @@ struct DDS_Ctrls
     float speedbrake;
 
     // Aero control faults
-    boolean flaps_power;	// true = power available
-    boolean flap_motor_ok;
+    char flaps_power;	// true = power available
+    char flap_motor_ok;
 
     // Engine controls
     unsigned short num_engines;	// number of valid engines
-    boolean master_bat[DDS_ENGINES];
-    boolean master_alt[DDS_ENGINES];
+    char master_bat[DDS_ENGINES];
+    char master_alt[DDS_ENGINES];
     unsigned long magnetos[DDS_ENGINES];
     unsigned long starter_power[DDS_ENGINES];	// true = starter power
     float throttle[DDS_ENGINES];		//  0 ... 1
@@ -45,16 +45,16 @@ struct DDS_Ctrls
     unsigned long fuel_pump_power[DDS_ENGINES];	// true = on
     float prop_advance[DDS_ENGINES];		//  0 ... 1
     unsigned short feed_tank_to[4];
-    boolean reverse[4];
+    char reverse[4];
 
 
     // Engine faults
-    boolean engine_ok[DDS_ENGINES];
-    boolean mag_left_ok[DDS_ENGINES];
-    boolean mag_right_ok[DDS_ENGINES];
-    boolean spark_plugs_ok[DDS_ENGINES];	// false = fouled plugs
+    char engine_ok[DDS_ENGINES];
+    char mag_left_ok[DDS_ENGINES];
+    char mag_right_ok[DDS_ENGINES];
+    char spark_plugs_ok[DDS_ENGINES];	// false = fouled plugs
     unsigned short oil_press_status[DDS_ENGINES];// 0 = normal, 1 = low, 2 = full fail
-    boolean fuel_pump_ok[DDS_ENGINES];
+    char fuel_pump_ok[DDS_ENGINES];
 
     // Fuel management
     unsigned short num_tanks;			// number of valid tanks
@@ -62,7 +62,7 @@ struct DDS_Ctrls
 //  unsigned short xfer_pump[5];		// specifies transfer from array
 						// value tank to tank specified
 						// by int value
-    boolean cross_feed;				// false = off, true = on
+    char cross_feed;				// false = off, true = on
 
     // Brake controls
     float brake_left;
@@ -72,10 +72,10 @@ struct DDS_Ctrls
     float brake_parking;
 
     // Landing Gear
-    boolean gear_handle;	// true=gear handle down; false= gear handle up
+    char gear_handle;	// true=gear handle down; false= gear handle up
 
     // Switches
-    boolean master_avionics;
+    char master_avionics;
 
     // nav and Comm
     float comm_1;
@@ -97,7 +97,7 @@ struct DDS_Ctrls
     float magvar;			// local magnetic variation in degs.
 
     // hazards
-    boolean icing;			// icing status could me much
+    char icing;			// icing status could me much
 					// more complex but I'm
 					// starting simple here.
 

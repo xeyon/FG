@@ -34,7 +34,7 @@ static const uint32_t FG_DDS_GUI_ops [] =
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, ground_elev),
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, tuned_freq),
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, nav_radial),
-  DDS_OP_ADR | DDS_OP_TYPE_BOO, offsetof (FG_DDS_GUI, in_range),
+  DDS_OP_ADR | DDS_OP_TYPE_1BY | DDS_OP_FLAG_SGN, offsetof (FG_DDS_GUI, in_range),
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, dist_nm),
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, course_deviation_deg),
   DDS_OP_ADR | DDS_OP_TYPE_4BY | DDS_OP_FLAG_FP, offsetof (FG_DDS_GUI, gs_deviation_deg),
@@ -51,5 +51,5 @@ const dds_topic_descriptor_t FG_DDS_GUI_desc =
   FG_DDS_GUI_keys,
   23,
   FG_DDS_GUI_ops,
-  "<MetaData version=\"1.0.0\"><Module name=\"FG\"><Struct name=\"DDS_GUI\"><Member name=\"id\"><Short/></Member><Member name=\"version\"><Short/></Member><Member name=\"longitude\"><Double/></Member><Member name=\"latitude\"><Double/></Member><Member name=\"altitude\"><Float/></Member><Member name=\"agl\"><Float/></Member><Member name=\"phi\"><Float/></Member><Member name=\"theta\"><Float/></Member><Member name=\"psi\"><Float/></Member><Member name=\"vcas\"><Float/></Member><Member name=\"climb_rate\"><Float/></Member><Member name=\"num_tanks\"><UShort/></Member><Member name=\"fuel_quantity\"><Array size=\"8\"><Float/></Array></Member><Member name=\"cur_time\"><ULongLong/></Member><Member name=\"warp\"><ULongLong/></Member><Member name=\"ground_elev\"><Float/></Member><Member name=\"tuned_freq\"><Float/></Member><Member name=\"nav_radial\"><Float/></Member><Member name=\"in_range\"><Boolean/></Member><Member name=\"dist_nm\"><Float/></Member><Member name=\"course_deviation_deg\"><Float/></Member><Member name=\"gs_deviation_deg\"><Float/></Member></Struct></Module></MetaData>"
+  "<MetaData version=\"1.0.0\"><Module name=\"FG\"><Struct name=\"DDS_GUI\"><Member name=\"id\"><Short/></Member><Member name=\"version\"><Short/></Member><Member name=\"longitude\"><Double/></Member><Member name=\"latitude\"><Double/></Member><Member name=\"altitude\"><Float/></Member><Member name=\"agl\"><Float/></Member><Member name=\"phi\"><Float/></Member><Member name=\"theta\"><Float/></Member><Member name=\"psi\"><Float/></Member><Member name=\"vcas\"><Float/></Member><Member name=\"climb_rate\"><Float/></Member><Member name=\"num_tanks\"><UShort/></Member><Member name=\"fuel_quantity\"><Array size=\"8\"><Float/></Array></Member><Member name=\"cur_time\"><ULongLong/></Member><Member name=\"warp\"><ULongLong/></Member><Member name=\"ground_elev\"><Float/></Member><Member name=\"tuned_freq\"><Float/></Member><Member name=\"nav_radial\"><Float/></Member><Member name=\"in_range\"><Char/></Member><Member name=\"dist_nm\"><Float/></Member><Member name=\"course_deviation_deg\"><Float/></Member><Member name=\"gs_deviation_deg\"><Float/></Member></Struct></Module></MetaData>"
 };

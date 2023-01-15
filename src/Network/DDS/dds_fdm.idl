@@ -70,7 +70,7 @@ struct DDS_FDM
     // Consumables
     unsigned short num_tanks;		// Max number of fuel tanks
     float fuel_quantity[DDS_TANKS];	// used by GPSsmooth and possibly others
-    boolean tank_selected[DDS_TANKS]; // selected, capacity, usable, density and level required for multiple-pc setups to work
+    char tank_selected[DDS_TANKS]; // selected, capacity, usable, density and level required for multiple-pc setups to work
     float capacity_m3[DDS_TANKS];
     float unusable_m3[DDS_TANKS];
     float density_kgpm3[DDS_TANKS];

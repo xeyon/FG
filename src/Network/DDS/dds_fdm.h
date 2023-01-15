@@ -65,7 +65,7 @@ typedef struct FG_DDS_FDM
   float oil_px[4];
   uint16_t num_tanks;
   float fuel_quantity[8];
-  bool tank_selected[8];
+  char tank_selected[8];
   float capacity_m3[8];
   float unusable_m3[8];
   float density_kgpm3[8];
