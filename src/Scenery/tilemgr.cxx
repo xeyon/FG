@@ -41,12 +41,13 @@
 #include <simgear/misc/strutils.hxx>
 #include <simgear/scene/material/matlib.hxx>
 
-#include <Main/globals.hxx>
 #include <Main/fg_props.hxx>
+#include <Main/globals.hxx>
+#include <Main/sentryIntegration.hxx>
+#include <Scripting/NasalModelData.hxx>
+#include <Scripting/NasalSys.hxx>
 #include <Viewer/renderer.hxx>
 #include <Viewer/splash.hxx>
-#include <Scripting/NasalSys.hxx>
-#include <Scripting/NasalModelData.hxx>
 
 #include "scenery.hxx"
 #include "SceneryPager.hxx"
@@ -120,6 +121,10 @@ public:
             _lodRough->setDoubleValue(_lodDetailed->getDoubleValue() + _lodRoughDelta->getDoubleValue());
             _lodBare->setDoubleValue(_lodRough->getDoubleValue() + _lodBareDelta->getDoubleValue());
         }
+
+        flightgear::addSentryBreadcrumb("Property:" + prop->getNameString() + " is now " +
+                                            prop->getStringValue(),
+                                        "info");
     }
 
 private:
@@ -208,6 +213,8 @@ void FGTileMgr::reinit()
     double rough    = fgGetDouble("/sim/rendering/static-lod/rough-delta", SG_OBJECT_RANGE_ROUGH) + detailed;
     double bare     = fgGetDouble("/sim/rendering/static-lod/bare", SG_OBJECT_RANGE_BARE) + rough;
     double tile_min_expiry = fgGetDouble("/sim/rendering/plod-minimum-expiry-time-secs", SG_TILE_MIN_EXPIRY);
+    flightgear::addSentryBreadcrumb("PLod-minimum-expiry time=" + std::to_string(tile_min_expiry), "info");
+
     _use_vpb = fgGetBool("/scenery/use-vpb");
 
     _options->setPluginStringData("SimGear::LOD_RANGE_BARE", std::to_string(bare));
