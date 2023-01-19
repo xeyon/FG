@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Copyright (C) 2012 Adrian Musceac
@@ -24,7 +24,7 @@ import re, string
 """Script which generates an API documentation file for Nasal libraries
 located inside $FGROOT/Nasal/
 Usage: nasal_api_doc.py parse [path to $FGROOT/Nasal/]
-Or configure the local path below, and ommit the path in the console.
+Or configure the local path below, and omit the path argument in the command.
 The API doc in HTML format is generated in the current working directory"""
 
 ########### Local $FGROOT/Nasal/ path ##########
@@ -41,11 +41,8 @@ def get_files(nasal_dir):
 		sys.exit()
 	fgroot_dir = nasal_dir.rstrip('/').replace('Nasal','')
 
-	try:
-		f_version = open(fgroot_dir+'version','rb')
-		version = f_version.read(256).rstrip('\n')
-	finally:
-		f_version.close()
+	with open(fgroot_dir + 'version', 'r', encoding="utf-8") as f_version:
+		version = f_version.read().strip()
 
 	top_level = []
 	modules = []
@@ -77,8 +74,12 @@ def get_files(nasal_dir):
 	output_text(top_namespaces,modules,version)
 
 
-def output_text(top_namespaces,modules,version):
-	fw=open('./nasal_api_doc.html','wb')
+def output_text(top_namespaces, modules, version):
+	with open('./nasal_api_doc.html', 'w', encoding="utf-8") as fw:
+		output_text_aux(fw, top_namespaces, modules, version)
+
+
+def output_text_aux(fw, top_namespaces, modules, version):
 	buf='<html><head>\
 	<title>Nasal API</title>\
 	<style>\n\
@@ -148,10 +149,10 @@ def output_text(top_namespaces,modules,version):
 			buf+='</div>\n'
 	buf+='</body></html>'
 	fw.write(buf)
-	fw.close()
+
 
 def parse_file(filename):
-	with open(filename,'rb') as fr:
+	with open(filename, 'r', encoding="utf-8") as fr:
 		content = fr.readlines()
 
 	i=0
