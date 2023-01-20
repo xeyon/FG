@@ -47,6 +47,8 @@ public:
     }
 
 private:
+    // the Nasal peer does not hold an owning reference to the
+    // main dialog object (dialogs are owned by the NewGUI subsystem)
     SGWeakPtr<FGPUICompatDialog> _dialog;
 };
 
@@ -108,8 +110,13 @@ FGPUICompatDialog::FGPUICompatDialog(SGPropertyNode* props) : FGDialog(props),
 
 FGPUICompatDialog::~FGPUICompatDialog()
 {
+    // nothing to do, all work was done in close()
+}
+
+void FGPUICompatDialog::close()
+{
     if (_peer) {
-        _peer->callMethod<void>("doClose");
+        _peer->callMethod<void>("onClose");
     }
     
     _props->setIntValue("lastx", getX());
@@ -124,6 +131,8 @@ FGPUICompatDialog::~FGPUICompatDialog()
         }
         nas->deleteModule(_module.c_str());
     }
+
+    _peer.clear();
 }
 
 bool FGPUICompatDialog::init()

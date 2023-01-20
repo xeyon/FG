@@ -102,6 +102,8 @@ public:
      */
     virtual void update();
 
+    void close() override;
+
     /**
      * Recompute the dialog's layout
      */

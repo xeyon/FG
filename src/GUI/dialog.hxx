@@ -63,6 +63,14 @@ public:
 
     virtual const char *getName() { return ""; }
     virtual void bringToFront() {}
+
+    /**
+     * @brief Close the dialog. This should actually close the GUI
+     * assets associated, if you want an 'are you sure?' interaction, it
+     * needs to be handled in advance of this interaction.
+     */
+    virtual void close() = 0;
+
 protected:
     /**
      * Construct a new GUI widget configured by a property tree.

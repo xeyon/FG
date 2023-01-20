@@ -112,6 +112,8 @@ public:
     double width() const;
     double height() const;
 
+    void close() override;
+
 private:
     friend naRef f_makeDialogPeer(const nasal::CallContext& ctx);
     friend naRef f_dialogRootObject(FGPUICompatDialog& dialog, naContext c);

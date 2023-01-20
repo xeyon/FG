@@ -331,12 +331,19 @@ NewGUI::closeActiveDialog ()
     if (_active_dialog == 0)
         return false;
 
+    // TODO support a request-close callback here, optionally
+    // many places in code assume this code-path does an
+    // immediate close, but for some UI paths it would be nice to
+    // allow some dialogs the chance to inervene
+
     // Kill any entries in _active_dialogs...  Is there an STL
     // algorithm to do (delete map entries by value, not key)?  I hate
     // the STL :) -Andy
     auto iter = _active_dialogs.begin();
     for(/**/; iter != _active_dialogs.end(); iter++) {
         if(iter->second == _active_dialog) {
+            _active_dialog->close();
+
             _active_dialogs.erase(iter);
             // iter is no longer valid
             break;
