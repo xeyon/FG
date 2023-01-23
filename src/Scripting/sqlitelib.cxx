@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <cstring>
-#include <sqlite3.h>
 
 #include <string>
 
@@ -8,6 +7,12 @@
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/structure/exception.hxx>
 #include <simgear/debug/logstream.hxx>
+
+#ifdef SYSTEM_SQLITE
+  #include "sqlite3.h"
+#else
+  #include "fg_sqlite3.h"
+#endif
 
 // Ghost types
 struct DBGhost { sqlite3* db; };
