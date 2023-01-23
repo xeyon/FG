@@ -21,7 +21,7 @@ static naGhostType StmtType = { (void(*)(void*))stmtDestroy, "sqlite_statement" 
 
 static void dbDestroy(struct DBGhost* g)
 {
-    if(g->db) sqlite3_close(g->db);
+    if(g->db) sqlite3_close_v2(g->db);
     g->db = 0;
     free(g);
 }
@@ -41,11 +41,7 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     g = (DBGhost*)malloc(sizeof(struct DBGhost));
 
     const auto path = SGPath::fromUtf8(naStr_data(args[0]));
-    if (!path.exists()) {
-        return naNil();
-    }
-
-    const SGPath filename = SGPath(path).validate(false);
+    const SGPath filename = SGPath(path).validate(true);
     if (filename.isNull()) {
         SG_LOG(SG_NASAL, SG_ALERT, "stat(): reading '" <<
         naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
@@ -60,7 +56,7 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     if(sqlite3_open_v2(pathUtf8.c_str(), &g->db, openFlags, NULL))
     {
         const char* msg = sqlite3_errmsg(g->db);
-        sqlite3_close(g->db);
+        sqlite3_close_v2(g->db);
         free(g);
         naRuntimeError(c, "sqlite open error: %s", msg);
     }
@@ -72,7 +68,7 @@ static naRef f_close(naContext c, naRef me, int argc, naRef* args)
 {
     struct DBGhost* g = argc > 0 ? DBG(args[0]) : 0;
     if(!g) naRuntimeError(c, "bad/missing argument to sqlite.close");
-    sqlite3_close(g->db);
+    sqlite3_close_v2(g->db);
     g->db = 0;
     return naNil();
 }
