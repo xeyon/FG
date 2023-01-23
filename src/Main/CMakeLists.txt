@@ -110,7 +110,7 @@ endif()
 
 add_executable(nasal
     nasal-bin.cxx
-    ${CMAKE_SOURCE_DIR}/src/Scripting/sqlitelib.c
+    ${CMAKE_SOURCE_DIR}/src/Scripting/sqlitelib.cxx
 )
 setup_fgfs_libraries(nasal)
 install(TARGETS nasal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

@@ -1,7 +1,13 @@
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 #include <sqlite3.h>
+
+#include <string>
+
 #include <simgear/nasal/nasal.h>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/structure/exception.hxx>
+#include <simgear/debug/logstream.hxx>
 
 // Ghost types
 struct DBGhost { sqlite3* db; };
@@ -32,8 +38,27 @@ static naRef f_open(naContext c, naRef me, int argc, naRef* args)
     struct DBGhost* g;
     if(argc < 1 || !naIsString(args[0]))
         naRuntimeError(c, "Bad/missing argument to sqlite.open");
-    g = malloc(sizeof(struct DBGhost));
-    if(sqlite3_open(naStr_data(args[0]), &g->db)) {
+    g = (DBGhost*)malloc(sizeof(struct DBGhost));
+
+    const auto path = SGPath::fromUtf8(naStr_data(args[0]));
+    if (!path.exists()) {
+        return naNil();
+    }
+
+    const SGPath filename = SGPath(path).validate(false);
+    if (filename.isNull()) {
+        SG_LOG(SG_NASAL, SG_ALERT, "stat(): reading '" <<
+        naStr_data(args[0]) << "' denied (unauthorized directory - authorization"
+        " no longer follows symlinks; to authorize reading additional "
+        "directories, pass them to --allow-nasal-read)");
+        naRuntimeError(c, "stat(): access denied (unauthorized directory)");
+        return naNil();
+    }
+
+    int openFlags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    std::string pathUtf8 = path.utf8Str();
+    if(sqlite3_open_v2(pathUtf8.c_str(), &g->db, openFlags, NULL))
+    {
         const char* msg = sqlite3_errmsg(g->db);
         sqlite3_close(g->db);
         free(g);
@@ -61,7 +86,7 @@ static naRef f_prepare(naContext c, naRef me, int argc, naRef* args)
     struct DBGhost* dbg = DBG(db);
     if(!naIsString(s) || !dbg)
         naRuntimeError(c, "bad/missing argument to sqlite.prepare");
-    g = malloc(sizeof(struct StmtGhost));
+    g = (StmtGhost*)malloc(sizeof(struct StmtGhost));
     if(sqlite3_prepare(dbg->db, naStr_data(s), naStr_len(s), &g->stmt, &tail))
     {
         const char* msg = sqlite3_errmsg(dbg->db);
@@ -86,7 +111,7 @@ static naRef run_query(naContext c, sqlite3* db, sqlite3_stmt* stmt,
             naRuntimeError(c, "sqlite step error: %s", sqlite3_errmsg(db));
         if(!fields) {
             cols = sqlite3_column_count(stmt);
-            fields = malloc(cols * sizeof(naRef));
+            fields = (naRef*)malloc(cols * sizeof(naRef));
             for(i=0; i<cols; i++) {
                 const char* s = sqlite3_column_name(stmt, i);
                 naRef fn = naStr_fromdata(naNewString(c), (char*)s, strlen(s));
@@ -159,11 +184,11 @@ static naRef f_finalize(naContext c, naRef me, int argc, naRef* args)
 }
 
 static naCFuncItem funcs[] = {
-    { "open", f_open },
-    { "close", f_close },
-    { "prepare", f_prepare },
-    { "exec", f_exec },
-    { "finalize", f_finalize },
+    { (char*)"open", f_open },
+    { (char*)"close", f_close },
+    { (char*)"prepare", f_prepare },
+    { (char*)"exec", f_exec },
+    { (char*)"finalize", f_finalize },
     { 0 }
 };
 

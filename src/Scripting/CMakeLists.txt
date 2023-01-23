@@ -14,7 +14,7 @@ set(SOURCES
   NasalModelData.cxx
   NasalSGPath.cxx
   NasalFlightPlan.cxx
-  sqlitelib.c
+  sqlitelib.cxx
   # we don't add this here becuase we need to exclude it the testSuite
   # so it can't go nto fgfsObjects library
   #   NasalUnitTesting.cxx
