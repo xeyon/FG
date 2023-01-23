@@ -14,6 +14,7 @@ set(SOURCES
   NasalModelData.cxx
   NasalSGPath.cxx
   NasalFlightPlan.cxx
+  sqlitelib.c
   # we don't add this here becuase we need to exclude it the testSuite
   # so it can't go nto fgfsObjects library
   #   NasalUnitTesting.cxx
@@ -49,7 +50,7 @@ else()
 endif()
 
 # NasalSys.cxx is passed as TEST_SOURCES since we need to compile it
-# seperately whrn building the test_suite
+# seperately when building the test_suite
 
 flightgear_component(Scripting "${SOURCES}" "${HEADERS}"  NasalSys.cxx)
 

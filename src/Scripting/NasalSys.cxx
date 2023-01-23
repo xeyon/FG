@@ -1097,6 +1097,7 @@ void FGNasalSys::init()
     hashset(_globals, "io", naInit_io(_context));
     hashset(_globals, "thread", naInit_thread(_context));
     hashset(_globals, "utf8", naInit_utf8(_context));
+    hashset(_globals, "sqlite", naInit_sqlite(_context));
 
     initLogLevelConstants();
 

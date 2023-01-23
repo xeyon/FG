@@ -108,6 +108,13 @@ else()
     install(TARGETS fgfs RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
+add_executable(nasal
+    nasal-bin.cxx
+    ${CMAKE_SOURCE_DIR}/src/Scripting/sqlitelib.c
+)
+setup_fgfs_libraries(nasal)
+install(TARGETS nasal RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 if(ENABLE_METAR)
     add_executable(metar metar_main.cxx)
     target_link_libraries(metar SimGearScene)
