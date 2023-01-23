@@ -12,6 +12,7 @@
 #endif
 
 #include <simgear/nasal/nasal.h>
+#include <simgear/misc/sg_path.hxx>
 
 #define HAVE_SQLITE 1
 
@@ -43,6 +44,16 @@ static naRef print(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
+void initAllowedPaths()
+{
+    SGPath::clearListOfAllowedPaths(false); // clear list of read-allowed paths
+    SGPath::clearListOfAllowedPaths(true);  // clear list of write-allowed paths
+
+    // Allow reading and writing anywhere
+    SGPath::addAllowedPathPattern("*", false); // read operations
+    SGPath::addAllowedPathPattern("*", true);  // write operations
+}
+
 #define MAX_PATH_LEN 1024
 #define NASTR(s) naStr_fromdata(naNewString(ctx), (s), strlen((s)))
 int main(int argc, char** argv)
@@ -59,6 +70,9 @@ int main(int argc, char** argv)
         fprintf(stderr, "nasal: must specify a script to run\n");
         exit(1);
     }
+
+    initAllowedPaths();         // for SGPath::validate()
+
     script = argv[1];
 
     // Read the contents of the file into a buffer in memory.
