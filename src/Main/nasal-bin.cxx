@@ -1,6 +1,7 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -12,9 +13,12 @@
 #endif
 
 #include <simgear/nasal/nasal.h>
+#include <simgear/io/sg_mmap.hxx>
 #include <simgear/misc/sg_path.hxx>
 
 #define HAVE_SQLITE 1
+
+using namespace std;
 
 void checkError(naContext ctx)
 {
@@ -44,7 +48,7 @@ static naRef print(naContext c, naRef me, int argc, naRef* args)
     return naNil();
 }
 
-void initAllowedPaths()
+static void initAllowedPaths()
 {
     SGPath::clearListOfAllowedPaths(false); // clear list of read-allowed paths
     SGPath::clearListOfAllowedPaths(true);  // clear list of write-allowed paths
@@ -54,17 +58,13 @@ void initAllowedPaths()
     SGPath::addAllowedPathPattern("*", true);  // write operations
 }
 
-#define MAX_PATH_LEN 1024
 #define NASTR(s) naStr_fromdata(naNewString(ctx), (s), strlen((s)))
 int main(int argc, char** argv)
 {
     naRef *args, code, nasal, result;
-//  char path[MAX_PATH_LEN];
     struct Context *ctx;
-    char *buf, *script;
-    struct stat fdat;
-    int errLine, i;
-    FILE* f;
+    int fsize, errLine, i;
+    char *buf;
 
     if(argc < 2) {
         fprintf(stderr, "nasal: must specify a script to run\n");
@@ -73,40 +73,25 @@ int main(int argc, char** argv)
 
     initAllowedPaths();         // for SGPath::validate()
 
-    script = argv[1];
-
-    // Read the contents of the file into a buffer in memory.
-    f = fopen(script, "rb");
-#if 0
-    if(!f) {
-        snprintf(path, MAX_PATH_LEN-1, SOURCE_DIR"/misc/%s", script);
-        f = fopen(path, "rb");
-        if(!f) {
-            fprintf(stderr, "nasal: could not open input file: %s\n", path);
-            exit(1);
-        }
-        script = path;
-    }
-#endif
-    stat(script, &fdat);
-    buf = (char*)malloc(fdat.st_size);
-    if(fread(buf, 1, fdat.st_size, f) != (size_t)fdat.st_size) {
-        fprintf(stderr, "nasal: error in fread()\n");
-        exit(1);
-    }
+    // MMap the contents of the file.
+    SGPath script(argv[1]);
+    SGMMapFile f(script);
+    f.open(SG_IO_IN);
+    buf = (char*)f.get();
+    fsize= f.get_size();
 
     // Create an interpreter context
     ctx = naNewContext();
 
     // Parse the code in the buffer.  The line of a fatal parse error
     // is returned via the pointer.
-    code = naParseCode(ctx, NASTR(script), 1, buf, fdat.st_size, &errLine);
+    code = naParseCode(ctx, NASTR(script.c_str()), 1, buf, fsize, &errLine);
     if(naIsNil(code)) {
         fprintf(stderr, "Parse error: %s at line %d\n",
                 naGetError(ctx), errLine);
         exit(1);
     }
-    free(buf);
+    f.close();
 
     // Make a hash containing the standard library functions.  This
     // will be the namespace for a new script
