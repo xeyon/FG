@@ -271,6 +271,7 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   }
 
   double speed = 450.0;
+  int remainingWaitTime = 0;
   if (dep != arr) {
     totalTimeEnroute = flight->getArrivalTime() - flight->getDepartureTime();
     if (flight->getDepartureTime() < now) {
@@ -295,8 +296,11 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
       remainingTimeEnroute = totalTimeEnroute;
       elapsedTimeEnroute = 0;
       position = dep->geod();
-      SG_LOG (SG_AI, SG_BULK, "Traffic Manager: " << flight->getCallSign() << " is pending, departure in "
-        << flight->getDepartureTime() - now << " seconds ");
+      remainingWaitTime = flight->getDepartureTime() - now;
+      if (remainingWaitTime<600) {
+        SG_LOG (SG_AI, SG_BULK, "Traffic Manager: " << flight->getCallSign() << " is pending, departure in "
+          << remainingWaitTime << " seconds ");
+      }
     }
   } else {
     // departure / arrival coincident
@@ -314,9 +318,11 @@ bool FGAISchedule::update(time_t now, const SGVec3d& userCart)
   // then 500nm, create this flight. At jet speeds 500 nm is roughly
   // one hour flight time, so that would be a good approximate point
   // to start a more detailed simulation of this aircraft.
-  SG_LOG (SG_AI, SG_BULK, "Traffic manager: " << registration << " is scheduled for a flight from "
-	     << dep->getId() << " to " << arr->getId() << ". Current distance to user: "
-             << distanceToUser);
+  if (remainingWaitTime<600) {
+    SG_LOG (SG_AI, SG_BULK, "Traffic manager: " << registration << " is scheduled for a flight from "
+        << dep->getId() << " to " << arr->getId() << ". Current distance to user: "
+              << distanceToUser);
+  }
   if (distanceToUser >= TRAFFICTOAIDISTTOSTART) {
     return true; // out of visual range, for the moment.
   }

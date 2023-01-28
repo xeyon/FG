@@ -299,42 +299,49 @@ FGTaxiNodeRef FGGroundNetwork::findNearestNodeOnRunwayExit(const SGGeod & aGeod,
     SGVec3d cartPos = SGVec3d::fromGeod(aGeod);
     FGTaxiNodeRef result = 0;
     FGTaxiNodeVector::const_iterator it;
-    for (it = m_nodes.begin(); it != m_nodes.end(); ++it) {
-        if (!(*it)->getIsOnRunway())
-            continue;
-        double localDistanceSqr = distSqr(cartPos, (*it)->cart());
-        if (aRunway) {
+    if (aRunway) {
+        SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit " << aRunway->ident() << " " << aRunway->headingDeg() );
+        for (it = m_nodes.begin(); it != m_nodes.end(); ++it) {
+            if (!(*it)->getIsOnRunway())
+                continue;
+            double localDistanceSqr = distSqr(cartPos, (*it)->cart());
             double headingTowardsExit = SGGeodesy::courseDeg(aGeod, (*it)->geod());
-            double diff = fabs(aRunway->headingDeg() - headingTowardsExit);
-            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit " << aRunway->headingDeg() << " "
-              << " Diff : " << diff << " " << (*it)->getIndex());
+            double diff = fabs(SGMiscd::normalizePeriodic(-180, 180, aRunway->headingDeg() - headingTowardsExit));
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit Diff : " << diff << " Id : " << (*it)->getIndex());
             if (diff > 10) {
                 // Only ahead
                 continue;
             }
             FGTaxiNodeVector exitSegments = findSegmentsFrom((*it));
-            // Only ends
-            if (exitSegments.size() != 1) {
+            // Some kind of star
+            if (exitSegments.size() > 2 ) {
+                continue;
+            }
+            // two segments and next points are on runway, too. Must be a segment before end
+            // single runway point not at end is ok
+            if (exitSegments.size() == 2 &&
+              ((*exitSegments.at(0)).getIsOnRunway() || (*exitSegments.at(0)).getIsOnRunway() )) {
                 continue;
             }
             double exitHeading = SGGeodesy::courseDeg((*it)->geod(),
-                                                      (exitSegments.back())->geod());
-            diff = fabs(aRunway->headingDeg() - exitHeading);
-            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit2 " << diff << " " << (*it)->getIndex());
+                                                    (exitSegments.back())->geod());
+            diff = fabs(SGMiscd::normalizePeriodic(-180, 180, aRunway->headingDeg() - exitHeading));
+            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit2 Diff :" << diff << " Id : " << (*it)->getIndex());
             if (diff > 70) {
                 // Only exits going in our direction
                 continue;
             }
-        } else {
-            SG_LOG(SG_AI, SG_BULK, "No Runway findNearestNodeOnRunwayExit");
+            if (localDistanceSqr < d) {
+                SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit3 " << localDistanceSqr << " " << (*it)->getIndex());
+                d = localDistanceSqr;
+                result = *it;
+            }
         }
-        if (localDistanceSqr < d) {
-            SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit3 " << localDistanceSqr << " " << (*it)->getIndex());
-            d = localDistanceSqr;
-            result = *it;
-        }
+    } else {
+        SG_LOG(SG_AI, SG_BULK, "No Runway findNearestNodeOnRunwayExit");
     }
     if(result) {
+        SG_LOG(SG_AI, SG_BULK, "findNearestNodeOnRunwayExit found :" << result->getIndex());
         return result;
     }
     // Ok then fallback only exits ahead

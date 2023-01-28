@@ -434,8 +434,10 @@ double FGAIFlightPlan::getDistanceToGo(double lat, double lon, FGAIWaypoint* wp)
   return SGGeodesy::distanceM(SGGeod::fromDeg(lon, lat), wp->getPos());
 }
 
-// sets distance in feet from a lead point to the current waypoint
-// basically a catch radius, that triggers the advancement of WPs
+/**
+  sets distance in feet from a lead point to the current waypoint
+  basically a catch radius, that triggers the advancement of WPs
+*/
 void FGAIFlightPlan::setLeadDistance(double speed,
                                      double bearing,
                                      FGAIWaypoint* current,
@@ -447,11 +449,11 @@ void FGAIFlightPlan::setLeadDistance(double speed,
   // we travel on. Get the turn radius by dividing by PI (*2).
   // FIXME Why when going backwards? No fabs
   if (speed < 0.5) {
-    lead_distance_ft = 0.5;
+    setLeadDistance(0.5);
     return;
   }
   if (speed > 0 && speed < 0.5) {
-    lead_distance_ft = 5 * SG_FEET_TO_METER;
+    setLeadDistance(5 * SG_METER_TO_FEET);
     SG_LOG(SG_AI, SG_BULK, "Setting Leaddistance fixed " << (lead_distance_ft*SG_FEET_TO_METER));
     return;
   }
@@ -473,11 +475,14 @@ void FGAIFlightPlan::setLeadDistance(double speed,
   //lead_distance_ft = turn_radius * sin(leadInAngle * SG_DEGREES_TO_RADIANS);
 
   if ((int)leadInAngle==0) {
-        double lead_distance_m = fabs(2*speed) * SG_FEET_TO_METER;
-        setLeadDistance(lead_distance_m * SG_METER_TO_FEET);
+    double lead_distance_m = fabs(2*speed) * SG_FEET_TO_METER;
+    setLeadDistance(lead_distance_m * SG_METER_TO_FEET);
+    if (lead_distance_ft > 1000) {
+        SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance leadin 0 " << lead_distance_ft << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
+    }
   } else {
     double lead_distance_m = turn_radius_m * tan((leadInAngle * SG_DEGREES_TO_RADIANS)/2);
-    lead_distance_ft = lead_distance_m * SG_METER_TO_FEET;
+    setLeadDistance(lead_distance_m * SG_METER_TO_FEET);
     SG_LOG(SG_AI, SG_BULK, "Setting Leaddistance " << (lead_distance_ft*SG_FEET_TO_METER) << " Turnradius " << turn_radius_m << " Speed " << speed_mps << " Half turn Angle " << (leadInAngle)/2);
     if (lead_distance_ft > 1000) {
         SG_LOG(SG_AI, SG_BULK, "Excessive leaddistance possible direction change " << lead_distance_ft << " leadInAngle " << leadInAngle << " inbound " << inbound << " outbound " << outbound);
@@ -499,6 +504,9 @@ void FGAIFlightPlan::setLeadDistance(double speed,
 
 void FGAIFlightPlan::setLeadDistance(double distance_ft){
   lead_distance_ft = distance_ft;
+  if (lead_distance_ft>10000) {
+    SG_LOG(SG_AI, SG_DEBUG, "Excessive Leaddistance " << distance_ft);
+  }
 }
 
 

@@ -38,9 +38,12 @@ class TrafficTests : public CppUnit::TestFixture
     CPPUNIT_TEST(testPushback);
     CPPUNIT_TEST(testPushbackCargo);
     CPPUNIT_TEST(testPushbackCargoInProgress);
-    CPPUNIT_TEST(testPushbackCargoInProgressDownWind);
+    CPPUNIT_TEST(testPushbackCargoInProgressDownWindEast);
+    CPPUNIT_TEST(testPushbackCargoInProgressDownWindWest);
     CPPUNIT_TEST(testPushbackCargoInProgressNotBeyond);
+    CPPUNIT_TEST(testPushbackCargoInProgressNotBeyondNorth);
     CPPUNIT_TEST(testPushbackCargoInProgressBeyond);
+    CPPUNIT_TEST(testPushbackCargoInProgressBeyondNorth);
     CPPUNIT_TEST(testChangeRunway);
     CPPUNIT_TEST(testPushforward);
     CPPUNIT_TEST(testPushforwardSpeedy);
@@ -60,9 +63,12 @@ public:
     void testPushback();
     void testPushbackCargo();
     void testPushbackCargoInProgress();
-    void testPushbackCargoInProgressDownWind();
+    void testPushbackCargoInProgressDownWindEast();
+    void testPushbackCargoInProgressDownWindWest();
     void testPushbackCargoInProgressNotBeyond();
+    void testPushbackCargoInProgressNotBeyondNorth();
     void testPushbackCargoInProgressBeyond();
+    void testPushbackCargoInProgressBeyondNorth();
     void testChangeRunway();
     //GA Tests with forward push
     void testPushforward();

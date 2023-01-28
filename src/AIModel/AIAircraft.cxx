@@ -348,13 +348,15 @@ void FGAIAircraft::ProcessFlightPlan( double dt, time_t now ) {
             setDie(true);
             return;
         }
+        fp->IncrementWaypoint(false);
+        fp->IncrementWaypoint(false);
         prev = fp->getPreviousWaypoint();
-        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Previous WP \t" << prev->getName());
+        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|EndofCruise Previous WP \t" << prev->getName());
         curr = fp->getCurrentWaypoint();
-        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Current WP \t" << curr->getName());
+        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|EndofCruise Current WP \t" << curr->getName());
         next = fp->getNextWaypoint();
         if( next ) {
-            SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Next WP \t" << next->getName());
+            SG_LOG(SG_AI, SG_BULK, getCallSign() << "|EndofCruise Next WP \t" << next->getName());
         }
     }
     if (!curr) {
@@ -606,7 +608,7 @@ bool FGAIAircraft::loadNextLeg(double distance) {
 
         int nextLeg = determineNextLeg(leg);
 
-        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Loading Leg " << nextLeg);
+        SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Loading Leg:" << leg << " Next: " << nextLeg);
         bool ok = fp->create (this,
                     dep,
                     arr,
@@ -879,7 +881,7 @@ void FGAIAircraft::handleFirstWaypoint() {
     // Make sure lead distance is initialized otherwise
     // If we are ending in a parking
     if (next && !curr->contains("END") && !curr->contains("PushBackPointlegend")) {
-        fp->setLeadDistance(speed, hdg, curr, next);
+        fp->setLeadDistance(tgt_speed, hdg, curr, next);
     }
 
     if (curr->getCrossat() > -1000.0) //use a calculated descent/climb rate
@@ -1147,7 +1149,11 @@ void FGAIAircraft::controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next) {
         prevSpeed = speed;
         if (next) {
             if (!curr->contains("END") && !curr->contains("PushBackPointlegend")) {
-                fp->setLeadDistance(speed, tgt_heading, curr, next);
+                if (speed_diff > 0 && tgt_speed >= 5) {
+                    fp->setLeadDistance(speed, tgt_heading, curr, next);
+                } else {
+                    fp->setLeadDistance(tgt_speed, tgt_heading, curr, next);
+                }
             }
         }
     }
