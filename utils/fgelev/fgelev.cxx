@@ -191,7 +191,7 @@ main(int argc, char** argv)
 
     // Get the whole world bvh tree
     SGSharedPtr<sg::BVHNode> node;
-    node = sg::BVHPageNodeOSG::load(bvhFile, options);
+    node = sg::BVHPageNodeOSG::load(bvhFile, options, true);
 
     // if no model has been successfully loaded report failure.
     if (!node.valid()) {
