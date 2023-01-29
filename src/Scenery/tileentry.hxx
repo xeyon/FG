@@ -40,6 +40,7 @@
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/misc/sg_path.hxx>
 #include <simgear/scene/util/OrthophotoManager.hxx>
+#include <simgear/scene/util/SGReaderWriterOptions.hxx>
 
 #include <osg/ref_ptr>
 #include <osgDB/ReaderWriter>
@@ -161,7 +162,7 @@ class STGTileEntry : public TileEntry {
 
 class VPBTileEntry : public TileEntry { 
     public:
-        VPBTileEntry ( const SGBucket& b );
+        VPBTileEntry ( const SGBucket& b, osg::ref_ptr<simgear::SGReaderWriterOptions> options );
         ~VPBTileEntry();
         inline TileEntry::Extension getExtension() { return TileEntry::Extension::VPB; };
 };

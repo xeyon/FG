@@ -32,6 +32,7 @@
 
 #include <simgear/bucket/newbucket.hxx>
 #include <simgear/debug/logstream.hxx>
+#include <simgear/scene/tgdb/SGOceanTile.hxx>
 
 #include "tileentry.hxx"
 
@@ -140,15 +141,41 @@ STGTileEntry::~STGTileEntry ()
 {
 }
 
-// Constructur - VPB version
-VPBTileEntry::VPBTileEntry ( const SGBucket& b ) : TileEntry(b)
+// Constructor - VPB version
+VPBTileEntry::VPBTileEntry ( const SGBucket& b, osg::ref_ptr<simgear::SGReaderWriterOptions> options ) : TileEntry(b)
 {
     tileFileName = "vpb/" + b.gen_vpb_base() + ".osgb";
-    _node->setName(tileFileName);
-    // Give a default LOD range so that traversals that traverse
-    // active children (like the groundcache lookup) will work before
-    // tile manager has had a chance to update this node.
-    _node->setRange(0, 0.0, 160000.0);
+
+    bool found = false;
+    auto filePathList = options->getDatabasePathList();
+    for (auto path : filePathList) {
+        SGPath p(path, tileFileName);
+        if (p.exists()) {
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        // File exists - set it up for loading later
+        _node->setName(tileFileName);
+
+        // Give a default LOD range so that traversals that traverse
+        // active children (like the groundcache lookup) will work before
+        // tile manager has had a chance to update this node.
+        _node->setRange(0, 0.0, 160000.0);
+    } else {
+        // File doesn't exist, so add a 1x1 degree Ocean tile.
+        double lat = floor(b.get_center_lat()) + 0.5;
+        double lon = floor(b.get_center_lon()) + 0.5;
+        SG_LOG( SG_TERRAIN, SG_DEBUG, "Generating Ocean Tile for " << lat << ", " << lon);
+
+        // Standard for WS2.0 is 5 points per bucket (~30km), or 8km spacing.  
+        // 1 degree latitude and 1 degree of longitude at the equator is 111km, 15 points
+        // are equivalent resolution.
+        osg::Node* oceanTile = SGOceanTile(lat, lon, 1.0, 1.0, options->getMaterialLib(), 15, 15);
+        _node->addChild(oceanTile, 0, 250000.0);
+    }
 }
 
 // Destructor - VPB Variant

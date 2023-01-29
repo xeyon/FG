@@ -318,26 +318,7 @@ bool FGTileMgr::sched_tile( const SGBucket& b, double priority, bool current_vie
         if (!v)
         {
             // create a new entry
-            v = new VPBTileEntry( b );
-
-            // If we put the tile on the queue blindly and it doesn't exist,
-            // OSG created huge amounts of log spam and WARN level.  So
-            // do a quick check here and drop out if the file doesn't exist.
-            bool found = false;
-            auto filePathList = _options->getDatabasePathList();
-            for (auto path : filePathList) {
-                SGPath p(path, v->tileFileName);
-                if (p.exists()) {
-                    found = true;
-                    break;
-                }
-            }
-
-            if (! found) {
-                delete v;
-                return false;
-            }
-
+            v = new VPBTileEntry( b, _options );
             SG_LOG( SG_TERRAIN, SG_INFO, "sched_tile: new VPB tile entry for:" << b );
 
             // insert the tile into the cache, update will generate load request
