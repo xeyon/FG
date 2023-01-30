@@ -1435,7 +1435,7 @@ void fgStartNewReset()
 
     sgUserDataInit( globals->get_props() );
 
-    unsigned int numDBPagerThreads = fgGetNode("/sim/rendering/database-pager/threads", true)->getIntValue(2);
+    unsigned int numDBPagerThreads = fgGetNode("/sim/rendering/database-pager/threads", true)->getIntValue(4);
 
     if (composite_viewer) {
         composite_viewer_view->setDatabasePager(FGScenery::getPagerSingleton());
@@ -1450,7 +1450,7 @@ void fgStartNewReset()
         composite_viewer->startThreading();
     }
     else {
-        viewer->getDatabasePager()->setUpThreads(numDBPagerThreads, 1);
+        viewer->getDatabasePager()->setUpThreads(numDBPagerThreads, 0);
         viewer->getDatabasePager()->setAcceptNewDatabaseRequests(true);
         // must do this before preinit for Rembrandthe
         flightgear::CameraGroup::buildDefaultGroup(viewer.get());
