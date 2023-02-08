@@ -999,6 +999,21 @@ bool FGAIAircraft::leadPointReached(FGAIWaypoint* curr, FGAIWaypoint* next, int 
         }
     }
 
+    // We are travelling straight and have passed the waypoint. This would result in a loop.
+    if (next && abs(nextTurnAngle) < 5) {
+        double bearingTowardsCurrent = fp->getBearing(this->getGeodPos(), curr);
+        double headingDiffCurrent = SGMiscd::normalizePeriodic(-180, 180, hdg-bearingTowardsCurrent);
+        double bearingTowardsNext = fp->getBearing(this->getGeodPos(), next);
+        double headingDiffNext = SGMiscd::normalizePeriodic(-180, 180, hdg-bearingTowardsNext);
+        if (abs(headingDiffCurrent) > 80 && speed > 0) {
+            if (fp->getLeg() <= AILeg::CLIMB) {
+                SG_LOG(SG_AI, SG_WARN, getCallSign() << "| possible missed WP at " << trafficRef->getDepartureAirport()->getId() << " " << curr->getName());
+            } else {
+                SG_LOG(SG_AI, SG_WARN, getCallSign() << "| possible missed WP at " << trafficRef->getArrivalAirport()->getId()  << " " << curr->getName());
+            }
+            SG_LOG(SG_AI, SG_BULK, getCallSign() << "| headingDiffCurrent " << headingDiffCurrent << " headingDiffNext " << headingDiffNext);
+        }
+    }
     if ((dist_to_go_m < lead_distance_m) ||
         ((dist_to_go_m > prev_dist_to_go) && (bearing > (minBearing * 1.1))) ) {
         SG_LOG(SG_AI, SG_BULK, getCallSign() << "|Leadpoint reached Bearing : " << bearing << "\tNext Bearing : " << nextBearing << " Next Turn Angle : " << fabs(nextTurnAngle));
@@ -1158,7 +1173,6 @@ void FGAIAircraft::controlSpeed(FGAIWaypoint* curr, FGAIWaypoint* next) {
         }
     }
 }
-
 
 /**
  * Update target values (heading, alt, speed) depending on flight plan or control properties
