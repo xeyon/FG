@@ -283,9 +283,9 @@ public:
             return;
         }
 
-        SGSceneryPicks pickList = globals->get_renderer()->pick(windowPos);
-        if(pickList.empty())
-          return;
+        // Do not compute scenery picks unless a callback requests it, as it is costly.
+        SGSceneryPicks pickList;
+        bool did_pick = false;
 
         for( ActivePickCallbacks::iterator mi = activePickCallbacks.begin();
                                            mi != activePickCallbacks.end();
@@ -294,6 +294,12 @@ public:
           SGPickCallbackList::iterator li;
           for( li = mi->second.begin(); li != mi->second.end(); ++li )
           {
+            if (!did_pick && (*li)->needsDragPosition())
+            {
+              pickList = globals->get_renderer()->pick(windowPos);
+              did_pick = true;
+            }
+
             const SGSceneryPick* pick = getPick(pickList, *li);
             (*li)->mouseMoved(*ea, pick ? &pick->info : 0);
 
