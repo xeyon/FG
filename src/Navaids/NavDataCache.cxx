@@ -649,7 +649,9 @@ public:
 
     getOctreeLeafChildren = prepare("SELECT rowid, type FROM positioned WHERE octree_node=?1");
 
-    searchAirports = prepare("SELECT ident, name FROM positioned WHERE (name LIKE ?1 OR ident LIKE ?1) " AND_TYPED);
+    searchAirports = prepare("SELECT ident, name FROM positioned WHERE (name LIKE ?1 OR ident LIKE ?1) " AND_TYPED
+                             // prioritize entries with matching ICAO
+                             " ORDER BY (ident LIKE ?1) DESC");
     sqlite3_bind_int(searchAirports, 2, FGPositioned::AIRPORT);
     sqlite3_bind_int(searchAirports, 3, FGPositioned::SEAPORT);
 
