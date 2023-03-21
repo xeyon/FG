@@ -878,6 +878,7 @@ void FGClimate::set_environment()
             _wetness = 12.0*std::max(_gl.precipitation-50.0, 0.0)/990.0;
 
             // clamping term, see https://sourceforge.net/p/flightgear/codetickets/2604/
+            _wetness *= monsoonal(season(_season_summer, 2.0*MONTH), 0.0, 1.0);
             _wetness = pow(sin(atan(SGD_PI*_wetness)), 2.0);
         } else {
             _wetness = 0.0;
