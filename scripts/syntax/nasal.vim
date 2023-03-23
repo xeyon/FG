@@ -43,6 +43,7 @@ syn match   nasalNumber			"-\=\<\d\+\>"
 syn match   nasalNumber			"-\=\.\d\+\([eE][+-]\=\d\+\)\=\>"
 syn match   nasalNumber			"-\=\<\d\+\.\=\([eE][+-]\=\d\+\)\=\>"
 syn match   nasalNumber			"-\=\<\d\+\.\d\+\([eE][+-]\=\d\+\)\=\>"
+syn keyword nasalNumber			true false
 
 syn keyword nasalStatement		func return var
 syn keyword nasalConditional		if elsif else
@@ -90,7 +91,7 @@ if !exists("nasal_no_fgfs")
 	syn keyword nasalPropsFunction		getType getName getIndex getValue setValue setIntValue
 	syn keyword nasalPropsFunction		setBoolValue setDoubleValue getParent getChild getChildren
 	syn keyword nasalPropsFunction		getAttribute setAttribute alias unalias getAliasTarget clearValue
-	syn keyword nasalPropsFunction		removeChild removeChildren getNode initNode
+	syn keyword nasalPropsFunction		removeChild removeChildren addChild addChildren getNode initNode
 	syn keyword nasalPropsFunction		getPath getBoolValue setValues getValues
 	syn match   nasalPropsFunction		"\<props\.\(_\?globals\|Node\|nodeList\|condition\)\>\.\="
 
