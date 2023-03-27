@@ -40,6 +40,14 @@
 #include <string>
 #include <vector>
 
+#ifdef MG_VERSION
+#define MONGOOSE_VERSION MG_VERSION
+#undef poll
+enum mg_result { MG_FALSE=0,
+                 MG_TRUE,
+                 MG_MORE };
+#endif
+
 using std::string;
 using std::vector;
 
@@ -47,6 +55,13 @@ namespace flightgear {
 namespace http {
 
 const char * PROPERTY_ROOT = "/sim/http";
+
+
+// this structure is used to save corresponding messages in mg_connection.data[]
+struct Mg_Message_Array {
+    struct mg_http_message* http_msg;
+    struct mg_ws_message* ws_msg;
+};
 
 /**
  * A Helper class for URI Handlers
@@ -107,29 +122,40 @@ public:
    */
   MongooseHTTPRequest(struct mg_connection * connection)
   {
-    Method = NotNull(connection->request_method);
-    Uri = urlDecode(NotNull(connection->uri));
-    HttpVersion = NotNull(connection->http_version);
-    QueryString = NotNull(connection->query_string);
+      struct Mg_Message_Array* msg = (struct Mg_Message_Array*)(connection->data);
+      struct mg_http_message* req_msg = msg->http_msg;
+      struct mg_ws_message* ws_msg = msg->ws_msg;
 
-    remoteAddress = NotNull(connection->remote_ip);
-    remotePort = connection->remote_port;
-    localAddress = NotNull(connection->local_ip);
-    localPort = connection->local_port;
+      Method = NotNull(req_msg->method.ptr, req_msg->method.len);
+      Uri = urlDecode(NotNull(req_msg->uri.ptr, req_msg->uri.len));
+      HttpVersion = NotNull(req_msg->proto.ptr, req_msg->proto.len); // HTTP/1.1
+      QueryString = NotNull(req_msg->query.ptr, req_msg->query.len);
 
-    using namespace simgear::strutils;
-    string_list pairs = split(string(QueryString), "&");
-    for (string_list::iterator it = pairs.begin(); it != pairs.end(); ++it) {
-      string_list nvp = split(*it, "=");
-      if (nvp.size() != 2) continue;
-      RequestVariables.insert(make_pair(urlDecode(nvp[0]), urlDecode(nvp[1])));
-    }
+      //remoteAddress = NotNull(connection->loc.ip);   // we aren't processing the IP here
+      remotePort = connection->rem.port;
+      //localAddress = NotNull(connection->local_ip);
+      localPort = connection->loc.port;
 
-    for (int i = 0; i < connection->num_headers; i++)
-      HeaderVariables[connection->http_headers[i].name] = connection->http_headers[i].value;
+      if (connection->is_websocket && ws_msg)
+      {
+          Content = NotNull(ws_msg->data.ptr, ws_msg->data.len);
 
-    Content = NotNull(connection->content, connection->content_len);
+      } else {
+          using namespace simgear::strutils;
+          string_list pairs = split(string(QueryString), "&");
+          for (string_list::iterator it = pairs.begin(); it != pairs.end(); ++it) {
+              string_list nvp = split(*it, "=");
+              if (nvp.size() != 2) continue;
+              RequestVariables.insert(make_pair(urlDecode(nvp[0]), urlDecode(nvp[1])));
+          }
 
+          for (int i = 0; i < MG_MAX_HTTP_HEADERS; i++)
+              if (req_msg->headers[i].name.ptr && req_msg->headers[i].value.ptr)
+                  HeaderVariables[string(req_msg->headers[i].name.ptr, req_msg->headers[i].name.len)]
+                  = string(req_msg->headers[i].value.ptr, req_msg->headers[i].value.len);
+
+          Content = NotNull(req_msg->body.ptr, req_msg->body.len);
+      }
   }
 
   /**
@@ -203,14 +229,23 @@ public:
 
 private:
     int poll(struct mg_connection * connection);
-    int auth(struct mg_connection * connection);
     int request(struct mg_connection * connection);
     int onConnect(struct mg_connection * connection);
     void close(struct mg_connection * connection);
 
-    static int staticRequestHandler(struct mg_connection *, mg_event event);
+    static void staticRequestHandler(struct mg_connection *, int event, void *ev_data, void *fn_data);
 
-    struct mg_server *_server;
+    //struct mg_server *_server;
+    struct {
+        struct mg_mgr mgr;
+        const char* addr;
+        string root_dir;
+        string mime_types;
+        int idle_timeout_ms;
+    } _server;
+
+    struct mg_http_serve_opts _opts;
+
     SGPropertyNode_ptr _configNode;
 
     typedef int (MongooseHttpd::*handler_t)(struct mg_connection *);
@@ -225,6 +260,7 @@ public:
       : _httpd(httpd)
   {
   }
+
   virtual ~MongooseConnection();
 
   virtual void close(struct mg_connection * connection) = 0;
@@ -233,7 +269,7 @@ public:
   virtual int onConnect(struct mg_connection * connection) {return 0;}
   virtual void write(const char * data, size_t len)
   {
-    if (_connection) mg_send_data(_connection, data, len);
+    if (_connection) mg_send(_connection, data, len);
   }
 
   static MongooseConnection * getConnection(MongooseHttpd * httpd, struct mg_connection * connection);
@@ -244,7 +280,7 @@ protected:
     _connection = connection;
   }
   MongooseHttpd * _httpd;
-  struct mg_connection * _connection;
+  struct ::mg_connection * _connection;
 
 };
 
@@ -278,7 +314,7 @@ public:
   }
   virtual ~WebsocketConnection()
   {
-    delete _websocket;
+      delete _websocket;
   }
   virtual void close(struct mg_connection * connection);
   virtual int poll(struct mg_connection * connection);
@@ -295,7 +331,8 @@ private:
 
     virtual int writeToWebsocket(int opcode, const char * data, size_t len)
     {
-      return mg_websocket_write(_connection, opcode, data, len);
+        return mg_ws_send(_connection, data, len, opcode);
+          // mg_websocket_write(_connection, opcode, data, len);
     }
   private:
     struct mg_connection * _connection;
@@ -303,28 +340,41 @@ private:
   Websocket * _websocket;
 };
 
-MongooseConnection * MongooseConnection::getConnection(MongooseHttpd * httpd, struct mg_connection * connection)
+// a pointer to MongooseConnection is stored in the associated mg_connection->fn_data
+MongooseConnection * MongooseConnection::getConnection(MongooseHttpd * httpd, struct ::mg_connection * connection)
 {
-  if (connection->connection_param) return static_cast<MongooseConnection*>(connection->connection_param);
-  MongooseConnection * c;
-  if (connection->is_websocket) c = new WebsocketConnection(httpd);
-  else c = new RegularConnection(httpd);
+    MongooseConnection* c = static_cast<MongooseConnection*>(connection->fn_data);
+    if (c) return c;
 
-  connection->connection_param = c;
-  return c;
+    if (connection->is_websocket) 
+        c = new WebsocketConnection(httpd);
+    else c = new RegularConnection(httpd);
+
+    connection->fn_data = c;
+    return c;
 }
 
-int RegularConnection::request(struct mg_connection * connection)
+// Called on MG_EV_HTTP_MSG
+int RegularConnection::request(struct mg_connection* connection)
 {
   setConnection(connection);
+  struct Mg_Message_Array* msg = (struct Mg_Message_Array*)(connection->data);
   MongooseHTTPRequest request(connection);
   SG_LOG(SG_NETWORK, SG_INFO, "RegularConnection::request for " << request.Uri);
 
   // find a handler for the uri and remember it for possible polls on this connection
   _handler = _httpd->findHandler(request.Uri);
   if (!_handler.valid()) {
-    // uri not registered - pass false to indicate we have not processed the request
-    return MG_FALSE;
+      // uri not registered - check for websocket uri
+      if ((request.Uri.find("/PropertyListener") == 0)||
+          (request.Uri.find("/PropertyTreeMirror/") == 0)){
+
+          SG_LOG(SG_NETWORK, SG_INFO, "Upgrade to WebSocket for: " << request.Uri);
+          mg_ws_upgrade(connection, msg->http_msg, NULL);
+          return MG_TRUE;
+      } else {
+          return MG_FALSE;
+      }
   }
 
   // We handle this URI, prepare the response
@@ -343,18 +393,15 @@ int RegularConnection::request(struct mg_connection * connection)
   // false the handler wants to get polled again (calling handlePoll() next time)
   bool done = _handler->handleRequest(request, response, this);
   // fill in the response header
-  mg_send_status(connection, response.StatusCode);
+  string header;
   for (HTTPResponse::Header_t::const_iterator it = response.Header.begin(); it != response.Header.end(); ++it) {
-    const string name = it->first;
-    const string value = it->second;
-    if (name.empty() || value.empty()) continue;
-    mg_send_header(connection, name.c_str(), value.c_str());
+      const string name = it->first;
+      const string value = it->second;
+      if (name.empty() || value.empty()) continue;
+      header += (name + ": " + value + "\r\n");
   }
-  if (done || !response.Content.empty()) {
-    SG_LOG(SG_NETWORK, SG_INFO,
-        "RegularConnection::request() responding " << response.Content.length() << " Bytes, done=" << done);
-    mg_send_data(connection, response.Content.c_str(), response.Content.length());
-  }
+  mg_http_reply(connection, response.StatusCode, header.c_str(), response.Content.c_str());
+
   return done ? MG_TRUE : MG_MORE;
 }
 
@@ -368,13 +415,13 @@ int RegularConnection::poll(struct mg_connection * connection)
 
 void RegularConnection::close(struct mg_connection * connection)
 {
-  setConnection(connection);
+  setConnection(nullptr);
   // nothing to close
 }
 
 void WebsocketConnection::close(struct mg_connection * connection)
 {
-  setConnection(connection);
+  setConnection(nullptr);
   if ( NULL != _websocket) _websocket->close();
   delete _websocket;
   _websocket = NULL;
@@ -393,9 +440,11 @@ int WebsocketConnection::poll(struct mg_connection * connection)
   return MG_MORE;
 }
 
+// called on MG_EV_WS_OPEN
 int WebsocketConnection::onConnect(struct mg_connection * connection)
 {
   setConnection(connection);
+  struct Mg_Message_Array* msg = (struct Mg_Message_Array*)(connection->data);
   MongooseHTTPRequest request(connection);
   SG_LOG(SG_NETWORK, SG_INFO, "WebsocketConnection::connect for " << request.Uri);
   if ( NULL == _websocket) _websocket = _httpd->newWebsocket(request.Uri);
@@ -407,10 +456,13 @@ int WebsocketConnection::onConnect(struct mg_connection * connection)
   return 0;
 }
 
-int WebsocketConnection::request(struct mg_connection * connection)
+// called on MG_EV_WS_MSG
+int WebsocketConnection::request(struct mg_connection* connection)
 {
   setConnection(connection);
-  if ((connection->wsbits & 0x0f) >= 0x8) {
+  struct Mg_Message_Array* msg = (struct Mg_Message_Array*)(connection->data);
+
+  if ((msg->ws_msg->flags & 0x0f) >= 0x8) {
     // control opcode (close/ping/pong)
     return MG_MORE;
   }
@@ -429,13 +481,16 @@ int WebsocketConnection::request(struct mg_connection * connection)
 }
 
 MongooseHttpd::MongooseHttpd(SGPropertyNode_ptr configNode)
-    : _server(NULL), _configNode(configNode)
+    : _configNode(configNode)
 {
+    _server.addr = "http://0.0.0.0:8080";
+    _server.root_dir = string(".");
 }
 
 MongooseHttpd::~MongooseHttpd()
 {
-  mg_destroy_server(&_server);
+    //mg_destroy_server(&_server);
+    mg_mgr_free(&_server.mgr);
 }
 
 void MongooseHttpd::init()
@@ -480,7 +535,9 @@ void MongooseHttpd::init()
     }
   }
 
-  _server = mg_create_server(this, MongooseHttpd::staticRequestHandler);
+  mg_mgr_init(&_server.mgr);
+  // save the pointer to our MongooseHttpd server wrapper
+  _server.mgr.userdata = this;
 
   n = _configNode->getNode("options");
   if (n.valid()) {
@@ -489,9 +546,8 @@ void MongooseHttpd::init()
     string docRoot = n->getStringValue("document-root", fgRoot.c_str());
     if (docRoot[0] != '/') docRoot.insert(0, "/").insert(0, fgRoot);
 
-    mg_set_option(_server, "document_root", docRoot.c_str());
-
-    mg_set_option(_server, "listening_port", n->getStringValue("listening-port", "8080").c_str());
+    _server.addr = (string("http://0.0.0.0:") + n->getStringValue("listening-port", "8080")).c_str();
+    mg_http_listen(&_server.mgr, _server.addr, MongooseHttpd::staticRequestHandler, NULL);
     {
       // build url rewrites relative to fg-root
       string rewrites = n->getStringValue("url-rewrites", "");
@@ -512,26 +568,29 @@ void MongooseHttpd::init()
         rewrites.append(lhs).append(1, '=');
         SGPath targetPath(rhs);
         if (targetPath.isAbsolute() ) {
-          rewrites.append(rhs);
+            rewrites.append(rhs);
         } else {
-          // don't use targetPath here because SGPath strips trailing '/'
-          rewrites.append(fgRoot).append(1, '/').append(rhs);
+            // don't use targetPath here because SGPath strips trailing '/'
+            rewrites.append(fgRoot).append(1, '/').append(rhs);
         }
       }
-      if (!rewrites.empty()) mg_set_option(_server, "url_rewrites", rewrites.c_str());
+      _server.root_dir = docRoot + "," + rewrites;
     }
-    mg_set_option(_server, "enable_directory_listing", n->getStringValue("enable-directory-listing", "yes").c_str());
-    mg_set_option(_server, "idle_timeout_ms", n->getStringValue("idle-timeout-ms", "30000").c_str());
-    mg_set_option(_server, "index_files", n->getStringValue("index-files", "index.html").c_str());
-    mg_set_option(_server, "extra_mime_types", n->getStringValue("extra-mime-types", "").c_str());
-    mg_set_option(_server, "access_log_file", n->getStringValue("access-log-file", "").c_str());
+    //mg_set_option(_server, "enable_directory_listing", n->getStringValue("enable-directory-listing", "yes").c_str());
+    //mg_set_option(_server, "idle_timeout_ms", n->getStringValue("idle-timeout-ms", "30000").c_str());
+    _server.idle_timeout_ms = n->getIntValue("idle-timeout-ms", 30000);
+    //mg_set_option(_server, "index_files", n->getStringValue("index-files", "index.html").c_str());
+    //mg_set_option(_server, "extra_mime_types", n->getStringValue("extra-mime-types", "").c_str());
+    _server.mime_types = n->getStringValue("extra-mime-types", "");
+    //mg_set_option(_server, "access_log_file", n->getStringValue("access-log-file", "").c_str());
+    memset(&_opts, 0, sizeof(struct mg_http_serve_opts));
+    _opts.root_dir = _server.root_dir.c_str();
+    _opts.mime_types = _server.mime_types.c_str();
 
-    SG_LOG(SG_NETWORK,SG_INFO,"starting mongoose with these options: ");
-    const char ** optionNames = mg_get_valid_option_names();
-    for( int i = 0; optionNames[i] != NULL; i+= 2 ) {
-      SG_LOG(SG_NETWORK,SG_INFO, "  > " << optionNames[i] << ": '" << mg_get_option(_server, optionNames[i]) << "'" );
-    }
-    SG_LOG(SG_NETWORK,SG_INFO,"end of mongoose options.");
+    SG_LOG(SG_NETWORK, SG_INFO, "starting mongoose with these options: ");
+    SG_LOG(SG_NETWORK, SG_INFO, "  > addr: '" << _server.addr << "'");
+    SG_LOG(SG_NETWORK, SG_INFO, "  > root_dir: '" << _server.root_dir << "'");
+    SG_LOG(SG_NETWORK, SG_INFO, "end of mongoose options.");
   }
 
   _configNode->setBoolValue("running",true);
@@ -545,7 +604,8 @@ void MongooseHttpd::bind()
 void MongooseHttpd::unbind()
 {
   _configNode->setBoolValue("running",false);
-  mg_destroy_server(&_server);
+  //mg_destroy_server(&_server);
+  mg_mgr_free(&_server.mgr);
   _uriHandler.clear();
   _propertyChangeObserver.clear();
 }
@@ -553,42 +613,42 @@ void MongooseHttpd::unbind()
 void MongooseHttpd::update(double dt)
 {
   _propertyChangeObserver.check();
-  mg_poll_server(_server, 0);
+  mg_mgr_poll(&_server.mgr, 0);
   _propertyChangeObserver.uncheck();
 }
 
 int MongooseHttpd::poll(struct mg_connection * connection)
 {
-  if ( NULL == connection->connection_param) return MG_FALSE; // connection not yet set up - ignore poll
+  if ( NULL == connection->fn_data) return MG_FALSE; // connection not yet set up - ignore poll
 
   return MongooseConnection::getConnection(this, connection)->poll(connection);
 }
 
-int MongooseHttpd::auth(struct mg_connection * connection)
-{
-  // auth preceeds request for websockets and regular connections,
-  // and eventually the websocket has been already set up by mongoose
-  // use this to choose the connection type
-  MongooseConnection::getConnection(this, connection);
-  //return MongooseConnection::getConnection(this,connection)->auth(connection);
-  return MG_TRUE; // unrestricted access for now
-}
-
 int MongooseHttpd::request(struct mg_connection * connection)
 {
-  return MongooseConnection::getConnection(this, connection)->request(connection);
+    auto c = MongooseConnection::getConnection(this, connection);
+    if (c == nullptr) 
+        return MG_FALSE;
+
+    if ((c->request(connection)) == MG_FALSE) {
+        // no dynamic handler, serve static pages
+        struct Mg_Message_Array* msg = (struct Mg_Message_Array*)(connection->data);
+        mg_http_serve_dir(connection, msg->http_msg, &(_opts));
+    }
+    return MG_TRUE;
 }
 
-int MongooseHttpd::onConnect(struct mg_connection * connection)
+int MongooseHttpd::onConnect(struct ::mg_connection * connection)
 {
   return MongooseConnection::getConnection(this, connection)->onConnect(connection);
 }
 
-void MongooseHttpd::close(struct mg_connection * connection)
+void MongooseHttpd::close(struct ::mg_connection * connection)
 {
   MongooseConnection * c = MongooseConnection::getConnection(this, connection);
   c->close(connection);
-  delete c;
+
+  // delete c -- we'll try to reuse RegularConnection
 }
 Websocket * MongooseHttpd::newWebsocket(const string & uri)
 {
@@ -603,35 +663,65 @@ Websocket * MongooseHttpd::newWebsocket(const string & uri)
   return NULL;
 }
 
-int MongooseHttpd::staticRequestHandler(struct mg_connection * connection, mg_event event)
+void MongooseHttpd::staticRequestHandler(struct ::mg_connection* connection, int event, void* ev_data, void* fn_data)
 {
-  switch (event) {
-    case MG_POLL:        // MG_TRUE: finished sending data, MG_MORE, call again
-      return static_cast<MongooseHttpd*>(connection->server_param)->poll(connection);
+    // the mg_mgr struct is storing the pointer on init();
+    MongooseHttpd* httpd = static_cast<MongooseHttpd*>(connection->mgr->userdata);
 
-    case MG_AUTH:        // If callback returns MG_FALSE, authentication fails
-      return static_cast<MongooseHttpd*>(connection->server_param)->auth(connection);
+    // the Mg_Message_Array is saved in connection->data[]
+    struct Mg_Message_Array* msg = (struct Mg_Message_Array*)(connection->data);
 
-    case MG_REQUEST:     // If callback returns MG_FALSE, Mongoose continues with req
-      return static_cast<MongooseHttpd*>(connection->server_param)->request(connection);
+    switch (event) {
+        case MG_EV_POLL:
+            // on each ITERATION, update websocket
+            httpd->poll(connection);
+            return;
 
-    case MG_CLOSE:       // Connection is closed, callback return value is ignored
-      static_cast<MongooseHttpd*>(connection->server_param)->close(connection);
-      return MG_TRUE;
+        case MG_EV_HTTP_MSG: 
+            // on each HTTP_MSG, generate response from the request
+            msg->http_msg = (struct mg_http_message*)ev_data;
+            httpd->request(connection);
+            return;
 
-    case MG_HTTP_ERROR:  // If callback returns MG_FALSE, Mongoose continues with err 
-      return MG_FALSE;   // we don't handle errors - let mongoose do the work
+        case MG_EV_OPEN:
+            // on each EV_OPEN, a new connection would be created
+            memset(connection->data, 0, sizeof(connection->data));
+            connection->fn_data = NULL;
+            httpd->onConnect(connection);
+            return;
 
-      // client services not used/implemented. Signal 'close connection' to be sure
-    case MG_CONNECT:     // If callback returns MG_FALSE, connect fails
-    case MG_REPLY:       // If callback returns MG_FALSE, Mongoose closes connection
-      return MG_FALSE;
+        case MG_EV_CLOSE: 
+            // on each EV_CLOSE, close the connection
+            httpd->close(connection);
+            connection->fn_data = (void *)NULL;
+            MG_INFO(("HTTP SERVER closed connetion on Port: %d", connection->loc.port));
+            return;
 
-    case MG_WS_CONNECT: // New websocket connection established, return value ignored
-      return static_cast<MongooseHttpd*>(connection->server_param)->onConnect(connection);
+        case MG_EV_ERROR: 
+            // on each EV_ERROR, print the message but continue
+            MG_INFO(("HTTP SERVER error: %s", (char*)ev_data));  // we don't handle errors - let mongoose do the work
+            return;
 
-    default:
-      return MG_FALSE; // keep compiler happy..
+        case MG_EV_WS_OPEN: 
+            // on each WS_OPEN, close regular connection and establish new websocket connection
+            httpd->close(connection);
+            connection->fn_data = NULL;
+            msg->http_msg = (struct mg_http_message*)ev_data;
+            /*if (!(connection->is_websocket)) {
+                MG_INFO(("Switching to websocket on Port: %d", connection->loc.port));
+                connection->is_websocket = 1;
+            }*/
+            httpd->onConnect(connection);
+            return;
+
+        case MG_EV_WS_MSG:
+            // on each WS_MSG, client message comes
+            msg->ws_msg = (struct mg_ws_message*)ev_data;
+            httpd->request(connection);
+            return;
+
+        default:
+            return; //MG_FALSE; // keep compiler happy..
   }
 }
 
