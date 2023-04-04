@@ -1,12 +1,14 @@
-// airspeed_indicator.hxx - a regular VSI tied to the static port.
-// Written by David Megginson, started 2002.
-//
-// Last modified by Eric van den Berg, 24 Nov 2012
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * airspeed_indicator.hxx - a regular ASI tied to the static port.
+ * Written by David Megginson, started 2002.
+ * Last modified by Eric van den Berg, 24 Nov 2012
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_AIRSPEED_INDICATOR_HXX
-#define __INSTRUMENTS_AIRSPEED_INDICATOR_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -76,5 +78,3 @@ private:
 
     FGEnvironmentMgr* _environmentManager;
 };
-
-#endif // __INSTRUMENTS_AIRSPEED_INDICATOR_HXX

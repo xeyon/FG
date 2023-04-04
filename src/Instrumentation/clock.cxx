@@ -42,7 +42,7 @@ Clock::init ()
     std::string branch;
     branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
     _offset_node = node->getChild("offset-sec", 0, true);
     _sec_node = node->getChild("indicated-sec", 0, true);

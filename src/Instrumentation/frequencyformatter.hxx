@@ -1,5 +1,4 @@
-#ifndef __FREQUENCY_FORMATTER_HXX
-#define __FREQUENCY_FORMATTER_HXX
+#pragma once
 
 /* ------------- A NAV/COMM Frequency formatter ---------------------- */
 class FrequencyFormatterBase : public SGReferenced {
@@ -57,6 +56,3 @@ private:
   double _min;
   double _max;
 };
-
-
-#endif //__FREQUENCY_FORMATTER_HXX

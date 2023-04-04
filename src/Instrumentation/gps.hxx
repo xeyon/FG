@@ -1,11 +1,13 @@
-// gps.hxx - distance-measuring equipment.
-// Written by David Megginson, started 2003.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * gps.hxx - distance-measuring equipment.
+ * Written by David Megginson, started 2003.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_GPS_HXX
-#define __INSTRUMENTS_GPS_HXX 1
+#pragma once
 
 #include <cassert>
 #include <memory>
@@ -435,5 +437,3 @@ private:
     SGPropertyChangeCallback<GPS> _callbackFlightPlanChanged;
     SGPropertyChangeCallback<GPS> _callbackRouteActivated;
 };
-
-#endif // __INSTRUMENTS_GPS_HXX

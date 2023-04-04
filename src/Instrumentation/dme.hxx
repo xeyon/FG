@@ -1,11 +1,13 @@
-// dme.hxx - distance-measuring equipment.
-// Written by David Megginson, started 2003.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * dme.hxx - distance-measuring equipment.
+ * Written by David Megginson, started 2003.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_DME_HXX
-#define __INSTRUMENTS_DME_HXX 1
+#pragma once
 
 #include <Instrumentation/AbstractInstrument.hxx>
 
@@ -71,5 +73,3 @@ private:
 
     class AudioIdent * _audioIdent;
 };
-
-#endif // __INSTRUMENTS_DME_HXX

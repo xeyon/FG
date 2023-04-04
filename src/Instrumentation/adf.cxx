@@ -84,7 +84,7 @@ void
 ADF::init ()
 {
     string branch = nodePath();
-    SGPropertyNode *node = fgGetNode(branch.c_str(), true );
+    SGPropertyNode *node = fgGetNode(branch, true );
 
     initServicePowerProperties(node);
     

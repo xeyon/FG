@@ -71,7 +71,7 @@ void TACAN::init()
 {
     std::string branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
 
     _serviceable_node = node->getChild("serviceable", 0, true);
     _ident_node = node->getChild("ident", 0, true);

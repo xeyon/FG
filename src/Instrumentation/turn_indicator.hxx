@@ -1,18 +1,21 @@
-// turn_indicator.hxx - an electric-powered turn indicator.
-// Written by David Megginson, started 2003.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * turn_indicator.hxx - an electric-powered turn indicator.
+ * Written by David Megginson, started 2003.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+ * 
+*/
 
 
-#ifndef __INSTRUMENTS_TURN_INDICATOR_HXX
-#define __INSTRUMENTS_TURN_INDICATOR_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
 #endif
 
-#include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
+#include <Instrumentation/AbstractInstrument.hxx>
 
 #include "gyro.hxx"
 
@@ -35,17 +38,17 @@
  *
  * /instrumentation/"name"/indicated-turn-rate
  */
-class TurnIndicator : public SGSubsystem
+class TurnIndicator : public AbstractInstrument
 {
 public:
     TurnIndicator ( SGPropertyNode *node );
     virtual ~TurnIndicator ();
 
     // Subsystem API.
-    void bind() override;
+    //void bind() override;
     void init() override;
     void reinit() override;
-    void unbind() override;
+    //void unbind() override;
     void update(double dt) override;
 
     // Subsystem identification.
@@ -55,13 +58,7 @@ private:
     Gyro _gyro;
     double _last_rate;
 
-    std::string _name;
-    int _num, _electrical;
-
     SGPropertyNode_ptr _roll_rate_node;
     SGPropertyNode_ptr _yaw_rate_node;
-    SGPropertyNode_ptr _electric_current_node;
     SGPropertyNode_ptr _rate_out_node;
 };
-
-#endif // __INSTRUMENTS_TURN_INDICATOR_HXX

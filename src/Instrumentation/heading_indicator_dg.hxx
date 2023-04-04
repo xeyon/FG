@@ -1,15 +1,17 @@
-// heading_indicator.hxx - a vacuum-powered heading indicator.
-// Written by David Megginson, started 2002.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * heading_indicator_dg.hxx - an electrically-powered heading indicator
+ * Written by David Megginson, started 2002.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
+
+#pragma once
 
 
-#ifndef __INSTRUMENTS_HEADING_INDICATOR_ELEC_HXX
-#define __INSTRUMENTS_HEADING_INDICATOR_ELEC_HXX 1
+#include <Instrumentation/AbstractInstrument.hxx>
 
-
-#include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/math/sg_random.hxx>
 
 #include "gyro.hxx"
@@ -30,7 +32,7 @@
  *
  * /instrumentation/"name"/indicated-heading-deg
  */
-class HeadingIndicatorDG : public SGSubsystem
+class HeadingIndicatorDG : public AbstractInstrument
 {
 public:
     HeadingIndicatorDG ( SGPropertyNode *node );
@@ -38,10 +40,8 @@ public:
     virtual ~HeadingIndicatorDG ();
 
     // Subsystem API.
-    void bind() override;
     void init() override;
     void reinit() override;
-    void unbind() override;
     void update(double dt) override;
 
     // Subsystem identification.
@@ -51,8 +51,7 @@ private:
     Gyro _gyro;
     double _last_heading_deg, _last_indicated_heading_dg;
 
-    std::string name;
-    int num;
+    std::string _powerSupplyPath;
 
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;
@@ -66,5 +65,3 @@ private:
     SGPropertyNode_ptr _heading_bug_error_node;
     SGPropertyNode_ptr _g_node;
 };
-
-#endif // __INSTRUMENTS_HEADING_INDICATOR_ELEC_HXX

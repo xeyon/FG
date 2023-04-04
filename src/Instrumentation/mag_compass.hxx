@@ -1,11 +1,13 @@
-// mag_compass.hxx - an altimeter tied to the static port.
-// Written by David Megginson, started 2002.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * mag_compass.hxx - models a magnetic compass
+ * Written by David Megginson, started 2002.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_MAG_COMPASS_HXX
-#define __INSTRUMENTS_MAG_COMPASS_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -73,5 +75,3 @@ private:
     SGPropertyNode_ptr _z_accel_node;
     SGPropertyNode_ptr _out_node;
 };
-
-#endif // __INSTRUMENTS_MAG_COMPASS_HXX

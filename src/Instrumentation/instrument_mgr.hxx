@@ -1,11 +1,13 @@
-// instrument_mgr.hxx - manage aircraft instruments.
-// Written by David Megginson, started 2002.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * instrument_mgr.hxx - manage aircraft instruments.
+ * Written by David Megginson, started 2002.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENT_MGR_HXX
-#define __INSTRUMENT_MGR_HXX 1
+#pragma once
 
 #include <simgear/compiler.h>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -37,5 +39,3 @@ private:
 
     std::vector<std::string> _instruments;
 };
-
-#endif // __INSTRUMENT_MGR_HXX

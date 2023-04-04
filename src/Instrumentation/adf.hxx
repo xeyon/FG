@@ -1,11 +1,14 @@
-// adf.hxx - automatic direction finder.
-// Written by David Megginson, started 2003.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * adf.hxx - automatic direction finder.
+ * Written by David Megginson, started 2003.
+ * Last modified by Eric van den Berg, 24 Nov 2012
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_ADF_HXX
-#define __INSTRUMENTS_ADF_HXX 1
+#pragma once
 
 #include <string>
 
@@ -82,5 +85,3 @@ private:
 
     SGSharedPtr<SGSampleGroup> _sgr;
 };
-
-#endif // __INSTRUMENTS_ADF_HXX

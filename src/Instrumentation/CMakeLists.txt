@@ -6,6 +6,7 @@ set(SOURCES
     airspeed_indicator.cxx
     altimeter.cxx
     attitude_indicator.cxx
+    attitude_indicator_electric.cxx
     clock.cxx
     dclgps.cxx
     dme.cxx
@@ -68,6 +69,7 @@ set(HEADERS
     airspeed_indicator.hxx
     altimeter.hxx
     attitude_indicator.hxx
+    attitude_indicator_electric.hxx
     clock.hxx
     dclgps.hxx
     dme.hxx

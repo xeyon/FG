@@ -145,7 +145,7 @@ FGNavRadio::FGNavRadio(SGPropertyNode *node) :
     }
   
     string branch = nodePath();
-    _radio_node = fgGetNode(branch.c_str(), true);
+    _radio_node = fgGetNode(branch, true);
 }
 
 

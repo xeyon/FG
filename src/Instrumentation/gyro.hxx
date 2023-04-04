@@ -1,7 +1,6 @@
 // gyro.hxx - simple model of a spinning gyro.
 
-#ifndef __INSTRUMENTATION_GYRO_HXX
-#define __INSTRUMENTATION_GYRO_HXX 1
+#pragma once
 
 /**
  * Simple model of a spinning gyro.
@@ -87,5 +86,3 @@ private:
     double _spin_norm;
 
 };
-
-#endif // __INSTRUMENTATION_GYRO_HXX

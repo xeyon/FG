@@ -1,13 +1,15 @@
-// clock.hxx.
-// Written by Melchior FRANZ, started 2003.
-//
-// This file is in the Public Domain and comes with no warranty.
-//
-// $Id$
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * clock.hxx.
+ * Written by Melchior FRANZ, started 2003.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+ * 
+ * $Id$
+*/
 
-
-#ifndef __INSTRUMENTS_CLOCK_HXX
-#define __INSTRUMENTS_CLOCK_HXX 1
+#pragma once
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -65,5 +67,3 @@ private:
     SGPropertyNode_ptr _string_node1;
     SGPropertyNode_ptr _string_node2;
 };
-
-#endif // __INSTRUMENTS_CLOCK_HXX

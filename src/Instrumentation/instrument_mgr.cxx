@@ -24,6 +24,7 @@
 #include "airspeed_indicator.hxx"
 #include "altimeter.hxx"
 #include "attitude_indicator.hxx"
+#include "attitude_indicator_electric.hxx"
 #include "clock.hxx"
 #include "dme.hxx"
 #include "gps.hxx"

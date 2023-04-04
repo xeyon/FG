@@ -118,7 +118,7 @@ GPS::GPS ( SGPropertyNode *node, bool defaultGPSMode) :
                                                         fgGetNode("/autopilot/route-manager/active", true)))
 {
   string branch = "/instrumentation/" + _name;
-  _gpsNode = fgGetNode(branch.c_str(), _num, true );
+  _gpsNode = fgGetNode(branch, _num, true );
   _scratchNode = _gpsNode->getChild("scratch", 0, true);
   
   SGPropertyNode *wp_node = _gpsNode->getChild("wp", 0, true);

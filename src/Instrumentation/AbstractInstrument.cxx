@@ -27,7 +27,7 @@ void AbstractInstrument::readConfig(SGPropertyNode* config,
     _name = config->getStringValue("name", defaultName.c_str());
     _index = config->getIntValue("number", 0);
     if (_powerSupplyPath.empty()) {
-        _powerSupplyPath = "/systems/electrical/outputs/" + defaultName;
+        _powerSupplyPath = "/systems/electrical/outputs/" + defaultName + "[" + std::to_string(_index) + "]";
     }
     
     if (config->hasChild("power-supply")) {

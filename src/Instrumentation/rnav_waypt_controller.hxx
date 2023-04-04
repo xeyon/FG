@@ -1,24 +1,28 @@
-// rnav_waypt_controller.hxx - Waypoint-specific behaviours for RNAV systems
-// Written by James Turner, started 2009.
-//
-// Copyright (C) 2009  Curtis L. Olson
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+/*
+ * SPDX-License-Identifier: GPL-2.0+
+ * SPDX-FileCopyrightText: 2009 (C) Curtis L. Olson
+ * 
+ * rnav_waypt_controller.hxx - Waypoint-specific behaviours for RNAV systems
+ * Written by James Turner, started 2009.
+ * 
+ * Copyright (C) 2009  Curtis L. Olson
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 
-#ifndef FG_WAYPT_CONTROLLER_HXX
-#define FG_WAYPT_CONTROLLER_HXX
+#pragma once
 
 #include <Navaids/waypoint.hxx>
 #include <simgear/misc/simgear_optional.hxx>
@@ -340,5 +344,3 @@ public:
 };
     
 } // of namespace flightgear
-
-#endif

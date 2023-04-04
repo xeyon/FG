@@ -56,7 +56,7 @@ MasterReferenceGyro::init ()
     _electrical_node = fgGetNode("/systems/electrical/outputs/MRG", true);
     _hdg_mag_in_node = fgGetNode("/orientation/heading-magnetic-deg", true);
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     _off_node = node->getChild("off-flag", 0, true);
     _pitch_out_node = node->getChild("indicated-pitch-deg", 0, true);
     _roll_out_node = node->getChild("indicated-roll-deg", 0, true);

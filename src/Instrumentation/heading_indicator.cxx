@@ -36,13 +36,13 @@ HeadingIndicator::init ()
     std::string branch;
     branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
       _offset_node = node->getChild("offset-deg", 0, true);
       _offset_node->setDoubleValue( -fgGetDouble("/environment/magnetic-variation-deg") );
     }
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
-    _suction_node = fgGetNode(_suction.c_str(), true);
+    _suction_node = fgGetNode(_suction, true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
     _heading_bug_node = node->getChild("heading-bug-deg", 0, true);
