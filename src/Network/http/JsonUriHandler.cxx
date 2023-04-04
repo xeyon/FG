@@ -58,7 +58,12 @@ bool JsonUriHandler::handleRequest( const HTTPRequest & request, HTTPResponse & 
 
     response.Content = JSON::toJsonString( indent, node, depth, timestamp ? fgGetDouble("/sim/time/elapsed-sec") : -1.0 );
 
-    return true;
+#define MAX_STR_SIZE 50000
+    if (response.Content.size() < MAX_STR_SIZE) {
+        return true;
+    } else {
+        return false;
+    }
   }
 
   if( request.Method == "POST" ) {

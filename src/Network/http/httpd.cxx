@@ -400,8 +400,20 @@ int RegularConnection::request(struct mg_connection* connection)
       if (name.empty() || value.empty()) continue;
       header += (name + ": " + value + "\r\n");
   }
-  mg_http_reply(connection, response.StatusCode, header.c_str(), response.Content.c_str());
 
+  if (done) {
+      mg_http_reply(connection, response.StatusCode, header.c_str(), response.Content.c_str());
+  } else {
+      if (response.StatusCode == 200) {
+          // Status OK but response.Content too long, try chunk encoding
+          mg_printf(connection, "HTTP/1.1 200 OK\r\n%sTransfer-Encoding: chunked\r\n\r\n", header.c_str());
+          mg_http_write_chunk(connection, response.Content.c_str(), response.Content.size());
+          mg_http_printf_chunk(connection, "");
+      } else {
+          // just send the error code
+          mg_http_reply(connection, response.StatusCode, header.c_str(), "");
+      }
+  }
   return done ? MG_TRUE : MG_MORE;
 }
 
