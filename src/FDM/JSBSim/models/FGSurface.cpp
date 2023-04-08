@@ -52,7 +52,6 @@ CLASS IMPLEMENTATION
 FGSurface::FGSurface(FGFDMExec* fdmex, int number) :
    contactNumber(number)
 {
-  eSurfaceType = ctBOGEY;
   _PropertyManager = fdmex->GetPropertyManager();
   resetValues();
 }
@@ -116,6 +115,12 @@ void FGSurface::bind(void)
 
 float FGSurface::GetBumpHeight()
 {
+  // bump hight might have been manually set
+  if (bumpHeight < DBL_MAX) {
+    float rv = bumpHeight;
+    bumpHeight = DBL_MAX;
+    return rv;
+  }
   if (bumpiness < 0.001) return 0.0f;
 
   double x = pos[0]*0.1;

@@ -140,6 +140,7 @@ set(SOURCES
 	flightProperties.cxx
 	TankProperties.cxx
 	groundcache.cxx
+        groundreactions.cxx
 	${SP_FDM_SOURCES}
 	ExternalNet/ExternalNet.cxx
 	ExternalPipe/ExternalPipe.cxx
@@ -158,6 +159,7 @@ set(HEADERS
 	flight.hxx
 	flightProperties.hxx
 	groundcache.hxx
+        groundreactions.hxx
 	${SP_FDM_HEADERS}
 	)
 
