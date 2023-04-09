@@ -29,8 +29,7 @@ public:
     inline void setHeading(float h) { heading = h; };
 
     // then get the bum height at that position
-    float getBumpHeight();
-
+    float getGroundDisplacement();
 
    inline float getPressure() { return pressure; }
    inline float getBumpiness() { return bumpiness; }

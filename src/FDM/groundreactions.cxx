@@ -91,7 +91,7 @@ GroundReactions::setPosition(const double pt[3])
 }
 
 float
-GroundReactions::getBumpHeight()
+GroundReactions::getGroundDisplacement()
 {
     static const float maxGroundBumpAmplitude = 0.4;
 

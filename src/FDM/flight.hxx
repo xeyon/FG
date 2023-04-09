@@ -774,7 +774,9 @@ public:
     }
     inline float getPressure() { return _groundReactions.getPressure(); }
     inline float getBumpiness() { return _groundReactions.getBumpiness(); }
-    inline float getBumpHeight() { return _groundReactions.getBumpHeight();}
+    inline float getGroundDisplacement() {
+        return _groundReactions.getGroundDisplacement();
+    }
     inline float getStaticFrictionFactor() {
         return _groundReactions.getStaticFrictionFactor();
     }
