@@ -125,7 +125,7 @@ LauncherController::LauncherController(QObject *parent, QWindow* window) :
        {globals->get_subsystem_mgr()->update(0.0);});
     m_subsystemIdleTimer->start();
 
-    QRect winRect= settings.value("window-geometry").toRect();
+    QRect winRect = settings.value("window-geometry").toRect();
 
     if (winRect.isValid()) {
         m_window->setGeometry(winRect);
@@ -275,10 +275,10 @@ void LauncherController::initialRestoreSettings()
 void LauncherController::saveSettings()
 {
     QSettings settings;
-    settings.setValue("window-geometry", m_window->geometry());
-    if (m_window->windowState() != Qt::WindowNoState) {
-        settings.setValue("window-state", m_window->windowState());
+    if (m_window->windowState() != Qt::WindowMaximized) {
+        settings.setValue("window-geometry", m_window->geometry());
     }
+    settings.setValue("window-state", m_window->windowState());
 
     m_config->saveConfigToINI();
     m_aircraftHistory->saveToSettings();
