@@ -1417,29 +1417,44 @@ NavDataCache::getDatFilesInfo(DatFileType datFileType) const
 
 bool NavDataCache::isRebuildRequired()
 {
-    if (d->readOnly) {
-        return false;
+  if (d->readOnly) {
+    return false;
+  }
+
+  const auto environmentOverride = std::getenv("FG_NAVCACHE_REBUILD");
+  bool dontRebuildFlag = false;
+  if (environmentOverride) {
+    if (!strcmp(environmentOverride, "0")) {
+      dontRebuildFlag = true;
     }
 
-    if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
-        SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
-        return true;
+    if (!strcmp(environmentOverride, "1")) {
+      SG_LOG(SG_NAVCACHE, SG_MANDATORY_INFO, "NavCache: forcing rebuild becuase FG_NAVCACHE_REBUILD=1");
+      return true;
     }
+  }
+
+  if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
+    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
+    return true;
+  }
 
   if (d->areDatFilesModified(DATFILETYPE_APT, true) ||
       d->isCachedFileModified(d->metarDatPath, true) ||
       d->areDatFilesModified(DATFILETYPE_NAV, true) ||
       d->areDatFilesModified(DATFILETYPE_FIX, true) ||
       d->isCachedFileModified(d->carrierDatPath, true) ||
-// since POI loading is disabled on Windows, don't check for it
-// this caused: https://code.google.com/p/flightgear-bugs/issues/detail?id=1227
-//ifndef SG_WINDOWS
       d->isCachedFileModified(d->poiDatPath, true) ||
-//#endif
       d->isCachedFileModified(d->airwayDatPath, true))
   {
-    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
-    return true;
+    if (dontRebuildFlag) {
+      SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: skipping rebuild because FG_NAVCACHE_REBUILD=0");
+      SG_LOG(SG_NAVCACHE, SG_ALERT, "!! Navigation and airport data will be incorrect !!");
+      return false;
+    } else {
+      SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
+      return true;
+    }
   }
 
   SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no main cache rebuild required");
