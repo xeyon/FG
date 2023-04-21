@@ -839,6 +839,7 @@ bool CoherentNoiseFilterImplementation::configure(SGPropertyNode& cfg_node,
 
     if (cfg_name == "absolute") {
         _absoluteVal = cfg_node.getBoolValue();
+        return true;
     }
     return false;
 }
