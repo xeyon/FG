@@ -26,6 +26,9 @@ using std::string;
 TurnIndicator::TurnIndicator ( SGPropertyNode *node) :
     _last_rate(0)
 {
+    if( !node->getBoolValue("new-default-power-path", 0) ){
+       setDefaultPowerSupplyPath("/systems/electrical/outputs/turn-coordinator");
+    }
     readConfig(node, "turn-indicator");
 }
 
@@ -42,6 +45,7 @@ TurnIndicator::init ()
     _roll_rate_node = fgGetNode("/orientation/roll-rate-degps", true);
     _yaw_rate_node = fgGetNode("/orientation/yaw-rate-degps", true);
     _rate_out_node = node->getChild("indicated-turn-rate", 0, true);
+    _spin_node = node->getChild("spin", 0, true);
 
     initServicePowerProperties(node);
 
@@ -62,6 +66,7 @@ TurnIndicator::update (double dt)
     _gyro.set_power_norm(isServiceableAndPowered());
     _gyro.update(dt);
     double spin = _gyro.get_spin_norm();
+    _spin_node->setDoubleValue( spin );
 
                                 // Calculate the indicated rate
     double factor = 1.0 - ((1.0 - spin) * (1.0 - spin) * (1.0 - spin));
