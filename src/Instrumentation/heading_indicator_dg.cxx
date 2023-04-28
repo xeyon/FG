@@ -29,7 +29,9 @@ HeadingIndicatorDG::HeadingIndicatorDG ( SGPropertyNode *node ) :
     _last_heading_deg(0),
     _last_indicated_heading_dg(0)
 {
-    _powerSupplyPath = "/systems/electrical/outputs/DG[" + std::to_string( node->getIntValue("number", 0) ) + "]";
+    if( !node->getBoolValue("new-default-power-path", 0) ){
+       setDefaultPowerSupplyPath("/systems/electrical/outputs/DG");
+    }
     readConfig(node, "heading-indicator-dg");
 }
 
@@ -53,6 +55,7 @@ HeadingIndicatorDG::init ()
     _nav1_error_node        = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node       = node->getChild("indicated-heading-deg", 0, true);
     _align_node             = node->getChild("align-deg", 0, true);
+    _spin_node              = node->getChild("spin", 0, true);
 
     initServicePowerProperties(node);
 
@@ -85,6 +88,8 @@ HeadingIndicatorDG::update (double dt)
     double spin = _gyro.get_spin_norm();
     double heading = _heading_in_node->getDoubleValue();
     double offset = _offset_node->getDoubleValue();
+    
+    _spin_node->setDoubleValue( spin );
 
     // calculate scaling factor
     double factor = POW6(spin);

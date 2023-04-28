@@ -54,6 +54,7 @@ HeadingIndicatorFG::init ()
     _nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _off_node         = node->getChild("off-flag", 0, true);
+    _spin_node              = node->getChild("spin", 0, true);
 
     initServicePowerProperties(node);
 
@@ -75,6 +76,7 @@ HeadingIndicatorFG::update (double dt)
 	 _gyro.set_power_norm(isServiceableAndPowered());
 	_gyro.update(dt);
     double spin = _gyro.get_spin_norm();
+    _spin_node->setDoubleValue( spin );
 
     if ( isServiceableAndPowered() && spin >= 0.25) {
         _off_node->setBoolValue(false);

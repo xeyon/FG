@@ -31,6 +31,17 @@
  * Output properties:
  *
  * /instrumentation/"name"/indicated-heading-deg
+ * 
+ * 
+ * Configuration:
+ * 
+ *   name
+ *   number
+ *   new-default-power-path: use /systems/electrical/outputs/"name"[ number ] instead of 
+ *                           /systems/electrical/outputs/DG as the default power
+ *                           supply path (not used when power-supply is set)
+ *   power-supply
+ *   minimum-supply-volts
  */
 class HeadingIndicatorDG : public AbstractInstrument
 {
@@ -64,4 +75,5 @@ private:
     SGPropertyNode_ptr _yaw_rate_node;
     SGPropertyNode_ptr _heading_bug_error_node;
     SGPropertyNode_ptr _g_node;
+    SGPropertyNode_ptr _spin_node;
 };

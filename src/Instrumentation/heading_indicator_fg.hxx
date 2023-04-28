@@ -64,4 +64,5 @@ private:
     SGPropertyNode_ptr _error_node;
     SGPropertyNode_ptr _nav1_error_node;
     SGPropertyNode_ptr _off_node;
+    SGPropertyNode_ptr _spin_node;
 };
