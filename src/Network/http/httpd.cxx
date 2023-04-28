@@ -269,7 +269,13 @@ public:
   virtual int onConnect(struct mg_connection * connection) {return 0;}
   virtual void write(const char * data, size_t len)
   {
-    if (_connection) mg_send(_connection, data, len);
+      if (_connection) {
+          if (len) {
+              mg_http_write_chunk(_connection, data, len);
+          } else {
+              mg_http_printf_chunk(_connection, "");
+          }
+      }
   }
 
   static MongooseConnection * getConnection(MongooseHttpd * httpd, struct mg_connection * connection);

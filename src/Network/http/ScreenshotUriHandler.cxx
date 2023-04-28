@@ -497,16 +497,17 @@ bool ScreenshotUriHandler::handleGetRequest(const HTTPRequest & request, HTTPRes
   if (!stream) {
     response.Header["Content-Type"] = string("image/").append(type);
     response.Header["Content-Disposition"] = string("inline; filename=\"fgfs-screen.").append(type).append("\"");
+    response.Header["Transfer-Encoding"] = string("chunked");
   } else {
-    response.Header["Content-Type"] = string("multipart/x-mixed-replace; boundary=" BOUNDARY);
-
+      response.Header["Content-Type"] = string("multipart/x-mixed-replace; boundary=" BOUNDARY);
+      response.Header["Transfer-Encoding"] = string("chunked");
   }
 
   if (canvasindex == -1)
       connection->put(KEY_SCREENSHOT, screenshotRequest);
   else
       connection->put(KEY_CANVASIMAGE, canvasimageRequest);
-  return false; // call me again thru poll
+  return true; // call me again thru poll
 }
 
 bool ScreenshotUriHandler::poll(Connection * connection)
