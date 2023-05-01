@@ -12,7 +12,7 @@ meaning that there is no time delay, engine acts as gain only.
                                 "Aerodynamics, Aeronautics and Flight Mechanics",
                                 John Wiley & Sons,1995, ISBN 0-471-11087-6
 
-        any suggestions, corrections, aditional data, flames, everything to 
+        any suggestions, corrections, additional data, flames, everything to 
         Gordan Sikic
         gsikic@public.srce.hr
 
