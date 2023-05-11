@@ -88,6 +88,7 @@ if(RTI_FOUND)
 endif()
 
 add_subdirectory(http)
+add_subdirectory(mqtt)
 
 if(ENABLE_SWIFT)
 	add_subdirectory(Swift)

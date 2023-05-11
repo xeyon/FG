@@ -136,6 +136,7 @@
 #include <Network/HTTPClient.hxx>
 #include <Network/fgcom.hxx>
 #include <Network/http/httpd.hxx>
+#include <Network/mqtt/mqttd.hxx>
 #include <Viewer/CameraGroup.hxx>
 #include <Viewer/FGEventHandler.hxx>
 #include <Viewer/GraphicsPresets.hxx>
@@ -1036,6 +1037,10 @@ void fgCreateSubsystems(bool duringReset) {
           SGSubsystem * httpd = flightgear::http::FGHttpd::createInstance( fgGetNode(flightgear::http::PROPERTY_ROOT) );
           if( NULL != httpd ) 
             mgr->add("httpd", httpd);
+
+          SGSubsystem* mqttd = flightgear::mqtt::FGMqttd::createInstance(fgGetNode(flightgear::mqtt::PROPERTY_ROOT));
+          if (NULL != mqttd)
+              mgr->add("mqttd", mqttd);
         }
 
         if (!duringReset) {
