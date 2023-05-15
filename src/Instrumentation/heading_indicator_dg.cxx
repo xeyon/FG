@@ -26,25 +26,13 @@
 #define POW6(x) (x*x*x*x*x*x)
 
 HeadingIndicatorDG::HeadingIndicatorDG ( SGPropertyNode *node ) :
-    name("heading-indicator-dg"),
-    num(0)
+    _last_heading_deg(0),
+    _last_indicated_heading_dg(0)
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        std::string cname = child->getNameString();
-        std::string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in DG heading-indicator config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
+    if( !node->getBoolValue("new-default-power-path", 0) ){
+       setDefaultPowerSupplyPath("/systems/electrical/outputs/DG");
     }
+    readConfig(node, "heading-indicator-dg");
 }
 
 HeadingIndicatorDG::~HeadingIndicatorDG ()
@@ -54,51 +42,24 @@ HeadingIndicatorDG::~HeadingIndicatorDG ()
 void
 HeadingIndicatorDG::init ()
 {
-    std::string branch;
-    branch = "/instrumentation/" + name;
+    string branch = nodePath();
 
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
     _yaw_rate_node   = fgGetNode("/orientation/yaw-rate-degps", true);
      _g_node         = fgGetNode("/accelerations/pilot-g", true);
 
-    SGPropertyNode *node    = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node    = fgGetNode(branch, true );
     _offset_node            = node->getChild("offset-deg", 0, true);
-    _serviceable_node       = node->getChild("serviceable", 0, true);
     _heading_bug_error_node = node->getChild("heading-bug-error-deg", 0, true);
     _error_node             = node->getChild("error-deg", 0, true);
     _nav1_error_node        = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node       = node->getChild("indicated-heading-deg", 0, true);
     _align_node             = node->getChild("align-deg", 0, true);
+    _spin_node              = node->getChild("spin", 0, true);
 
-    _electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
+    initServicePowerProperties(node);
 
     reinit();
-}
-
-void
-HeadingIndicatorDG::bind ()
-{
-    std::ostringstream temp;
-    std::string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
-
-    fgTie((branch + "/serviceable").c_str(),
-          &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
-    fgTie((branch + "/spin").c_str(),
-          &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
-}
-
-void
-HeadingIndicatorDG::unbind ()
-{
-    std::ostringstream temp;
-    std::string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
-
-    fgUntie((branch + "/serviceable").c_str());
-    fgUntie((branch + "/spin").c_str());
 }
 
 void
@@ -119,7 +80,7 @@ void
 HeadingIndicatorDG::update (double dt)
 {
                                 // Get the spin from the gyro
-    _gyro.set_power_norm(_electrical_node->getDoubleValue());
+    _gyro.set_power_norm(isServiceableAndPowered());
 
     _gyro.update(dt);
 
@@ -127,6 +88,8 @@ HeadingIndicatorDG::update (double dt)
     double spin = _gyro.get_spin_norm();
     double heading = _heading_in_node->getDoubleValue();
     double offset = _offset_node->getDoubleValue();
+    
+    _spin_node->setDoubleValue( spin );
 
     // calculate scaling factor
     double factor = POW6(spin);
@@ -203,13 +166,5 @@ HeadingIndicatorDG::update (double dt)
         _nav1_error_node->setDoubleValue( diff );
     }
 }
-
-
-// Register the subsystem.
-#if 0
-SGSubsystemMgr::InstancedRegistrant<HeadingIndicatorDG> registrantHeadingIndicatorDG(
-    SGSubsystemMgr::FDM,
-    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
-#endif
 
 // end of heading_indicator_dg.cxx

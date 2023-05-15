@@ -1,24 +1,27 @@
-// heading_indicator.hxx - a vacuum-powered heading indicator.
-// Written by David Megginson, started 2002.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * heading_indicator_fg.hxx - an electrically-powered fluxgate compass.
+ * Written by David Megginson, started 2002.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_HEADING_INDICATOR_FG_HXX
-#define __INSTRUMENTS_HEADING_INDICATOR_FG_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
 #endif
 
 #include <simgear/props/props.hxx>
-#include <simgear/structure/subsystem_mgr.hxx>
+
+#include <Instrumentation/AbstractInstrument.hxx>
 
 #include "gyro.hxx"
 
 
 /**
- * Model an electically-powered fluxgate compass
+ * Model an electrically-powered fluxgate compass
  *
  * Input properties:
  *
@@ -26,13 +29,13 @@
  * /instrumentation/"name"/spin
  * /instrumentation/"name"/offset-deg
  * /orientation/heading-deg
- * /systems/electrical/outputs/DG
+ * /systems/electrical/outputs/"name"["number"]
  *
  * Output properties:
  *
  * /instrumentation/"name"/indicated-heading-deg
  */
-class HeadingIndicatorFG : public SGSubsystem
+class HeadingIndicatorFG : public AbstractInstrument
 {
 public:
     HeadingIndicatorFG ( SGPropertyNode *node );
@@ -40,10 +43,10 @@ public:
     virtual ~HeadingIndicatorFG ();
 
     // Subsystem API.
-    void bind() override;
+    //void bind() override;
     void init() override;
     void reinit() override;
-    void unbind() override;
+    //void unbind() override;
     void update(double dt) override;
 
     // Subsystem identification.
@@ -53,9 +56,6 @@ private:
     Gyro _gyro;
     double _last_heading_deg;
 
-    std::string name;
-    int num;
-
     SGPropertyNode_ptr _offset_node;
     SGPropertyNode_ptr _heading_in_node;
     SGPropertyNode_ptr _serviceable_node;
@@ -64,6 +64,5 @@ private:
     SGPropertyNode_ptr _error_node;
     SGPropertyNode_ptr _nav1_error_node;
     SGPropertyNode_ptr _off_node;
+    SGPropertyNode_ptr _spin_node;
 };
-
-#endif // __INSTRUMENTS_HEADING_INDICATOR_HXX

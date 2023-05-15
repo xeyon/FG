@@ -50,10 +50,10 @@ AirspeedIndicator::init ()
     std::string branch;
     branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
-    _total_pressure_node = fgGetNode(_total_pressure.c_str(), true);
-    _static_pressure_node = fgGetNode(_static_pressure.c_str(), true);
+    _total_pressure_node = fgGetNode(_total_pressure, true);
+    _static_pressure_node = fgGetNode(_static_pressure, true);
     _density_node = fgGetNode("/environment/density-slugft3", true);
     _speed_node = node->getChild("indicated-speed-kt", 0, true);
     _tas_node = node->getChild("true-speed-kt", 0, true);
@@ -78,7 +78,7 @@ AirspeedIndicator::init ()
         }
 
         _airspeed_limit = node->getChild("airspeed-limit-kt", 0, true);
-        _pressure_alt = fgGetNode(_pressure_alt_source.c_str(), true);
+        _pressure_alt = fgGetNode(_pressure_alt_source, true);
     }
     
     _environmentManager = globals->get_subsystem<FGEnvironmentMgr>();

@@ -26,7 +26,7 @@
 #include <simgear/nasal/cppbind/NasalObject.hxx>
 ////////////////////////////////////////////////////////////
 
-// shoudl really be exposed properly
+// should really be exposed properly
 extern naRef propNodeGhostCreate(naContext c, SGPropertyNode* n);
 
 class FGPUICompatDialog::DialogPeer : public nasal::Object
@@ -172,7 +172,7 @@ bool FGPUICompatDialog::init()
         display(_props);
         _peer->callMethod<void>("didBuild");
     } catch (std::exception& e) {
-        SG_LOG(SG_GUI, SG_ALERT, "Faield to build dialog:" << e.what());
+        SG_LOG(SG_GUI, SG_ALERT, "Failed to build dialog:" << e.what());
 
         return false;
     }

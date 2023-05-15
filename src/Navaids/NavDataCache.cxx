@@ -1,23 +1,9 @@
-// NavDataCache.cxx - defines a unified binary cache for navigation
-// data, parsed from various text / XML sources.
 
-// Written by James Turner, started 2012.
-//
-// Copyright (C) 2012  James Turner
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+/*
+ * SPDX-FileCopyrightText: (C) 2012 James Turner <james@flightgear.org>
+ * SPDX_FileComment: Defins a unified binary cache for navigation data, parsed from text/XMl sources
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
 
 #include "config.h"
 
@@ -55,13 +41,14 @@
 #endif
 
 // SimGear
+#include <simgear/bucket/newbucket.hxx>
+#include <simgear/debug/logstream.hxx>
+#include <simgear/io/sg_file.hxx>
+#include <simgear/misc/sg_dir.hxx>
+#include <simgear/misc/sg_path.hxx>
+#include <simgear/misc/strutils.hxx>
 #include <simgear/sg_inlines.h>
 #include <simgear/structure/exception.hxx>
-#include <simgear/debug/logstream.hxx>
-#include <simgear/bucket/newbucket.hxx>
-#include <simgear/misc/sg_path.hxx>
-#include <simgear/misc/sg_dir.hxx>
-#include <simgear/misc/strutils.hxx>
 #include <simgear/threads/SGThread.hxx>
 
 #include "CacheSchema.h"
@@ -571,9 +558,9 @@ public:
 
 #define POSITIONED_COLS "rowid, type, ident, name, airport, lon, lat, elev_m, octree_node"
 #define AND_TYPED "AND type>=?2 AND type <=?3"
-    statCacheCheck = prepare("SELECT stamp FROM stat_cache WHERE path=?");
+    statCacheCheck = prepare("SELECT stamp, sha FROM stat_cache WHERE path=?");
     stampFileCache = prepare("INSERT OR REPLACE INTO stat_cache "
-                             "(path, stamp) VALUES (?,?)");
+                             "(path, stamp, sha) VALUES (?,?, ?)");
 
     loadPositioned = prepare("SELECT " POSITIONED_COLS " FROM positioned WHERE rowid=?");
     loadAirportStmt = prepare("SELECT has_metar FROM airport WHERE rowid=?");
@@ -649,7 +636,9 @@ public:
 
     getOctreeLeafChildren = prepare("SELECT rowid, type FROM positioned WHERE octree_node=?1");
 
-    searchAirports = prepare("SELECT ident, name FROM positioned WHERE (name LIKE ?1 OR ident LIKE ?1) " AND_TYPED);
+    searchAirports = prepare("SELECT ident, name FROM positioned WHERE (name LIKE ?1 OR ident LIKE ?1) " AND_TYPED
+                             // prioritize entries with matching ICAO
+                             " ORDER BY (ident LIKE ?1) DESC");
     sqlite3_bind_int(searchAirports, 2, FGPositioned::AIRPORT);
     sqlite3_bind_int(searchAirports, 3, FGPositioned::SEAPORT);
 
@@ -1089,28 +1078,35 @@ bool NavDataCache::NavDataCachePrivate::isCachedFileModified(const SGPath& path,
   }
 
   sqlite_bind_temp_stdstring(statCacheCheck, 1, path.realpath().utf8Str());
-  bool isModified = true;
   sgDebugPriority logLevel = verbose ? SG_WARN : SG_DEBUG;
-  if (execSelect(statCacheCheck)) {
-    time_t modtime = sqlite3_column_int64(statCacheCheck, 0);
-    time_t delta = std::labs(modtime - path.modTime());
-    if (delta != 0)
-    {
-      SG_LOG(SG_NAVCACHE, logLevel, "NavCache: rebuild required for " << path <<
-             ". Timestamps: " << modtime << " != " << path.modTime());
-    }
-    else
-    {
-      SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: no rebuild required for " << path);
-    }
-
-    isModified = (delta != 0);
-  } else {
+  if (!execSelect(statCacheCheck)) {
     SG_LOG(SG_NAVCACHE, logLevel, "NavCache: (re-)build required because '" <<
            path.utf8Str() << "' is not in the cache");
+    reset(statCacheCheck);
+    return true;
   }
 
+  time_t modtime = sqlite3_column_int64(statCacheCheck, 0);
+  time_t delta = std::labs(modtime - path.modTime());
+  if (delta == 0) {
+    SG_LOG(SG_NAVCACHE, SG_DEBUG, "NavCache: modtime matches, no rebuild required for " << path);
+    reset(statCacheCheck);
+    return false;
+  }
+
+  const std::string shaHash{(char*)sqlite3_column_text(statCacheCheck, 1)};
+  SGFile f(path);
+  const auto fileHash = f.computeHash();
+  const auto isModified = (fileHash != shaHash);
   reset(statCacheCheck);
+
+  if (!isModified) {
+    // the mode time check failed, but the hashes matched. Let's update our modtime so we
+    // don't compute the hash until the mod-time changes again.
+    SG_LOG(SG_NAVCACHE, logLevel, "NavCache: " << path << " has changed modtime but contents are unchanged, re-setting cahced mod-time");
+    outer->stampCacheFile(path, fileHash);
+  }
+
   return isModified;
 }
 
@@ -1421,29 +1417,44 @@ NavDataCache::getDatFilesInfo(DatFileType datFileType) const
 
 bool NavDataCache::isRebuildRequired()
 {
-    if (d->readOnly) {
-        return false;
+  if (d->readOnly) {
+    return false;
+  }
+
+  const auto environmentOverride = std::getenv("FG_NAVCACHE_REBUILD");
+  bool dontRebuildFlag = false;
+  if (environmentOverride) {
+    if (!strcmp(environmentOverride, "0")) {
+      dontRebuildFlag = true;
     }
 
-    if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
-        SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
-        return true;
+    if (!strcmp(environmentOverride, "1")) {
+      SG_LOG(SG_NAVCACHE, SG_MANDATORY_INFO, "NavCache: forcing rebuild becuase FG_NAVCACHE_REBUILD=1");
+      return true;
     }
+  }
+
+  if (flightgear::Options::sharedInstance()->isOptionSet("restore-defaults")) {
+    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: restore-defaults requested, will rebuild cache");
+    return true;
+  }
 
   if (d->areDatFilesModified(DATFILETYPE_APT, true) ||
       d->isCachedFileModified(d->metarDatPath, true) ||
       d->areDatFilesModified(DATFILETYPE_NAV, true) ||
       d->areDatFilesModified(DATFILETYPE_FIX, true) ||
       d->isCachedFileModified(d->carrierDatPath, true) ||
-// since POI loading is disabled on Windows, don't check for it
-// this caused: https://code.google.com/p/flightgear-bugs/issues/detail?id=1227
-//ifndef SG_WINDOWS
       d->isCachedFileModified(d->poiDatPath, true) ||
-//#endif
       d->isCachedFileModified(d->airwayDatPath, true))
   {
-    SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
-    return true;
+    if (dontRebuildFlag) {
+      SG_LOG(SG_NAVCACHE, SG_ALERT, "NavCache: skipping rebuild because FG_NAVCACHE_REBUILD=0");
+      SG_LOG(SG_NAVCACHE, SG_ALERT, "!! Navigation and airport data will be incorrect !!");
+      return false;
+    } else {
+      SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: main cache rebuild required");
+      return true;
+    }
   }
 
   SG_LOG(SG_NAVCACHE, SG_INFO, "NavCache: no main cache rebuild required");
@@ -1890,13 +1901,20 @@ bool NavDataCache::isCachedFileModified(const SGPath& path) const
   return d->isCachedFileModified(path, false);
 }
 
-void NavDataCache::stampCacheFile(const SGPath& path)
+void NavDataCache::stampCacheFile(const SGPath& path, const std::string& sha)
 {
-    if (!isReadOnly()){
-        sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.realpath().utf8Str());
-        sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
-        d->execInsert(d->stampFileCache);
+  if (!isReadOnly()){
+    sqlite_bind_temp_stdstring(d->stampFileCache, 1, path.realpath().utf8Str());
+    sqlite3_bind_int64(d->stampFileCache, 2, path.modTime());
+
+    if (sha.empty()) {
+      SGFile f(path);
+      sqlite_bind_temp_stdstring(d->stampFileCache, 3, f.computeHash());
+    } else {
+      sqlite_bind_temp_stdstring(d->stampFileCache, 3, sha);
     }
+      d->execInsert(d->stampFileCache);
+  }
 }
 
 void NavDataCache::beginTransaction()

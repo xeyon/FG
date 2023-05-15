@@ -52,7 +52,7 @@ RadarAltimeter::init ()
 {
 
     std::string branch = "/instrumentation/" + _name;
-    _Instrument = fgGetNode(branch.c_str(), _num, true);
+    _Instrument = fgGetNode(branch, _num, true);
 
     _sceneryLoaded = fgGetNode("/sim/sceneryloaded", true);
     _serviceable_node = _Instrument->getNode("serviceable", true);

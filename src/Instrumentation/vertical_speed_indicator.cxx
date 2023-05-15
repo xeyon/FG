@@ -43,10 +43,10 @@ VerticalSpeedIndicator::init ()
     string branch;
     branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
-    _pressure_node = fgGetNode(_static_pressure.c_str(), true);
-    _temperature_node = fgGetNode(_static_temperature.c_str(), true);
+    _pressure_node = fgGetNode(_static_pressure, true);
+    _temperature_node = fgGetNode(_static_temperature, true);
     _speed_fpm_node = node->getChild("indicated-speed-fpm", 0, true);
     _speed_mps_node = node->getChild("indicated-speed-mps", 0, true);
     _speed_kts_node = node->getChild("indicated-speed-kts", 0, true);

@@ -1,11 +1,16 @@
-// dme.hxx - distance-measuring equipment.
-// Written by David Megginson, started 2003.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * tacan.hxx - Models a TACAN (Tactical Air Navigation) Radio
+ * Written by David Megginson, started 2003.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+ * 
+*/
 
 
-#ifndef __INSTRUMENTS_TACAN_HXX
-#define __INSTRUMENTS_TACAN_HXX 1
+
+#pragma once
 
 #include <simgear/props/props.hxx>
 #include <simgear/structure/subsystem_mgr.hxx>
@@ -90,5 +95,3 @@ private:
 
     int _listener_active;
 };
-
-#endif // __INSTRUMENTS_TACAN_HXX

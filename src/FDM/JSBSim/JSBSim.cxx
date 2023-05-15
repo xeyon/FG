@@ -39,6 +39,7 @@
 #include <simgear/bvh/BVHMaterial.hxx>
 
 #include <FDM/flight.hxx>
+#include <FDM/groundreactions.hxx>
 
 #include <Aircraft/controls.hxx>
 #include <Main/globals.hxx>
@@ -1403,39 +1404,15 @@ FGJSBsim::get_agl_ft(double t, const FGColumnVector3& loc, double alt_off,
   if (terrain_active)
   {
     static bool material_valid = false;
-    if (material) {
-      // Traction Coefficient factors for Tires vs Dry Asphalt:
-      // Dry Asphalt   1.0             Wet Asphalt     0.75
-      // Dry Ice/Snow  0.375           Wet Ice         0.125
-      bool rain = (precipitation->getDoubleValue() > 0.0);
-      bool is_lake = (*material).solid_is_prop();
-      bool solid = (*material).get_solid();
-      double friction_fact, pressure;
-      if (is_lake && solid) { // on ice
-        GroundReactions->SetBumpiness(0.1);
-        if (rain) {
-          if (temperature->getDoubleValue() > 0.0) { // Wet Ice
-            GroundReactions->SetRollingFFactor(0.05);
-            friction_fact = 0.125*(*material).get_friction_factor();
-          } else { // Snow
-            GroundReactions->SetRollingFFactor(0.15);
-            friction_fact = 0.375*(*material).get_friction_factor();
-          }
-        } else { // Dry Ice
-          GroundReactions->SetRollingFFactor(0.05);
-          friction_fact = 0.375*(*material).get_friction_factor();
-        }
-        pressure = (*material).get_load_resistance()*1000;
-      } else { // not on ice
-        GroundReactions->SetRollingFFactor((*material).get_rolling_friction()/0.02);
-        GroundReactions->SetBumpiness((*material).get_bumpiness());
-        friction_fact = (*material).get_friction_factor();
-        if (rain) friction_fact *= 0.75;
-        pressure = (*material).get_load_resistance();
-      }
-      GroundReactions->SetStaticFFactor(friction_fact);
-      GroundReactions->SetMaximumForce(pressure*0.00014503773800721815);
-      GroundReactions->SetSolid(solid);
+
+    if (updateGroundReactions(material)) {
+      setPosition(pt);
+      setHeading(Propagate->GetEuler(FGJSBBase::ePsi));
+      GroundReactions->SetRollingFFactor(getRolingFrictionFactor());
+      GroundReactions->SetStaticFFactor(getStaticFrictionFactor());
+      GroundReactions->SetMaximumForce(getPressure()*0.00014503773800721815);
+      GroundReactions->SetBumpiness(getBumpiness());
+      GroundReactions->SetSolid(getSolid());
       GroundReactions->SetPosition(pt);
       material_valid = true;
     } else {
@@ -1448,7 +1425,8 @@ FGJSBsim::get_agl_ft(double t, const FGColumnVector3& loc, double alt_off,
 #else
   terrain->setBoolValue("valid", false);
 #endif
-  return dot(hlToEc.rotate(SGVec3d(0, 0, 1)), SGVec3d(contact) - SGVec3d(pt));
+  return dot(hlToEc.rotate(SGVec3d(0, 0, 1)), SGVec3d(contact) - SGVec3d(pt)) +
+         getGroundDisplacement();
 }
 
 inline static double sqr(double x)

@@ -81,6 +81,7 @@
 #include <simgear/structure/subsystem_mgr.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
 #include <FDM/groundcache.hxx>
+#include <FDM/groundreactions.hxx>
 #include <FDM/AIWake/AIWakeGroup.hxx>
 
 namespace simgear {
@@ -213,6 +214,7 @@ class FGInterface : public SGSubsystem
     // the ground cache object itself.
     FGGroundCache ground_cache;
 
+    GroundReactions _groundReactions;
     AIWakeGroup wake_group;
 
     void set_A_X_pilot(double x)
@@ -761,6 +763,28 @@ public:
     // Tell the cache code that it does no longer need to care for
     // the wire end position.
     void release_wire(void);
+
+    // Ground reactions
+    bool updateGroundReactions(simgear::BVHMaterial const*& material) {
+        return _groundReactions.update(material);
+    }
+    inline void setHeading(float h) { _groundReactions.setHeading(h); }
+    inline void setPosition(double pt[3]) {
+        _groundReactions.setPosition(pt);
+    }
+    inline float getPressure() { return _groundReactions.getPressure(); }
+    inline float getBumpiness() { return _groundReactions.getBumpiness(); }
+    inline float getGroundDisplacement() {
+        return _groundReactions.getGroundDisplacement();
+    }
+    inline float getStaticFrictionFactor() {
+        return _groundReactions.getStaticFrictionFactor();
+    }
+    inline float getRolingFrictionFactor() {
+        return _groundReactions.getRolingFrictionFactor();
+    }
+    inline bool getSolid() { return _groundReactions.getSolid(); }
+
 
     // Manages the AI wake computations.
     void add_ai_wake(FGAIAircraft* ai) { wake_group.AddAI(ai); }

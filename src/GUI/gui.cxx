@@ -219,7 +219,7 @@ bool guiInit(osg::GraphicsContext* gc)
 
 void syncPausePopupState()
 {
-    bool paused = fgGetBool("/sim/freeze/master",true) | fgGetBool("/sim/freeze/clock",true);
+    bool paused = fgGetBool("/sim/freeze/master",true) || fgGetBool("/sim/freeze/clock",true);
     SGPropertyNode_ptr args(new SGPropertyNode);
     args->setStringValue("id", "sim-pause");
     if (paused && fgGetBool("/sim/view-name-popup")) {

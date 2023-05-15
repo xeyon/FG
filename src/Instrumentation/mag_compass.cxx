@@ -46,7 +46,7 @@ MagCompass::init ()
     std::string branch;
     branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
     _pitch_offset_node = node->getChild("pitch-offset-deg", 0, true);
     _roll_node = fgGetNode("/orientation/roll-deg", true);

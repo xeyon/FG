@@ -172,7 +172,7 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
     }
 
     // only bother running the following code if the current aircraft is the
-    // first in line for depature
+    // first in line for departure
     /* if (current.getAircraft() == rwy->getFirstAircraftIndepartureQueue()) {
         if (rwy->getCleared()) {
             if (id == rwy->getCleared()) {
@@ -230,11 +230,13 @@ void FGTowerController::updateAircraftInformation(int id, SGGeod geod,
             auto ac = rwy->getFirstOfStatus(AITakeOffStatus::QUEUED);
             if (ac) {
                 ac->setTakeOffStatus(AITakeOffStatus::QUEUED);
-                // transmit takeoff clearacne? But why twice?
+                // transmit takeoff clearance? But why twice?
             }
         } else {
+#if 0   // Ticket #2770 : ATC/TowerController floods log
             SG_LOG(SG_ATC, SG_BULK,
                "Not cleared " << current.getAircraft()->getCallSign() << " " << rwy->getFirstAircraftInDepartureQueue()->getCallSign());
+#endif
         }
     }
 }

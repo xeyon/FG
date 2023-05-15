@@ -1,11 +1,13 @@
-// heading_indicator.hxx - a vacuum-powered heading indicator.
-// Written by David Megginson, started 2002.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * heading_indicator.hxx - a vacuum-powered heading indicator.
+ * Written by David Megginson, started 2002.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_HEADING_INDICATOR_HXX
-#define __INSTRUMENTS_HEADING_INDICATOR_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -64,5 +66,3 @@ private:
     SGPropertyNode_ptr _heading_bug_error_node;
     SGPropertyNode_ptr _heading_bug_node;
 };
-
-#endif // __INSTRUMENTS_HEADING_INDICATOR_HXX

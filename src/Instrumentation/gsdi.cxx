@@ -51,7 +51,7 @@ void GSDI::init()
 {
   std::string branch;
 	branch = "/instrumentation/" + _name;
-	SGPropertyNode *n = fgGetNode(branch.c_str(), _num, true);
+	SGPropertyNode *n = fgGetNode(branch, _num, true);
 	_serviceableN = n->getNode("serviceable", true);
 
 	// input

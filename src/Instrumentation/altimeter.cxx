@@ -77,7 +77,7 @@ Altimeter::setSettingHPa( double value )
 void
 Altimeter::init ()
 {
-    _pressure_node     = fgGetNode(_static_pressure.c_str(), true);
+    _pressure_node     = fgGetNode(_static_pressure, true);
     _serviceable_node  = _rootNode->getChild("serviceable", 0, true);
     _press_alt_node    = _rootNode->getChild("pressure-alt-ft", 0, true);
     if (_encodeModeC) {

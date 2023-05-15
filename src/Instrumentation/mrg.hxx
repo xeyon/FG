@@ -1,11 +1,13 @@
-// attitude_indicator.hxx - a vacuum-powered attitude indicator.
-// Written by David Megginson, started 2002.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * mrg.hxx - an electrically-powered master reference gyro
+ * Written by David Megginson, started 2002.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_MRG_HXX
-#define __INSTRUMENTS_MRG_HXX 1
+#pragma once
 
 
 #include <simgear/props/props.hxx>
@@ -102,5 +104,3 @@ private:
     SGPropertyNode_ptr _hdg_input_source_node;
     SGPropertyNode_ptr _fast_erect_node;
 };
-
-#endif // __INSTRUMENTS_MRG_HXX

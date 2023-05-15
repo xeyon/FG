@@ -691,10 +691,11 @@ bool runLauncherDialog()
     flightgear::WindowBuilder::setPoseAsStandaloneApp(false);
 
     LauncherMainWindow dlg(false);
+
     if (options->isOptionSet("enable-fullscreen")) {
         dlg.showFullScreen();
     } else {
-        dlg.show();
+        dlg.setVisible(true);
     }
 
     int appResult = qApp->exec();

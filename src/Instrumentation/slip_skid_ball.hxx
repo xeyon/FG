@@ -1,11 +1,13 @@
-// slip_skid_ball.hxx - an slip-skid ball.
-// Written by David Megginson, started 2003.
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * slip_skid_ball.hxx - an slip-skid ball.
+ * Written by David Megginson, started 2003.
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_SLIP_SKID_BALL_HXX
-#define __INSTRUMENTS_SLIP_SKID_BALL_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -52,5 +54,3 @@ private:
     SGPropertyNode_ptr _out_node;
     SGPropertyNode_ptr _override_node;
 };
-
-#endif // __INSTRUMENTS_SLIP_SKID_BALL_HXX

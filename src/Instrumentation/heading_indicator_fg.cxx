@@ -25,25 +25,9 @@ using std::string;
 
 HeadingIndicatorFG::HeadingIndicatorFG ( SGPropertyNode *node )
     :
-    name("heading-indicator-fg"),	 
-    num(0)
+    _last_heading_deg(0)
 {
-    int i;
-    for ( i = 0; i < node->nChildren(); ++i ) {
-        SGPropertyNode *child = node->getChild(i);
-        string cname = child->getNameString();
-        string cval = child->getStringValue();
-        if ( cname == "name" ) {
-            name = cval;
-        } else if ( cname == "number" ) {
-            num = child->getIntValue();
-        } else {
-            SG_LOG( SG_INSTR, SG_WARN, "Error in flux-gate heading-indicator config logic" );
-            if ( name.length() ) {
-                SG_LOG( SG_INSTR, SG_WARN, "Section = " << name );
-            }
-        }
-    }
+    readConfig(node, "heading-indicator-fg");
 }
 
 HeadingIndicatorFG::HeadingIndicatorFG ()
@@ -57,23 +41,22 @@ HeadingIndicatorFG::~HeadingIndicatorFG ()
 void
 HeadingIndicatorFG::init ()
 {
-    string branch;
-    branch = "/instrumentation/" + name;
+    string branch = nodePath();
     
     _heading_in_node = fgGetNode("/orientation/heading-deg", true);
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), num, true );
+    SGPropertyNode *node = fgGetNode(branch, true );
     if( NULL == (_offset_node = node->getChild("offset-deg", 0, false)) ) {
       _offset_node = node->getChild("offset-deg", 0, true);
       _offset_node->setDoubleValue( -fgGetDouble("/environment/magnetic-variation-deg") );
     }
-    _serviceable_node = node->getChild("serviceable", 0, true);
     _error_node = node->getChild("heading-bug-error-deg", 0, true);
     _nav1_error_node = node->getChild("nav1-course-error-deg", 0, true);
     _heading_out_node = node->getChild("indicated-heading-deg", 0, true);
     _off_node         = node->getChild("off-flag", 0, true);
+    _spin_node              = node->getChild("spin", 0, true);
 
-    _electrical_node = fgGetNode("/systems/electrical/outputs/DG", true);
+    initServicePowerProperties(node);
 
     reinit();
 }
@@ -87,40 +70,15 @@ HeadingIndicatorFG::reinit ()
 }
 
 void
-HeadingIndicatorFG::bind ()
-{
-    std::ostringstream temp;
-    string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
-
-    fgTie((branch + "/serviceable").c_str(),
-          &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
-    fgTie((branch + "/spin").c_str(),
-          &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
-}
-
-void
-HeadingIndicatorFG::unbind ()
-{
-    std::ostringstream temp;
-    string branch;
-    temp << num;
-    branch = "/instrumentation/" + name + "[" + temp.str() + "]";
-
-    fgUntie((branch + "/serviceable").c_str());
-    fgUntie((branch + "/spin").c_str());
-}
-
-void
 HeadingIndicatorFG::update (double dt)
 {
                                 // Get the spin from the gyro
-	 _gyro.set_power_norm(_electrical_node->getDoubleValue());
+	 _gyro.set_power_norm(isServiceableAndPowered());
 	_gyro.update(dt);
     double spin = _gyro.get_spin_norm();
+    _spin_node->setDoubleValue( spin );
 
-    if ( _electrical_node->getDoubleValue() > 0 && spin >= 0.25) {
+    if ( isServiceableAndPowered() && spin >= 0.25) {
         _off_node->setBoolValue(false);
     } else {
         _off_node->setBoolValue(true);

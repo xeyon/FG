@@ -30,7 +30,7 @@ SlipSkidBall::init ()
     string branch;
     branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     _serviceable_node = node->getChild("serviceable", 0, true);
     _y_accel_node = fgGetNode("/accelerations/pilot/y-accel-fps_sec", true);
     _z_accel_node = fgGetNode("/accelerations/pilot/z-accel-fps_sec", true);

@@ -24,11 +24,12 @@ using std::string;
 
 
 TurnIndicator::TurnIndicator ( SGPropertyNode *node) :
-    _last_rate(0),
-    _name(node->getStringValue("name", "turn-indicator")),
-    _num(node->getIntValue("number", 0)),
-    _electrical(node->getIntValue("electrical", 0))
+    _last_rate(0)
 {
+    if( !node->getBoolValue("new-default-power-path", 0) ){
+       setDefaultPowerSupplyPath("/systems/electrical/outputs/turn-coordinator");
+    }
+    readConfig(node, "turn-indicator");
 }
 
 TurnIndicator::~TurnIndicator ()
@@ -38,15 +39,15 @@ TurnIndicator::~TurnIndicator ()
 void
 TurnIndicator::init ()
 {
-    string branch;
-    branch = "/instrumentation/" + _name;
+    string branch = nodePath();
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, true );
     _roll_rate_node = fgGetNode("/orientation/roll-rate-degps", true);
     _yaw_rate_node = fgGetNode("/orientation/yaw-rate-degps", true);
-    _electric_current_node = 
-        fgGetNode("/systems/electrical/outputs/turn-coordinator", _electrical, true);
     _rate_out_node = node->getChild("indicated-turn-rate", 0, true);
+    _spin_node = node->getChild("spin", 0, true);
+
+    initServicePowerProperties(node);
 
     reinit();
 }
@@ -59,39 +60,13 @@ TurnIndicator::reinit ()
 }
 
 void
-TurnIndicator::bind ()
-{
-    std::ostringstream temp;
-    string branch;
-    temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
-
-    fgTie((branch + "/serviceable").c_str(),
-          &_gyro, &Gyro::is_serviceable, &Gyro::set_serviceable);
-    fgTie((branch + "/spin").c_str(),
-          &_gyro, &Gyro::get_spin_norm, &Gyro::set_spin_norm);
-}
-
-void
-TurnIndicator::unbind ()
-{
-    std::ostringstream temp;
-    string branch;
-    temp << _num;
-    branch = "/instrumentation/" + _name + "[" + temp.str() + "]";
-
-    fgUntie((branch + "/serviceable").c_str());
-    fgUntie((branch + "/serviceable").c_str());
-}
-
-void
 TurnIndicator::update (double dt)
 {
                                 // Get the spin from the gyro
-    double power = _electric_current_node->getDoubleValue() / 12.0;
-    _gyro.set_power_norm(power);
+    _gyro.set_power_norm(isServiceableAndPowered());
     _gyro.update(dt);
     double spin = _gyro.get_spin_norm();
+    _spin_node->setDoubleValue( spin );
 
                                 // Calculate the indicated rate
     double factor = 1.0 - ((1.0 - spin) * (1.0 - spin) * (1.0 - spin));
@@ -112,13 +87,5 @@ TurnIndicator::update (double dt)
                                 // Publish the indicated rate
     _rate_out_node->setDoubleValue(rate);
 }
-
-
-// Register the subsystem.
-#if 0
-SGSubsystemMgr::InstancedRegistrant<TurnIndicator> registrantTurnIndicator(
-    SGSubsystemMgr::FDM,
-    {{"instrumentation", SGSubsystemMgr::Dependency::HARD}});
-#endif
 
 // end of turn_indicator.cxx

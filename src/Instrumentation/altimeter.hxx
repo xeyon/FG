@@ -1,12 +1,14 @@
-// altimeter.hxx - an altimeter tied to the static port.
-// Written by David Megginson, started 2002.
-// Updated by John Denker to match changes in altimeter.cxx in 2007
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * altimeter.hxx - an altimeter tied to the static port.
+ * Written by David Megginson, started 2002.
+ * Updated by John Denker to match changes in altimeter.cxx in 2007
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+*/
 
-
-#ifndef __INSTRUMENTS_ALTIMETER_HXX
-#define __INSTRUMENTS_ALTIMETER_HXX 1
+#pragma once
 
 #include <simgear/props/props.hxx>
 #include <simgear/props/tiedpropertylist.hxx>
@@ -73,5 +75,3 @@ private:
 
     simgear::TiedPropertyList _tiedProperties;
 };
-
-#endif // __INSTRUMENTS_ALTIMETER_HXX

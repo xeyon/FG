@@ -45,12 +45,12 @@ AttitudeIndicator::init ()
     string branch;
     branch = "/instrumentation/" + _name;
 
-    SGPropertyNode *node = fgGetNode(branch.c_str(), _num, true );
+    SGPropertyNode *node = fgGetNode(branch, _num, true );
     SGPropertyNode *n;
     
     _pitch_in_node = fgGetNode("/orientation/pitch-deg", true);
     _roll_in_node = fgGetNode("/orientation/roll-deg", true);
-    _suction_node = fgGetNode(_suction.c_str(), true);
+    _suction_node = fgGetNode(_suction, true);
     SGPropertyNode *cnode = node->getChild("config", 0, true);
     _tumble_flag_node = cnode->getChild("tumble-flag", 0, true);
     _caged_node = node->getChild("caged-flag", 0, true);

@@ -1245,7 +1245,7 @@ TCAS::reinit(void)
 void
 TCAS::bind(void)
 {
-    SGPropertyNode* node = fgGetNode(("/instrumentation/" + name).c_str(), num, true);
+    SGPropertyNode* node = fgGetNode(("/instrumentation/" + name), num, true);
 
     nodeServiceable  = node->getNode("serviceable", true);
 

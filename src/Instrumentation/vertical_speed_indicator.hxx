@@ -1,13 +1,17 @@
-// vertical_speed_indicator.hxx - a regular VSI tied to the static port.
-// Written by David Megginson, started 2002.
-//
-// Last change by E. van den Berg, 17.02.1013
-//
-// This file is in the Public Domain and comes with no warranty.
+/*
+ * SPDX-License-Identifier: CC0-1.0
+ * 
+ * vertical_speed_indicator.hxx - a regular VSI tied to the static port.
+ * Written by David Megginson, started 2002.
+ * 
+ * Last change by E. van den Berg, 17.02.1013
+ * 
+ * This file is in the Public Domain and comes with no warranty.
+ * 
+*/
 
 
-#ifndef __INSTRUMENTS_VERTICAL_SPEED_INDICATOR_HXX
-#define __INSTRUMENTS_VERTICAL_SPEED_INDICATOR_HXX 1
+#pragma once
 
 #ifndef __cplusplus
 # error This library requires C++
@@ -63,5 +67,3 @@ private:
     SGPropertyNode_ptr _speed_mps_node;
     SGPropertyNode_ptr _speed_kts_node;
 };
-
-#endif // __INSTRUMENTS_VERTICAL_SPEED_INDICATOR_HXX

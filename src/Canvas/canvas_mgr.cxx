@@ -91,7 +91,8 @@ CanvasMgr::CanvasMgr():
     fgGetNode("/sim/signals/model-reinit", true)
   )
 {
-
+    const SGPath path = globals->get_fg_root() / "gui" / "shaders";
+    setShaderRoot(path);
 }
 
 //----------------------------------------------------------------------------

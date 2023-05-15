@@ -1,28 +1,31 @@
-// kr-87.hxx -- class to impliment the King KR 87 Digital ADF
-//
-// Written by Curtis Olson, started June 2002.
-//
-// Copyright (C) 2002  Curtis L. Olson - http://www.flightgear.org/~curt
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as
-// published by the Free Software Foundation; either version 2 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful, but
-// WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-// General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-// $Id$
+/*
+ * SPDX-License-Identifier: GPL-2.0+
+ * SPDX-FileCopyrightText: 2002 (C) Curtis L. Olson - http://www.flightgear.org/~curt
+ * 
+ * kr-87.hxx -- class to impliment the King KR 87 Digital ADF
+ * Written by Curtis Olson, started June 2002.
+ * 
+ * Copyright (C) 2002  Curtis L. Olson - http://www.flightgear.org/~curt
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * 
+ * $Id$
+*/
 
 
-#ifndef _FG_KR_87_HXX
-#define _FG_KR_87_HXX
+#pragma once
 
 
 #include <Main/fg_props.hxx>
@@ -188,5 +191,3 @@ public:
     inline bool get_flt_ann() const { return flt_ann; }
     inline bool get_et_ann() const { return et_ann; }
 };
-
-#endif // _FG_KR_87_HXX

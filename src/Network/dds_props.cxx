@@ -80,7 +80,7 @@ bool FGDDSProps::process() {
                 prop.version == FG_DDS_PROP_VERSION &&
                 prop.mode == FG_DDS_MODE_READ)
         {
-            // s is used to keep a copy of the string returend by
+            // s is used to keep a copy of the string returned by
             // p->getStringValue() in setProp until it is sent to the DDS layer.
             std::string s;
 

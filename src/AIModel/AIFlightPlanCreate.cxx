@@ -736,14 +736,37 @@ bool FGAIFlightPlan::createClimb(FGAIAircraft * ac, bool firstFlight,
 
       // compute course towards destination
         double course = SGGeodesy::courseDeg(cur, arrival->geod());
+        double distance = SGGeodesy::distanceM(cur, arrival->geod());
 
-        SGGeod climb1 = SGGeodesy::direct(cur, course, 10 * SG_NM_TO_METER);
-        FGAIWaypoint *wpt = createInAir(ac, "10000ft climb", climb1, 10000, vClimb);
-        pushBackWaypoint(wpt);
+        const double headingDiffRunway = SGMiscd::normalizePeriodic(-180, 180, course - runway->headingDeg());
 
-        SGGeod climb2 = SGGeodesy::direct(cur, course, 20 * SG_NM_TO_METER);
-        wpt = createInAir(ac, "18000ft climb", climb2, 18000, vClimb);
-        pushBackWaypoint(wpt);
+        if( fabs(headingDiffRunway) <10 ) {
+            SGGeod climb1 = SGGeodesy::direct(cur, course, 10 * SG_NM_TO_METER);
+            FGAIWaypoint *wpt = createInAir(ac, "10000ft climb", climb1, 10000, vClimb);
+            pushBackWaypoint(wpt);
+
+            SGGeod climb2 = SGGeodesy::direct(cur, course, 20 * SG_NM_TO_METER);
+            wpt = createInAir(ac, "18000ft climb", climb2, 18000, vClimb);
+            pushBackWaypoint(wpt);
+        } else {
+            double initialTurnRadius = getTurnRadius(vClimb, true);
+            double lateralOffset = initialTurnRadius;
+            if (headingDiffRunway > 0.0) {
+                lateralOffset *= -1.0;
+            }
+            SGGeod climb1 = SGGeodesy::direct(cur, runway->headingDeg(), 5 * SG_NM_TO_METER);
+            FGAIWaypoint *wpt = createInAir(ac, "5000ft climb", climb1, 5000, vClimb);
+            pushBackWaypoint(wpt);
+            int rightAngle = headingDiffRunway>0?90:-90;
+            int firstTurnIncrement = headingDiffRunway>0?2:-2;
+
+            SGGeod firstTurnCenter = SGGeodesy::direct(climb1, ac->getTrueHeadingDeg() + rightAngle, initialTurnRadius);
+            createArc(ac, firstTurnCenter, ac->_getHeading()-rightAngle, course-rightAngle, firstTurnIncrement, initialTurnRadius, 5000, 100, vClimb, "climb-out%03d");
+            SGGeod climb2 = SGGeodesy::direct(cur, course, 20 * SG_NM_TO_METER);
+            wpt = createInAir(ac, "18000ft climb", waypoints.back()->getPos(), 18000, vClimb);
+            pushBackWaypoint(wpt);
+        }
+
     }
 
     return true;
