@@ -88,7 +88,7 @@ bool FGDDSProps::process() {
             {
                 if (prop.val._d == FG_DDS_STRING)
                 {
-                    const char *path = prop.val._u.String;
+                    const char *path = prop.val._u.String_c1;
                     auto it = path_list.find(path);
                     if (it == path_list.end())
                     {
@@ -99,7 +99,7 @@ bool FGDDSProps::process() {
                             prop.id = prop_list.size();
                             try {
                                 prop_list.push_back(p);
-                                path_list[prop.val._u.String] = prop.id;
+                                path_list[prop.val._u.String_c1] = prop.id;
 
                             } catch (sg_exception&) {
                                 SG_LOG(SG_IO, SG_ALERT, "out of memory");
@@ -159,31 +159,31 @@ void FGDDSProps::setProp(FG_DDS_prop& prop, SGPropertyNode_ptr p, std::string& s
             prop.val._u.Bool = p->getBoolValue();
         } else if (type == simgear::props::INT) {
             prop.val._d = FG_DDS_INT;
-            prop.val._u.Int32 = p->getIntValue();
+            prop.val._u.Int32_i4 = p->getIntValue();
         } else if (type == simgear::props::LONG) {
             prop.val._d = FG_DDS_LONG;
-            prop.val._u.Int64 = p->getLongValue();
+            prop.val._u.Int64_i8 = p->getLongValue();
         } else if (type == simgear::props::FLOAT) {
             prop.val._d = FG_DDS_FLOAT;
-            prop.val._u.Float32 = p->getFloatValue();
+            prop.val._u.Float32_f4 = p->getFloatValue();
         } else if (type == simgear::props::DOUBLE) {
             prop.val._d = FG_DDS_DOUBLE;
-            prop.val._u.Float64 = p->getDoubleValue();
+            prop.val._u.Float64_f8 = p->getDoubleValue();
         } else if (type == simgear::props::ALIAS) {
             prop.val._d = FG_DDS_ALIAS;
             s = p->getStringValue();
-            prop.val._u.String = const_cast<char*>(s.c_str());
+            prop.val._u.String_c1 = const_cast<char*>(s.c_str());
         } else if (type == simgear::props::STRING) {
             prop.val._d = FG_DDS_STRING;
             s = p->getStringValue();
-            prop.val._u.String = const_cast<char*>(s.c_str());
+            prop.val._u.String_c1 = const_cast<char*>(s.c_str());
         } else if (type == simgear::props::UNSPECIFIED) {
             prop.val._d = FG_DDS_UNSPECIFIED;
             s = p->getStringValue();
-            prop.val._u.String = const_cast<char*>(s.c_str());
+            prop.val._u.String_c1 = const_cast<char*>(s.c_str());
         } else {
             prop.val._d = FG_DDS_NONE;
-            prop.val._u.Int32 = 0;
+            prop.val._u.Int32_i4 = 0;
         }
     }
 }

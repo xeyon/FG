@@ -7,8 +7,8 @@ module FG
 // defining it this way also generates accompanying #defines in the header file.
 const octet DDS_PROP_VERSION = 0;
 const short DDS_PROP_REQUEST = -1;
-const boolean DDS_MODE_READ = 0;
-const boolean DDS_MODE_WRITE = 1;
+const boolean DDS_MODE_READ = FALSE;
+const boolean DDS_MODE_WRITE = TRUE;
 
 enum propType
 {
@@ -30,21 +30,21 @@ union propValue switch ( propType )
 
     case DDS_NONE:
     case DDS_INT:
-        long Int32;
+        long Int32_i4;
 
     case DDS_LONG:
-        long long Int64;
+        long long Int64_i8;
 
     case DDS_FLOAT:
-        float Float32;
+        float Float32_f4;
 
     case DDS_DOUBLE:
-        double Float64;
+        double Float64_f8;
 
     case DDS_ALIAS:
     case DDS_STRING:
     case DDS_UNSPECIFIED:
-        string String;
+        string String_c1;
 };
 
 // Initial property request sequence

@@ -120,7 +120,7 @@ int main()
       printf(" mode: %s\n", prop.mode ? "write" : "read");
       printf("   id: %i\n", prop.id);
       if (prop.id == FG_DDS_PROP_REQUEST) {
-        printf(" path: %s\n", prop.val._u.String);
+        printf(" path: %s\n", prop.val._u.String_c1);
         printf("GUID: ");
         for(int i=0; i<16; ++i)
           printf("%X ", prop.guid[i]);
@@ -136,23 +136,23 @@ int main()
           break;
         case FG_DDS_INT:
           printf("       type: int");
-          printf("      value: %i\n", prop.val._u.Int32);
+          printf("      value: %i\n", prop.val._u.Int32_i4);
           break;
         case FG_DDS_LONG:
           printf("       type: long");
-          printf("      value: %li\n", prop.val._u.Int64);
+          printf("      value: %li\n", prop.val._u.Int64_i8);
           break;
         case FG_DDS_FLOAT:
           printf("       type: float");
-          printf("      value: %f\n", prop.val._u.Float32);
+          printf("      value: %f\n", prop.val._u.Float32_f4);
           break;
         case FG_DDS_DOUBLE:
           printf("       type: double");
-          printf("      value: %lf\n", prop.val._u.Float64);
+          printf("      value: %lf\n", prop.val._u.Float64_f8);
           break;
         case FG_DDS_STRING:
           printf("       type: string");
-          printf("      value: %s\n", prop.val._u.String);
+          printf("      value: %s\n", prop.val._u.String_c1);
           break;
         default:
           break;

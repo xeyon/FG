@@ -392,6 +392,7 @@ find_package(SimGear ${MIN_SIMGEAR_VERSION} CONFIG REQUIRED)
 
 if (SG_HAVE_DDS)
     message(STATUS "Data Distribution Service support: CycloneDDS")
+    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/cyclonedds/include)
     set(FG_HAVE_DDS 1)
 else()
     message(STATUS "Data Distribution Service support: DISBLED")

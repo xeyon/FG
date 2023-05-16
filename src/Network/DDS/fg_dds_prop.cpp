@@ -42,7 +42,7 @@ int main()
     prop.version = FG_DDS_PROP_VERSION;
     prop.mode = FG_DDS_MODE_READ;
     prop.val._d = FG_DDS_STRING;
-    prop.val._u.String = path;
+    prop.val._u.String_c1 = path;
 
     topic->write();
 
@@ -59,7 +59,7 @@ int main()
         break;
       case FG_DDS_ALIAS:
         printf("       type: alias");
-        printf("      value: %s\n", prop.val._u.String);
+        printf("      value: %s\n", prop.val._u.String_c1);
         break;
       case FG_DDS_BOOL:
         printf("       type: bool");
@@ -67,27 +67,27 @@ int main()
         break;
       case FG_DDS_INT:
         printf("       type: int");
-        printf("      value: %i\n", prop.val._u.Int32);
+        printf("      value: %i\n", prop.val._u.Int32_i4);
         break;
       case FG_DDS_LONG:
         printf("       type: long");
-        printf("      value: %li\n", prop.val._u.Int64);
+        printf("      value: %li\n", prop.val._u.Int64_i8);
         break;
       case FG_DDS_FLOAT:
         printf("       type: float");
-        printf("      value: %f\n", prop.val._u.Float32);
+        printf("      value: %f\n", prop.val._u.Float32_f4);
         break;
       case FG_DDS_DOUBLE:
         printf("       type: double");
-        printf("      value: %lf\n", prop.val._u.Float64);
+        printf("      value: %lf\n", prop.val._u.Float64_f8);
         break;
       case FG_DDS_STRING:
         printf("       type: string");
-        printf("      value: %s\n", prop.val._u.String);
+        printf("      value: %s\n", prop.val._u.String_c1);
         break;
       case FG_DDS_UNSPECIFIED:
         printf("       type: unspecified");
-        printf("      value: %s\n", prop.val._u.String);
+        printf("      value: %s\n", prop.val._u.String_c1);
         break;
       default:
         break;
