@@ -1,6 +1,9 @@
 #ifndef APT_LOADER_DLL_H
 #define APT_LOADER_DLL_H
 
+
+#define NVCACHE_REBUILD_DONE 600
+
 /// <summary>
 /// This reflect the mem block for EP Airport Information Response from Word 11. 
 /// </summary>

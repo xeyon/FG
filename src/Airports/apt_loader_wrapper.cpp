@@ -397,7 +397,7 @@ int initNavCache(char* sDatapath)
         return phase;
     }
     //cout << "NavDataCache rebuild done!\n";
-    return flightgear::NavDataCache::REBUILD_DONE;
+    return NVCACHE_REBUILD_DONE;
 }
 
 int getRebuildProgress()
