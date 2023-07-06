@@ -54,7 +54,7 @@ public:
     int timeout_ms;
     struct mg_connection* conn;
 
-    map<string, string> updateList;
+    map<string, struct mg_str> updateList;
 
 
     MongooseMQTTConnection() : addr(""),
@@ -82,13 +82,21 @@ public:
     }
 
     int establishConnection(string& url, int timeout_ms);
-    int subscribeUpdate();
-    int publishUpdate(const char* topic, const char* value);
+    int subscribeUpdate(SGPropertyNode_ptr node, struct mg_str data);
+    int publishUpdate(SGPropertyNode_ptr node);
 
 private:
     static void staticRequestHandler(struct mg_connection*, int event, void* ev_data, void* fn_data);
     // Timer function - recreate client connection if it is closed
     static void staticReconnectTimer(void* arg);
+
+    typedef  union {
+        bool vBOOL;
+        int vINT;
+        long vLONG;
+        float vFLOAT;
+        double vDOUBLE;
+    } u_val_t;
 };
 
 int MongooseMQTTConnection::establishConnection(string& url, int timeout)
@@ -103,18 +111,79 @@ int MongooseMQTTConnection::establishConnection(string& url, int timeout)
     return 1;
 }
 
-int MongooseMQTTConnection::subscribeUpdate()
+int MongooseMQTTConnection::subscribeUpdate(SGPropertyNode_ptr node, struct mg_str data)
 {
-    return 0;
+    u_val_t* val = (u_val_t*)data.ptr;
+
+    switch (node->getType()) {
+    case simgear::props::BOOL:
+        return node->setBoolValue(val->vBOOL);
+
+    case simgear::props::INT:
+        return node->setIntValue(val->vINT);
+
+    case simgear::props::LONG:
+        return node->setLongValue(val->vLONG);
+        
+    case simgear::props::FLOAT:
+        return node->setFloatValue(val->vFLOAT);
+ 
+    case simgear::props::DOUBLE: 
+        return node->setDoubleValue(val->vDOUBLE);
+ 
+    default:
+        return node->setStringValue(data.ptr);
+ 
+    }
+ 
 }
 
-int MongooseMQTTConnection::publishUpdate(const char *topic, const char *value)
+int MongooseMQTTConnection::publishUpdate(SGPropertyNode_ptr node)
 {
-    if (conn != NULL) {
-        mg_mqtt_pub(conn, mg_str(topic), mg_str(value), qos, false);
-        SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection PUBLISHED " << value << " to " << topic);
+    static struct mg_str data;
+    u_val_t val;
+    string strV;
 
-        return 1;
+    switch (node->getType()) {
+    case simgear::props::BOOL:
+        data.ptr = (char *)&val;
+        data.len = sizeof(bool);
+        val.vBOOL = node->getBoolValue();
+        break;
+    case simgear::props::INT:
+        data.ptr = (char*)&val;
+        data.len = sizeof(int);
+        val.vINT = node->getIntValue();
+        break;
+    case simgear::props::LONG:
+        data.ptr = (char*)&val;
+        data.len = sizeof(long);
+        val.vLONG = node->getLongValue();
+        break;
+    case simgear::props::FLOAT:
+        data.ptr = (char*)&val;
+        data.len = sizeof(float);
+        val.vFLOAT = node->getFloatValue();
+        break;
+    case simgear::props::DOUBLE: {
+        data.ptr = (char*)&val;
+        data.len = sizeof(double);
+        val.vDOUBLE = node->getDoubleValue();
+        break;
+    }
+    default:
+        strV = node->getStringValue();
+        data.ptr = strV.c_str();
+        data.len = strV.size();
+        break;
+    }
+
+    if (conn != NULL) {
+        string topic = node->getPath(true);
+        mg_mqtt_pub(conn, mg_str(topic.c_str()), data, qos, false);
+        SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection PUBLISHED " << data.ptr << " to " << topic);
+
+        return data.len;
     } else {
         return 0;
     }
@@ -156,7 +225,7 @@ void MongooseMQTTConnection::staticRequestHandler(struct mg_connection *c, int e
     struct mg_mqtt_message *mm = (struct mg_mqtt_message *) ev_data;
     SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection RECEIVED " << mm->data.ptr << " from " << mm->topic.ptr);
 
-    p_conn->updateList.insert_or_assign(string(mm->topic.ptr, mm->topic.len), string(mm->data.ptr, mm->data.len));
+    p_conn->updateList.insert_or_assign(string(mm->topic.ptr, mm->topic.len), mg_strdup(mm->data));
 
     // to close the connection
     //c->is_closing = 1;  
@@ -298,10 +367,11 @@ void MongooseMqttd::update(double dt)
         SGPropertyNode_ptr node = *it;
 
         if (_propertyChangeObserver.isChangedValue(node)) {
-            string path = node->getPath(true);
-            string data = node->getStringValue();
-            SG_LOG(SG_NETWORK, SG_INFO, "mqttd: new Local Value for " << path << ": " << data);
-            _conn.publishUpdate(path.c_str(), data.c_str());
+            //string path = node->getPath(true);
+            //string data = node->getStringValue();
+            
+            //SG_LOG(SG_NETWORK, SG_INFO, "mqttd: new Local Value for " << path << ": " << data.ptr);
+            _conn.publishUpdate(node);
         }
     }
 
@@ -314,10 +384,9 @@ void MongooseMqttd::update(double dt)
         auto newData = _conn.updateList.find(path);
 
         if (newData != _conn.updateList.end()) {
-            node->setStringValue(newData->second);
-            SG_LOG(SG_NETWORK, SG_INFO, 
-                "mqttd: new Remote Value for " << path << ": " << newData->second
-                                                  << " --type: " << node->getType());
+            //node->setStringValue(newData->second);
+            _conn.subscribeUpdate(node, newData->second);
+            free((void*)newData->second.ptr);
         }
     }
     _conn.updateList.clear();
