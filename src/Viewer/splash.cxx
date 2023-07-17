@@ -221,7 +221,7 @@ void SplashScreen::createNodes()
         }
     }
     // add main title last so it is atop all.
-    addText(geode, osg::Vec2(0.025f, 0.02f), 0.08, "FlightGear "s + fgGetString("/sim/version/flightgear"), osgText::Text::LEFT_TOP);
+    addText(geode, osg::Vec2(0.025f, 0.02f), 0.08, "3D OTW Preview  "s, osgText::Text::LEFT_TOP);
 
    ///////////
 

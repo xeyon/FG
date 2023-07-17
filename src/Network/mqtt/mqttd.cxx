@@ -114,11 +114,15 @@ int MongooseMQTTConnection::establishConnection(string& url, int timeout)
 int MongooseMQTTConnection::subscribeUpdate(SGPropertyNode_ptr node, struct mg_str data)
 {
     u_val_t* val = (u_val_t*)data.ptr;
+    string path = node->getPath(true);
 
     switch (node->getType()) {
-    case simgear::props::BOOL:
-        return node->setBoolValue(val->vBOOL);
-
+    case simgear::props::BOOL: {
+        bool ba = val->vBOOL;
+        SG_LOG(SG_NETWORK, SG_INFO, "RECEIVED BOOL val:" << path << " -> " << ba);
+        // To make sure LSB is used
+        return node->setBoolValue(0xff & (val->vBOOL));
+    }
     case simgear::props::INT:
         return node->setIntValue(val->vINT);
 
@@ -327,7 +331,7 @@ void MongooseMqttd::init()
 
     const string fgRoot = fgGetString("/sim/fg-root");
     string addr = n->getStringValue("url", "mqtt://broker.hivemq.com:1883");
-    string topic = n->getStringValue("watched-list", "/sim");
+    string topic = n->getStringValue("watched-list", "/network/mqtt");
     int timeout = n->getIntValue("retry-timeout-ms", 30000);
 
     SG_LOG(SG_NETWORK, SG_INFO, "starting mqtt connection with these options: ");
@@ -361,16 +365,18 @@ void MongooseMqttd::unbind()
 
 void MongooseMqttd::update(double dt)
 {
+    string path, data;
+
     _propertyChangeObserver.check();
 
     for (WatchedNodesList::iterator it = _watchedNodes.begin(); it != _watchedNodes.end(); ++it) {
         SGPropertyNode_ptr node = *it;
 
         if (_propertyChangeObserver.isChangedValue(node)) {
-            //string path = node->getPath(true);
-            //string data = node->getStringValue();
+            path = node->getPath(true);
+            data = node->getStringValue();
             
-            //SG_LOG(SG_NETWORK, SG_INFO, "mqttd: new Local Value for " << path << ": " << data.ptr);
+            SG_LOG(SG_NETWORK, SG_INFO, "mqttd: new Local Value for " << path << ": " << data);
             _conn.publishUpdate(node);
         }
     }
@@ -379,14 +385,18 @@ void MongooseMqttd::update(double dt)
 
     for (WatchedNodesList::iterator it = _watchedNodes.begin(); it != _watchedNodes.end(); ++it) {
         SGPropertyNode_ptr node = *it;
-        string path = node->getPath(true);
+        // Skip to update the node we've just published
+        if (!_propertyChangeObserver.isChangedValue(node)) 
+        {
+            path = node->getPath(true);
 
-        auto newData = _conn.updateList.find(path);
+            auto newData = _conn.updateList.find(path);
 
-        if (newData != _conn.updateList.end()) {
-            //node->setStringValue(newData->second);
-            _conn.subscribeUpdate(node, newData->second);
-            free((void*)newData->second.ptr);
+            if (newData != _conn.updateList.end()) {
+                //node->setStringValue(newData->second);
+                _conn.subscribeUpdate(node, newData->second);
+                free((void*)newData->second.ptr);
+            }
         }
     }
     _conn.updateList.clear();

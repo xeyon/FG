@@ -247,11 +247,11 @@ static bool fgSetPosFromAirportIDandRwy( const string& id, const string& rwy, bo
       return true;
   }
 
-  if (rwy_req) {
+  /* if (rwy_req) {
       flightgear::modalMessageBox("Runway not available", "Runway/helipad "
                                    + rwy + " not found at airport " + apt->getId()
                                    + " - " + apt->getName() );
-  } else {
+  } else*/ {
     SG_LOG( SG_GENERAL, SG_INFO,
            "Failed to find runway/helipad " << rwy <<
            " at airport " << id << ". Using default runway." );
@@ -743,6 +743,22 @@ bool initPosition()
   fgSetDouble("/position/altitude-ft", fgGetDouble("/sim/presets/altitude-ft"));
   fgSetDouble("/position/longitude-deg", fgGetDouble("/sim/presets/longitude-deg"));
   fgSetDouble("/position/latitude-deg", fgGetDouble("/sim/presets/latitude-deg"));
+
+  // TODO: set associate boolean to allow override pos, needed for CAE
+  double lat = fgGetDouble("/sim/presets/latitude-deg");
+  double lon = fgGetDouble("/sim/presets/longitude-deg");
+  alt = fgGetDouble("/sim/presets/altitude-ft");
+  float heading = hdg_preset->getFloatValue();
+  SG_LOG(SG_GENERAL, SG_INFO, "Attempting to set starting position at lat = " << lat << ", lon = " << lon << ", alt = " << alt << ", heading = " << heading);
+  fgSetFloat("/network/mqtt/ci99_pos_alt_f4", alt);
+  fgSetBool("/network/mqtt/ca99_pos_alt_l1", true);
+  fgSetDouble("/network/mqtt/ci99_pos_lon_f8", lon);
+  fgSetBool("/network/mqtt/ca99_pos_lon_l1", true);
+  fgSetDouble("/network/mqtt/ci99_pos_lat_f8", lat);
+  fgSetBool("/network/mqtt/ca99_pos_lat_l1", true);
+
+  fgSetFloat("/network/mqtt/ci99_pos_hdgmag_f4", heading);
+  fgSetBool("/network/mqtt/ca99_pos_hdgmag_l1", true);
 
   return true;
 }
