@@ -172,6 +172,7 @@ static bool setPosFromAirportIDandHdg( const string& id, double tgt_hdg ) {
   } else {
     FGRunway* r = apt->findBestRunwayForHeading(tgt_hdg);
       std::tie(startPos, heading) = runwayStartPos(r);
+    fgSetString("/sim/presets/runway", r->name());
   }
 
     fgApplyStartOffset(startPos, heading);
@@ -748,6 +749,12 @@ bool initPosition()
   double lat = fgGetDouble("/sim/presets/latitude-deg");
   double lon = fgGetDouble("/sim/presets/longitude-deg");
   alt = fgGetDouble("/sim/presets/altitude-ft");
+  if (alt < 0) {
+      // TODO: set ac on ground
+      alt = 0;
+      fgSetFloat("/network/mqtt/ci99_pos_ias_f4", fgGetFloat("/sim/presets/airspeed-kt"));
+      fgSetBool("/network/mqtt/ca99_pos_ias_l1", true);
+  }
   float heading = hdg_preset->getFloatValue();
   SG_LOG(SG_GENERAL, SG_INFO, "Attempting to set starting position at lat = " << lat << ", lon = " << lon << ", alt = " << alt << ", heading = " << heading);
   fgSetFloat("/network/mqtt/ci99_pos_alt_f4", alt);
@@ -760,6 +767,9 @@ bool initPosition()
   fgSetFloat("/network/mqtt/ci99_pos_hdgmag_f4", heading);
   fgSetBool("/network/mqtt/ca99_pos_hdgmag_l1", true);
 
+  fgSetString("/network/mqtt/ci99_pos_airport_c1", fgGetString("/sim/presets/airport-id"));
+  fgSetString("/network/mqtt/ci99_pos_runway_c1", fgGetString("/sim/presets/runway"));
+  
   return true;
 }
 

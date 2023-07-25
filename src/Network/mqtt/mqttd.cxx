@@ -50,7 +50,8 @@ public:
     string addr;
     string sub_topic;
     string pub_topic;
-    int qos;
+    uint8_t pub_qos;    // Outbound QoS, default to 1
+    uint8_t sub_qos;    // Inbound QoS, default to 0
     int timeout_ms;
     struct mg_connection* conn;
 
@@ -60,7 +61,8 @@ public:
     MongooseMQTTConnection() : addr(""),
                                sub_topic("mg/+/test"),
                                pub_topic("mg/clnt/test"),
-                               qos(1),
+                               sub_qos(0),
+                               pub_qos(1),
                                timeout_ms(3000),
                                conn(nullptr)
     {
@@ -70,7 +72,8 @@ public:
     MongooseMQTTConnection(string url) : addr(url),
                                          sub_topic("mg/+/test"),
                                          pub_topic("mg/clnt/test"),
-                                         qos(1),
+                                         sub_qos(0),
+                                         pub_qos(1),
                                          timeout_ms(3000),
                                          conn(nullptr)
     {
@@ -184,7 +187,7 @@ int MongooseMQTTConnection::publishUpdate(SGPropertyNode_ptr node)
 
     if (conn != NULL) {
         string topic = node->getPath(true);
-        mg_mqtt_pub(conn, mg_str(topic.c_str()), data, qos, false);
+        mg_mqtt_pub(conn, mg_str(topic.c_str()), data, pub_qos, false);
         SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection PUBLISHED " << data.ptr << " to " << topic);
 
         return data.len;
@@ -199,7 +202,7 @@ void MongooseMQTTConnection::staticRequestHandler(struct mg_connection *c, int e
     const char* s_url = p_conn->addr.c_str();
     const char* s_sub_topic = p_conn->sub_topic.c_str();
     const char* s_pub_topic = p_conn->pub_topic.c_str();
-    int s_qos = p_conn->qos;
+    int s_qos = p_conn->sub_qos;
     struct mg_connection **s_conn = &(p_conn->conn);
 
   if (ev == MG_EV_OPEN) {
@@ -249,7 +252,7 @@ void MongooseMQTTConnection::staticReconnectTimer(void* arg)
     const char* s_url = p_conn->addr.c_str();
     const char* s_sub_topic = p_conn->sub_topic.c_str();
     const char* s_pub_topic = p_conn->pub_topic.c_str();
-    int s_qos = p_conn->qos;
+    int s_qos = p_conn->pub_qos;
     struct mg_connection **s_conn = &(p_conn->conn);
 
     if (*s_conn == NULL) {
@@ -401,7 +404,8 @@ void MongooseMqttd::update(double dt)
     }
     _conn.updateList.clear();
 
-    _propertyChangeObserver.uncheck();
+    _propertyChangeObserver.check();   // To flush updates by remote,
+    _propertyChangeObserver.uncheck(); // So we don't resend the updates on next iteration.
 }
 
 FGMqttd * FGMqttd::createInstance(SGPropertyNode_ptr configNode)
@@ -426,7 +430,12 @@ int MongooseMqttd::WatchedNodesList::addWatchedNode(const std::string& node, Pro
     if (ls->hasValue()) {
         SGPropertyNode_ptr n = propertyChangeObserver->addObservation(node);
         if (n.valid()) push_back(n);
-        SG_LOG(SG_NETWORK, SG_INFO, "mqttd: addWatchedNode (" << node << ") success");
+        string strAct = "";
+        auto act = ls->getNode("_attr_/active");
+        if (act)
+            strAct = act->getStringValue();
+
+        SG_LOG(SG_NETWORK, SG_INFO, "mqttd: addWatchedNode (" << node << ") success. sigACT=" << strAct);
 
         return 1;
     } else if (nCh > 0) {
