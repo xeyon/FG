@@ -103,7 +103,7 @@ static void fgApplyStartOffset(const SGGeod& aStartPos, double aHeading, double 
       aHeading = aTargetHeading;
     }
 
-    startPos = SGGeodesy::direct(startPos, offsetAzimuth + 180, offsetDistance);
+    startPos = SGGeodesy::direct(startPos, offsetAzimuth, offsetDistance);
   }
 
     setInitialPosition(startPos, aHeading);
@@ -298,7 +298,7 @@ static void fgSetDistOrAltFromGlideSlope()
     SG_LOG( SG_GENERAL, SG_ALERT,
            "Glideslope given but not altitude or offset-distance." );
     SG_LOG( SG_GENERAL, SG_ALERT, "Resetting glideslope to zero" );
-    fgSetDouble("/sim/presets/glideslope-deg", 0);
+    //fgSetDouble("/sim/presets/glideslope-deg", 0);
     fgSetBool("/sim/presets/onground", true);
   }
 }
@@ -676,7 +676,8 @@ bool initPosition()
 
   if (original_hdg < 9990.0) {
     // The user-set heading may be overridden by the setPosFromAirportID above.
-    hdg_preset->setDoubleValue(original_hdg);
+    // But we would like the new heading to be effective
+    //hdg_preset->setDoubleValue(original_hdg);
   }
 
   if ( !set_pos && !vor.empty() ) {
