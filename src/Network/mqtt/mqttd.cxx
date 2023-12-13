@@ -187,8 +187,15 @@ int MongooseMQTTConnection::publishUpdate(SGPropertyNode_ptr node)
 
     if (conn != NULL) {
         string topic = node->getPath(true);
-        mg_mqtt_pub(conn, mg_str(topic.c_str()), data, pub_qos, false);
-        SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection PUBLISHED " << data.ptr << " to " << topic);
+
+        struct mg_mqtt_opts pub_opts = {0};
+        pub_opts.topic = mg_str(topic.c_str());
+        pub_opts.message = data;
+        pub_opts.qos = pub_qos;
+        pub_opts.retain = false;
+        mg_mqtt_pub(conn, &pub_opts);
+
+        //SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection PUBLISHED " << data.ptr << " to " << topic);
 
         return data.len;
     } else {
@@ -203,10 +210,12 @@ void MongooseMQTTConnection::staticRequestHandler(struct mg_connection *c, int e
     const char* s_sub_topic = p_conn->sub_topic.c_str();
     const char* s_pub_topic = p_conn->pub_topic.c_str();
     int s_qos = p_conn->sub_qos;
+    int p_qos = p_conn->pub_qos;
     struct mg_connection **s_conn = &(p_conn->conn);
 
   if (ev == MG_EV_OPEN) {
-        SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection CREATED!");
+    SG_LOG(SG_NETWORK, SG_INFO, "MQTT(TCP) connection CREATED!");
+    // mg_mqtt_login() would send MQTT CONNECT request by mongoose.c itself.
   } else if (ev == MG_EV_ERROR) {
     // On error, log error message
     MG_ERROR(("%p %s", c->fd, (char *) ev_data));
@@ -214,7 +223,8 @@ void MongooseMQTTConnection::staticRequestHandler(struct mg_connection *c, int e
     // If target URL is SSL/TLS, command client connection to use TLS
     if (mg_url_is_ssl(s_url)) {
       struct mg_tls_opts opts = {0};
-      opts.ca = "ca.pem";
+      opts.ca = mg_str("ca.pem");
+      opts.name = mg_url_host(s_url);
       mg_tls_init(c, &opts);
     }
   } else if (ev == MG_EV_MQTT_OPEN) {
@@ -222,15 +232,27 @@ void MongooseMQTTConnection::staticRequestHandler(struct mg_connection *c, int e
     struct mg_str subt = mg_str(s_sub_topic);
     struct mg_str pubt = mg_str(s_pub_topic), data = mg_str("hello");
     SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection CONNECTED to " << s_url);
-    mg_mqtt_sub(c, subt, s_qos);
-    SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection SUBSCRIBING to " << subt.ptr);
 
-    mg_mqtt_pub(c, pubt, data, s_qos, false);
+    struct mg_mqtt_opts sub_opts = {0};
+    sub_opts.topic = subt;
+    sub_opts.qos = s_qos;
+    mg_mqtt_sub(c, &sub_opts);
+    SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection SUBSCRIBING to " << subt.ptr);
+    // TODO: Note that Mongoose does not handle retries for QoS 1 and 2. 
+    // That has to be handled by the application in the event handler, if needed.
+
+    struct mg_mqtt_opts pub_opts = {0};
+    pub_opts.topic = mg_str(s_pub_topic);
+    pub_opts.message = mg_str("hello");
+    pub_opts.qos = p_qos;
+    pub_opts.retain = false;
+    mg_mqtt_pub(c, &pub_opts);
+
     SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection PUBLISHED " <<data.ptr << " to " << pubt.ptr);
   } else if (ev == MG_EV_MQTT_MSG) {
-    // When we get echo response, print it
+    // When we get a MQTT message, append to updateList
     struct mg_mqtt_message *mm = (struct mg_mqtt_message *) ev_data;
-    SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection RECEIVED " << mm->data.ptr << " from " << mm->topic.ptr);
+    // SG_LOG(SG_NETWORK, SG_INFO, "MQTT connection RECEIVED " << mm->data.ptr << " from " << mm->topic.ptr);
 
     p_conn->updateList.insert_or_assign(string(mm->topic.ptr, mm->topic.len), mg_strdup(mm->data));
 
@@ -257,12 +279,21 @@ void MongooseMQTTConnection::staticReconnectTimer(void* arg)
 
     if (*s_conn == NULL) {
         struct mg_mqtt_opts opts = {0};
-        opts.clean = true;
-        opts.will_qos = s_qos;
-        opts.will_topic = mg_str(s_pub_topic);
-        opts.will_message = mg_str("goodbye");
+        opts.clean = true;      // clean session
+        opts.qos = s_qos;
+        opts.topic = mg_str(s_pub_topic);
+        opts.version = 4;
+        opts.message = mg_str("goodbye");
 
         *s_conn = mg_mqtt_connect(mgr, s_url, &opts, staticRequestHandler, arg);
+        /* This function does not connect to a broker; 
+           it allocates the required resources and starts the TCP connection process. 
+           Once that connection is established, an MG_EV_CONNECT event is sent to the connection event handler, 
+           then the MQTT connection process is started (by means of mg_mqtt_login()).
+           mg_mqtt_login() is usually called by mg_mqtt_connect(), 
+           you will only need to call it when you manually start the MQTT connect process, 
+           e.g: when using MQTT over WebSocket. 
+         */
     }
 }
 
